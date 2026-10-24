@@ -1,10 +1,8 @@
-import { useCore } from "./CoreContext";
+import { ArchivedExercises } from "./ExerciseActions";
 import { ExerciseList } from "./ExerciseList";
-import { RoutineEditor } from "./RoutineEditor";
+import { RoutineList } from "./RoutineList";
 
 export function SettingsScreen({ onBack }: { onBack: () => void }) {
-  const core = useCore();
-  const routine = core.listRoutines()[0];
 
   return (
     <main className="screen">
@@ -15,17 +13,21 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
         <h1 className="grow">Settings</h1>
       </header>
 
-      {routine && (
-        <section className="stack">
-          <h2>Routine</h2>
-          <RoutineEditor routineId={routine.id} />
-        </section>
-      )}
+      <section className="stack">
+        <h2>Routines</h2>
+        <p className="muted">Tap a routine to edit it. Changes apply from your next session.</p>
+        <RoutineList />
+      </section>
 
       <section className="stack">
         <h2>Exercises</h2>
-        <p className="muted">Tap an exercise to edit it.</p>
+        <p className="muted">Tap an exercise to edit, archive or delete it.</p>
         <ExerciseList />
+      </section>
+
+      <section className="stack">
+        <h2>Archived exercises</h2>
+        <ArchivedExercises />
       </section>
     </main>
   );

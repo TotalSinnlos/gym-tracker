@@ -219,3 +219,9 @@ button:disabled {
   margin: 0;
   font-size: 1.6rem;
 }
+
+.open-routine {
+  border: 1px solid #4b5563;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
