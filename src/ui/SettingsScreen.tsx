@@ -1,6 +1,7 @@
 import { BackupSection } from "./BackupSection";
 import { ArchivedExercises } from "./ExerciseActions";
 import { ExerciseList } from "./ExerciseList";
+import { ExportSection } from "./ExportSection";
 import { RoutineList } from "./RoutineList";
 
 export function SettingsScreen({ onBack }: { onBack: () => void }) {
@@ -31,6 +32,7 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
       </section>
 
       <BackupSection allowRestore />
+      <ExportSection />
     </main>
   );
 }

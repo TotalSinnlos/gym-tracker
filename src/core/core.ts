@@ -69,6 +69,19 @@ export interface Backup {
   createdAt: string;
 }
 
+/** A spreadsheet (CSV) file of the history, made by `exportSpreadsheet`. */
+export interface SpreadsheetExport {
+  /** The CSV file's contents. */
+  text: string;
+  /** ISO time the export was made. */
+  createdAt: string;
+  /** How many sets (rows below the header) it holds. */
+  sets: number;
+}
+
+/** The CSV export's columns, in order. */
+export const SPREADSHEET_COLUMNS = ["Date", "Routine", "Exercise", "Exercise type", "Set", "Weight (kg)", "Reps"] as const;
+
 /** What a backup file holds, shown before restoring it. */
 export interface BackupInfo {
   /** ISO time the backup was made, or null if the file doesn't say. */
@@ -575,6 +588,20 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     async restoreBackup(text: string) {
       await commit(readBackup(text));
     },
+
+    // --- Export ---
+
+    /**
+     * The history of completed sessions as a CSV file for Excel or Google Sheets, one row per logged set
+     * (see `SPREADSHEET_COLUMNS`), oldest session first. Names are as recorded in each session, so later
+     * renames or deletions don't change past rows. Skipped exercises have no rows and the running session
+     * isn't included. Null when there are no sets to export yet.
+     */
+    exportSpreadsheet(): SpreadsheetExport | null {
+      const rows = buildSpreadsheetRows(data.sessions);
+      if (rows.length === 0) return null;
+      return { text: toCsv([[...SPREADSHEET_COLUMNS], ...rows]), createdAt: now().toISOString(), sets: rows.length };
+    },
   };
 
   /** An exercise that can be put into a routine: one that exists and isn't archived. */
@@ -611,6 +638,54 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     }
     return null;
   }
+}
+
+// --- Export ---
+
+const EXPORT_TYPE_LABELS: Record<ExerciseType, string> = {
+  machine: "Machine",
+  freeWeight: "Free weight",
+  bodyweight: "Bodyweight",
+};
+
+function buildSpreadsheetRows(sessions: Session[]): string[][] {
+  // Saved sessions are already oldest first; sorting (stably) keeps that true for edited or restored data too.
+  const chronological = [...sessions].sort((a, b) => Date.parse(a.startedAt) - Date.parse(b.startedAt));
+  return chronological.flatMap((session) =>
+    session.entries
+      .filter((entry) => entry.state !== "skipped")
+      .flatMap((entry) =>
+        entry.loggedSets.map((set, i) => [
+          localDate(session.startedAt),
+          session.routineName,
+          entry.exerciseName,
+          EXPORT_TYPE_LABELS[entry.type],
+          String(i + 1),
+          set.weight === undefined ? "" : formatCsvNumber(set.weight),
+          String(set.reps),
+        ]),
+      ),
+  );
+}
+
+/** `YYYY-MM-DD` in the phone's time zone, which spreadsheets recognise as a date. */
+function localDate(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** A dot for decimals and no thousands separator; rounded so sums like 0.1 + 0.2 don't show long tails. */
+const formatCsvNumber = (n: number) => String(Math.round(n * 1000) / 1000);
+
+/**
+ * Joins rows into CSV text. Fields with commas, quotes or line breaks are put in quotes, with quotes
+ * doubled. It starts with a byte order mark so Excel reads accents and other non-English letters
+ * correctly, and uses Windows line endings, which Excel and Google Sheets both expect.
+ */
+function toCsv(rows: string[][]): string {
+  const field = (value: string) => (/[",\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value);
+  return "﻿" + rows.map((row) => row.map(field).join(",") + "\r\n").join("");
 }
 
 // --- Data ---
