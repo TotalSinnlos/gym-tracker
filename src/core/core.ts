@@ -166,6 +166,45 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
 
     listExercises: () => data.exercises.filter((e) => !e.archived),
 
+    listArchivedExercises: () => data.exercises.filter((e) => e.archived),
+
+    /**
+     * Hides an exercise from lists and pickers but keeps its history. It is also taken out of every
+     * routine, so no routine (and no new session) contains an archived exercise. A running session
+     * keeps it until it ends.
+     */
+    async archiveExercise(id: string) {
+      findExercise(id);
+      await commit({
+        ...data,
+        exercises: data.exercises.map((e) => (e.id === id ? { ...e, archived: true } : e)),
+        routines: data.routines.map((r) => withoutExercise(r, id)),
+      });
+    },
+
+    /** Brings an archived exercise back, with its history. It isn't put back into any routine. */
+    async unarchiveExercise(id: string) {
+      findExercise(id);
+      await commit({ ...data, exercises: data.exercises.map((e) => (e.id === id ? { ...e, archived: false } : e)) });
+    },
+
+    /** Whether the exercise appears in any saved session or the running one, even as skipped. */
+    hasHistory: (id: string) => hasHistory(id),
+
+    /** Deletes an exercise and takes it out of every routine. Only allowed when it has no history. */
+    async deleteExercise(id: string) {
+      findExercise(id);
+      if (hasHistory(id)) throw new CoreError("This exercise has history, so it can only be archived");
+      await commit({
+        ...data,
+        exercises: data.exercises.filter((e) => e.id !== id),
+        routines: data.routines.map((r) => withoutExercise(r, id)),
+      });
+    },
+
+    /** The routines the exercise is in, for warning before archiving or deleting it. */
+    routinesWithExercise: (id: string) => data.routines.filter((r) => r.exerciseIds.includes(id)),
+
     getExercise: (id: string) => findExercise(id),
 
     /** How far the −/+ buttons move an exercise's weight. */
@@ -174,7 +213,7 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     // --- Routines ---
 
     async createRoutine(name: string, exerciseIds: string[] = []): Promise<Routine> {
-      exerciseIds.forEach(findExercise);
+      exerciseIds.forEach(findActiveExercise);
       const routine: Routine = { id: newId(), name: requireName(name), exerciseIds: [...exerciseIds] };
       await commit({ ...data, routines: [...data.routines, routine] });
       return routine;
@@ -187,7 +226,7 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     /** Adds an exercise to the end of the routine. The same exercise may appear more than once. */
     async addExerciseToRoutine(routineId: string, exerciseId: string) {
       const routine = findRoutine(routineId);
-      findExercise(exerciseId);
+      findActiveExercise(exerciseId);
       await replaceRoutine({ ...routine, exerciseIds: [...routine.exerciseIds, exerciseId] });
     },
 
@@ -208,7 +247,22 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       await replaceRoutine({ ...routine, exerciseIds: ids });
     },
 
+    /**
+     * Deletes a routine. Past sessions keep its name. The routine of the running session can't be
+     * deleted, and neither can the last routine, so there's always one to start a session from.
+     */
+    async deleteRoutine(id: string) {
+      const problem = routineDeleteProblem(findRoutine(id));
+      if (problem) throw new CoreError(problem);
+      await commit({ ...data, routines: data.routines.filter((r) => r.id !== id) });
+    },
+
+    canDeleteRoutine: (id: string) => routineDeleteProblem(findRoutine(id)) === null,
+
     listRoutines: () => data.routines,
+
+    /** The routines a session can be started from: those with at least one exercise. */
+    startableRoutines: () => data.routines.filter((r) => r.exerciseIds.length > 0),
 
     getRoutine: (id: string) => findRoutine(id),
 
@@ -231,7 +285,8 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     async startSession(routineId: string): Promise<Session> {
       if (data.activeSession) throw new CoreError("A session is already running");
       const routine = findRoutine(routineId);
-      const exercises = routine.exerciseIds.map(findExercise);
+      // Archiving takes an exercise out of its routines, so this only guards against odd data.
+      const exercises = routine.exerciseIds.map(findActiveExercise);
       if (exercises.length === 0) throw new CoreError("This routine has no exercises");
       const entryIds = entryIdsFor(exercises.map((e) => e.id));
       const session: Session = {
@@ -437,6 +492,25 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     wasLowered: (sessionId: string, entryId: string) => findEntry(findSession(sessionId), entryId).lowered === true,
   };
 
+  /** An exercise that can be put into a routine: one that exists and isn't archived. */
+  function findActiveExercise(id: string): Exercise {
+    const exercise = findExercise(id);
+    if (exercise.archived) throw new CoreError(`${exercise.name} is archived`);
+    return exercise;
+  }
+
+  function hasHistory(exerciseId: string): boolean {
+    const sessions = data.activeSession ? [...data.sessions, data.activeSession] : data.sessions;
+    return sessions.some((s) => s.entries.some((e) => e.exerciseId === exerciseId));
+  }
+
+  /** Why the routine can't be deleted, or null if it can. */
+  function routineDeleteProblem(routine: Routine): string | null {
+    if (data.activeSession?.routineId === routine.id) return "This routine's session is still running";
+    if (data.routines.length === 1) return "You need at least one routine";
+    return null;
+  }
+
   function findSession(id: string): Session {
     const session = data.sessions.find((s) => s.id === id);
     if (!session) throw new CoreError(`Unknown session: ${id}`);
@@ -488,6 +562,11 @@ function entryIdsFor(exerciseIds: string[]): string[] {
     return count === 1 ? id : `${id}#${count}`;
   });
 }
+
+const withoutExercise = (routine: Routine, exerciseId: string): Routine => ({
+  ...routine,
+  exerciseIds: routine.exerciseIds.filter((id) => id !== exerciseId),
+});
 
 // --- Progression rules ---
 

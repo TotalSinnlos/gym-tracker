@@ -162,6 +162,13 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
   - Data: create a backup, restore a backup and export CSV.
 - Queries the core exposes, roughly: the active session (the current exercise, the "Up next" list in order, whether skipping is available, how many exercises are left, whether the session is stale, and last time's results for the current exercise), session history, an exercise's history series for graphs, the overview summary and the date of the last backup.
 
+### Routine and exercise management
+
+- A routine can be deleted, except the routine of the running session and the last remaining routine (so there's always one to start from). Past sessions keep the deleted routine's name.
+- Starting a session offers only routines with at least one exercise. With one such routine, "Start session" starts it; with several, the home screen asks which one.
+- Archiving an exercise hides it from exercise lists and "add to routine" pickers, keeps its history and current weight, and takes it out of every routine (the user is told which ones before confirming). So no routine, and no new session, ever contains an archived exercise; starting a session from a routine that somehow does is rejected. Archived exercises can't be added to routines. A running session keeps an exercise archived mid-session, and its result still counts. Unarchiving brings it back with its history but doesn't put it back into any routine.
+- An exercise has history when any saved session or the running session has an entry for it, even a skipped one. Only an exercise without history can be deleted; deleting also takes it out of every routine.
+
 ### Session queue behaviour
 
 - When a session starts, the queue holds the routine's exercises in routine order, and the first one is current. The session keeps this snapshot of the routine and of each exercise's sets and rep range. Changes to them in settings apply from the next session. Changes to an exercise's current weight in settings update the session weight of its pending entries immediately; if the exercise was already done in this session, the weight set in settings wins at the end instead of the session's result. An exercise switched to bodyweight during a session gets no weight written back.
@@ -223,6 +230,7 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
   - below range: detection, lowering by one increment only when chosen, clamping at 0 kg, and no lowering offered for bodyweight;
   - editing past sessions: recalculation for the most recent session (respecting a recorded lowering choice), no recalculation for older ones, and deleting a session;
   - deleting exercises: allowed without history, rejected with history;
+  - routines and archiving: several routines sharing an exercise's history, deleting routines (not the running session's or the last one), archiving taking an exercise out of routines while keeping its history, and unarchiving;
   - resuming: a session interrupted after any command continues exactly where it left off when the core is reloaded from the same store, and a session older than 6 hours is reported as stale;
   - backup and restore: the data after a backup followed by a restore is identical to the data before, and a malformed or wrong-version file is rejected without touching existing data;
   - CSV export: the correct columns, one row per set, an empty weight for bodyweight, and no rows for skipped entries.

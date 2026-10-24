@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { type Exercise, isWeighted } from "../core";
 import { useCore } from "./CoreContext";
+import { ExerciseActions } from "./ExerciseActions";
 import { ExerciseForm, TYPE_LABELS } from "./ExerciseForm";
 import { formatKg } from "./format";
 
@@ -19,16 +20,18 @@ export function ExerciseList() {
     <div className="stack">
       {core.listExercises().map((exercise) =>
         editingId === exercise.id ? (
-          <ExerciseForm
-            key={exercise.id}
-            initial={exercise}
-            submitLabel="Save"
-            onSubmit={async (input) => {
-              await core.updateExercise(exercise.id, input);
-              setEditingId(null);
-            }}
-            onCancel={() => setEditingId(null)}
-          />
+          <div key={exercise.id} className="stack">
+            <ExerciseForm
+              initial={exercise}
+              submitLabel="Save"
+              onSubmit={async (input) => {
+                await core.updateExercise(exercise.id, input);
+                setEditingId(null);
+              }}
+              onCancel={() => setEditingId(null)}
+            />
+            <ExerciseActions exerciseId={exercise.id} onDone={() => setEditingId(null)} />
+          </div>
         ) : (
           <button key={exercise.id} className="card list-item" onClick={() => setEditingId(exercise.id)}>
             <strong>{exercise.name}</strong>
