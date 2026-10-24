@@ -10,7 +10,7 @@ The weight is never lowered unless the user taps the button. On the session scre
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Qualifying weighted exercises increase by their increment when the session ends
 - [x] No increase when any set is short of the threshold, when there are fewer sets than configured, or when any set was at a lower weight

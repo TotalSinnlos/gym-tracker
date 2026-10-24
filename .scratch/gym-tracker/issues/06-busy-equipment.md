@@ -4,7 +4,7 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] "Skip for now" swaps the current exercise with the next pending one
 - [x] "Skip for now" is hidden when only one exercise is pending, and the core rejects a skip in that state
