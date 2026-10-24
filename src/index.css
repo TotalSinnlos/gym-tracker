@@ -220,6 +220,82 @@ button:disabled {
   font-size: 1.6rem;
 }
 
+/* Charts (ticket 09) */
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.chart-grid {
+  stroke: #4b5563;
+  stroke-width: 1;
+}
+
+.chart-band {
+  fill: #f59e0b;
+  opacity: 0.12;
+}
+
+.chart-label {
+  fill: var(--muted);
+  font-size: 11px;
+}
+
+.chart-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.chart-point {
+  stroke-width: 2;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.legend-swatch.band {
+  border-radius: 2px;
+  background: rgba(245, 158, 11, 0.3);
+}
+
+.compact-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.overview-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stack-tight {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.sparkline {
+  flex: 0 0 auto;
+}
+
 .open-routine {
   border: 1px solid #4b5563;
   border-radius: 0.75rem;

@@ -5,9 +5,10 @@ import { useAction } from "./useAction";
 interface Props {
   onOpenSettings: () => void;
   onOpenSession: () => void;
+  onOpenOverview: () => void;
 }
 
-export function HomeScreen({ onOpenSettings, onOpenSession }: Props) {
+export function HomeScreen({ onOpenSettings, onOpenSession, onOpenOverview }: Props) {
   const core = useCore();
   const routines = core.startableRoutines();
   const active = core.activeSession();
@@ -75,6 +76,10 @@ export function HomeScreen({ onOpenSettings, onOpenSession }: Props) {
           ))}
         </section>
       )}
+
+      <button className="secondary wide" onClick={onOpenOverview}>
+        Progress
+      </button>
     </main>
   );
 }

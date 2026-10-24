@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 import type { EndSessionResult, SessionEntry } from "../core";
 import { useCore } from "./CoreContext";
+import { CompactProgress } from "./ExercisePage";
 import { formatKg, formatReps, formatSet, parseNumber } from "./format";
 import { useAction } from "./useAction";
 
@@ -141,6 +142,8 @@ function CurrentExercise({ entry }: { entry: SessionEntry }) {
           {weightChange !== null && weightChange > 0 && <strong> (↑ +{formatKg(weightChange)} since last time)</strong>}
         </p>
       )}
+
+      <CompactProgress exerciseId={entry.exerciseId} />
 
       {weighted && (
         <WeightStepper
