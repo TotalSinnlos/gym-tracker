@@ -1,3 +1,4 @@
+import { BackupSection } from "./BackupSection";
 import { useCore } from "./CoreContext";
 import { ExerciseList } from "./ExerciseList";
 import { RoutineEditor } from "./RoutineEditor";
@@ -27,6 +28,8 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
         <p className="muted">Tap an exercise to edit it.</p>
         <ExerciseList />
       </section>
+
+      <BackupSection allowRestore />
     </main>
   );
 }

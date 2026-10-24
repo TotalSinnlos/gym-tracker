@@ -7,9 +7,9 @@
 **Status:** ready-for-agent
 
 - [ ] "Back up" on the summary and in settings opens the Android share menu with the backup file, and Google Drive works as a target on the user's phone
-- [ ] It falls back to a file download when file sharing isn't available
-- [ ] Restore asks for confirmation, then replaces all data with the backup's contents
-- [ ] Malformed or unsupported backup files are rejected with a clear message, and existing data is untouched
-- [ ] The last backup time shows in settings and on the summary
-- [ ] The app requests persistent storage on first launch
-- [ ] Core tests: data after backup followed by restore is identical to before, and invalid or wrong-version files are rejected without changes
+- [x] It falls back to a file download when file sharing isn't available
+- [x] Restore asks for confirmation, then replaces all data with the backup's contents
+- [x] Malformed or unsupported backup files are rejected with a clear message, and existing data is untouched
+- [x] The last backup time shows in settings and on the summary
+- [x] The app requests persistent storage on first launch
+- [x] Core tests: data after backup followed by restore is identical to before, and invalid or wrong-version files are rejected without changes

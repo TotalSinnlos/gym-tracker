@@ -1,4 +1,5 @@
 import type { EndSessionResult, EntryState, ProgressionSummary } from "../core";
+import { BackupSection } from "./BackupSection";
 import { useCore } from "./CoreContext";
 import { formatEntryWeight, formatKg, formatReps } from "./format";
 import { useAction } from "./useAction";
@@ -28,6 +29,7 @@ export function SummaryScreen({ result, onDone }: { result: EndSessionResult; on
               </li>
             ))}
           </ol>
+          <BackupSection />
         </>
       ) : (
         <>
