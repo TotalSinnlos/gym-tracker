@@ -46,6 +46,8 @@ export interface SessionEntry {
   sessionWeight?: number;
   loggedSets: SetRecord[];
   state: EntryState;
+  /** Set when the user chose "Lower to X kg next time?" in the end-of-session summary. */
+  lowered?: boolean;
 }
 
 export interface Session {

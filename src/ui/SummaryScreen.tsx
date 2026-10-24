@@ -1,6 +1,8 @@
-import type { EndSessionResult, EntryState } from "../core";
-import { formatReps } from "./format";
+import type { EndSessionResult, EntryState, ProgressionSummary } from "../core";
+import { useCore } from "./CoreContext";
+import { formatKg, formatReps } from "./format";
 import { formatEntryWeight } from "./SessionScreen";
+import { useAction } from "./useAction";
 
 const STATE_LABELS: Record<EntryState, string> = {
   done: "✓ Done",
@@ -10,15 +12,14 @@ const STATE_LABELS: Record<EntryState, string> = {
 };
 
 export function SummaryScreen({ result, onDone }: { result: EndSessionResult; onDone: () => void }) {
-  const { session } = result;
-
   return (
     <main className="screen">
-      {session ? (
+      {result.session ? (
         <>
           <h1>Session saved</h1>
+          <Progression sessionId={result.session.id} summary={result.summary} />
           <ol className="stack routine-list">
-            {session.entries.map((entry) => (
+            {result.session.entries.map((entry) => (
               <li key={entry.exerciseId} className="card">
                 <strong>{entry.exerciseName}</strong>
                 <span className="muted">
@@ -39,5 +40,50 @@ export function SummaryScreen({ result, onDone }: { result: EndSessionResult; on
         Done
       </button>
     </main>
+  );
+}
+
+/** Increases, bodyweight "rep range beaten" and below-range exercises, with the "lower weight" button. */
+function Progression({ sessionId, summary }: { sessionId: string; summary: ProgressionSummary }) {
+  const core = useCore();
+  const { error, run } = useAction();
+  // Read the saved session so a lowering choice shows once it's recorded.
+  const saved = core.listSessions().find((s) => s.id === sessionId);
+  const wasLowered = (exerciseId: string) => saved?.entries.find((e) => e.exerciseId === exerciseId)?.lowered === true;
+  const { increases, repRangeBeaten, belowRange } = summary;
+  if (increases.length + repRangeBeaten.length + belowRange.length === 0) return null;
+
+  return (
+    <section className="stack">
+      {increases.map((item) => (
+        <div key={item.exerciseId} className="card">
+          <strong>↑ {item.name}</strong>
+          <span className="muted">
+            Up to {formatKg(item.toKg)} next time (was {formatKg(item.fromKg)})
+          </span>
+        </div>
+      ))}
+      {repRangeBeaten.map((item) => (
+        <div key={item.exerciseId} className="card">
+          <strong>★ {item.name}</strong>
+          <span className="muted">Rep range beaten: time for a harder variation?</span>
+        </div>
+      ))}
+      {belowRange.map((item) => (
+        <div key={item.exerciseId} className="card">
+          <strong>↓ {item.name}</strong>
+          <span className="muted">A set was below the rep range.</span>
+          {item.lowerToKg !== undefined &&
+            (wasLowered(item.exerciseId) ? (
+              <span>Lowered to {formatKg(item.lowerToKg)} for next time.</span>
+            ) : (
+              <button className="secondary" onClick={() => run(() => core.lowerWeightAfterSession(sessionId, item.exerciseId))}>
+                Lower to {formatKg(item.lowerToKg)} next time?
+              </button>
+            ))}
+        </div>
+      ))}
+      {error && <p className="error">{error}</p>}
+    </section>
   );
 }

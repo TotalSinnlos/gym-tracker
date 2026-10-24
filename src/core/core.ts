@@ -36,9 +36,24 @@ export interface CoreOptions {
   now?: () => Date;
 }
 
-export interface EndSessionResult {
-  /** The saved session, or null when nothing was logged and it was discarded. */
-  session: Session | null;
+/** What the end-of-session summary shows about progression. */
+export interface ProgressionSummary {
+  /** Weighted exercises that go up next time. */
+  increases: { exerciseId: string; name: string; fromKg: number; toKg: number }[];
+  /** Bodyweight exercises where every set beat the rep range. */
+  repRangeBeaten: { exerciseId: string; name: string }[];
+  /** Exercises with a set under the rep minimum. `lowerToKg` is offered for weighted ones only. */
+  belowRange: { exerciseId: string; name: string; lowerToKg?: number }[];
+}
+
+/** The saved session with its summary, or `session: null` when nothing was logged and it was discarded. */
+export type EndSessionResult = { session: Session; summary: ProgressionSummary } | { session: null };
+
+/** Last time's results for an exercise: its latest done or incomplete entry from any routine. */
+export interface LastResult {
+  entry: SessionEntry;
+  /** ISO start time of that session. */
+  date: string;
 }
 
 export async function createCore(store: Store, options: CoreOptions = {}) {
@@ -315,7 +330,8 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
 
     /**
      * Saves the session: untouched exercises become skipped, partly logged ones incomplete,
-     * and finished weighted exercises keep their session weight as their current weight.
+     * and finished weighted exercises keep their session weight as their current weight,
+     * plus one increment when they qualify (see "Progression rules" below).
      * A session with nothing logged is discarded.
      */
     async endSession(): Promise<EndSessionResult> {
@@ -335,15 +351,123 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       const exercises = data.exercises.map((exercise) => {
         const entry = ended.entries.find((e) => e.exerciseId === exercise.id);
         if (entry?.state !== "done" || entry.sessionWeight === undefined) return exercise;
-        return { ...exercise, weight: entry.sessionWeight };
+        return { ...exercise, weight: progressedWeight(entry, exercise) };
       });
       await commit({ ...data, exercises, activeSession: null, sessions: [...data.sessions, ended] });
-      return { session: ended };
+      return { session: ended, summary: summarizeProgression(ended, data.exercises) };
     },
 
     /** Completed sessions, newest first. */
     listSessions: () => [...data.sessions].reverse(),
+
+    // --- Progression ---
+
+    /** Last time's results for an exercise, or null if it has never been done. */
+    lastResult: (exerciseId: string) => findLastResult(exerciseId),
+
+    /**
+     * How far the exercise's current weight has moved since last time (e.g. +2.5 after an increase).
+     * Null for bodyweight exercises and exercises with no history.
+     */
+    weightChangeSinceLastTime(exerciseId: string): number | null {
+      const exercise = findExercise(exerciseId);
+      const last = findLastResult(exerciseId);
+      if (exercise.weight === undefined || last?.entry.sessionWeight === undefined) return null;
+      return exercise.weight - last.entry.sessionWeight;
+    },
+
+    /**
+     * The "Lower to X kg next time?" button: sets the exercise's weight to one increment below the
+     * session weight (never below 0 kg) and records the choice on the entry. Only allowed for a
+     * below-range weighted entry from the exercise's most recent completed session.
+     */
+    async lowerWeightAfterSession(sessionId: string, exerciseId: string) {
+      const exercise = findExercise(exerciseId);
+      const session = data.sessions.find((s) => s.id === sessionId);
+      if (!session) throw new CoreError(`Unknown session: ${sessionId}`);
+      const entry = findEntry(session, exerciseId);
+      if (findLastResult(exerciseId)?.entry !== entry) {
+        throw new CoreError("Only the exercise's most recent session can lower its weight");
+      }
+      if (entry.sessionWeight === undefined || exercise.increment === undefined) {
+        throw new CoreError("Bodyweight exercises have no weight to lower");
+      }
+      if (!isBelowRange(entry)) throw new CoreError("That exercise wasn't below its rep range");
+      if (entry.lowered) throw new CoreError("The weight has already been lowered");
+
+      const weight = loweredWeight(entry.sessionWeight, exercise.increment);
+      const updated: Session = {
+        ...session,
+        entries: session.entries.map((e) => (e === entry ? { ...e, lowered: true } : e)),
+      };
+      await commit({
+        ...data,
+        exercises: data.exercises.map((e) => (e.id === exerciseId ? { ...e, weight } : e)),
+        sessions: data.sessions.map((s) => (s.id === sessionId ? updated : s)),
+      });
+    },
   };
+
+  /** The latest done or incomplete entry for the exercise across completed sessions. */
+  function findLastResult(exerciseId: string): LastResult | null {
+    for (let i = data.sessions.length - 1; i >= 0; i--) {
+      const session = data.sessions[i];
+      const entry = session.entries.find(
+        (e) => e.exerciseId === exerciseId && (e.state === "done" || e.state === "incomplete"),
+      );
+      if (entry) return { entry, date: session.startedAt };
+    }
+    return null;
+  }
+}
+
+// --- Progression rules ---
+
+/** Every configured set was logged and reached the rep maximum plus one, at the session weight or higher. */
+function beatsRepRange(entry: SessionEntry): boolean {
+  return (
+    entry.loggedSets.length >= entry.sets &&
+    entry.loggedSets.every(
+      (set) =>
+        set.reps >= entry.repMax + 1 &&
+        (entry.sessionWeight === undefined || (set.weight ?? 0) >= entry.sessionWeight),
+    )
+  );
+}
+
+/** Any set fell under the rep minimum. */
+function isBelowRange(entry: SessionEntry): boolean {
+  return entry.loggedSets.some((set) => set.reps < entry.repMin);
+}
+
+/** A done weighted entry's new current weight: the session weight, plus the increment if it qualifies. */
+function progressedWeight(entry: SessionEntry, exercise: Exercise): number {
+  const weight = entry.sessionWeight!;
+  return beatsRepRange(entry) ? weight + (exercise.increment ?? 0) : weight;
+}
+
+const loweredWeight = (sessionWeight: number, increment: number) => Math.max(0, sessionWeight - increment);
+
+function summarizeProgression(session: Session, exercises: Exercise[]): ProgressionSummary {
+  const summary: ProgressionSummary = { increases: [], repRangeBeaten: [], belowRange: [] };
+  for (const entry of session.entries) {
+    const { exerciseId, exerciseName: name, sessionWeight } = entry;
+    const increment = exercises.find((e) => e.id === exerciseId)?.increment;
+    if (entry.state === "done" && beatsRepRange(entry)) {
+      if (sessionWeight === undefined) summary.repRangeBeaten.push({ exerciseId, name });
+      else if (increment !== undefined) {
+        summary.increases.push({ exerciseId, name, fromKg: sessionWeight, toKg: sessionWeight + increment });
+      }
+    }
+    if ((entry.state === "done" || entry.state === "incomplete") && isBelowRange(entry)) {
+      summary.belowRange.push(
+        sessionWeight !== undefined && increment !== undefined
+          ? { exerciseId, name, lowerToKg: loweredWeight(sessionWeight, increment) }
+          : { exerciseId, name },
+      );
+    }
+  }
+  return summary;
 }
 
 /** The pending entries other than `exerciseId`, in queue order starting after it and wrapping round to the start. */
