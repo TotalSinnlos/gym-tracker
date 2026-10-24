@@ -8,13 +8,13 @@ The session keeps a snapshot of the routine and of each exercise's sets and rep 
 
 **Status:** ready-for-agent
 
-- [ ] Home screen offers "Start session" (or "Resume session" if one is active), and only one session can be active
-- [ ] The session screen shows the current exercise, its editable weight (hidden for bodyweight) and set inputs
-- [ ] Logging the configured number of sets marks the exercise done and advances to the next one
-- [ ] Sets can be added and removed, and a set's weight can differ from the session weight
-- [ ] A done exercise can be reopened and corrected during the session
-- [ ] "End session" asks for confirmation when exercises are still pending, then saves with untouched exercises marked skipped
-- [ ] Ending a session with no sets logged discards it
-- [ ] Closing and reopening the app mid-session restores the exact state
-- [ ] Routine and sets/rep-range edits during a session don't change it, but weight edits do
-- [ ] Core tests cover starting, logging, advancing, editing a done entry, ending, discarding empty sessions, resuming from the same store, and the snapshot rules
+- [x] Home screen offers "Start session" (or "Resume session" if one is active), and only one session can be active
+- [x] The session screen shows the current exercise, its editable weight (hidden for bodyweight) and set inputs
+- [x] Logging the configured number of sets marks the exercise done and advances to the next one
+- [x] Sets can be added and removed, and a set's weight can differ from the session weight
+- [x] A done exercise can be reopened and corrected during the session
+- [x] "End session" asks for confirmation when exercises are still pending, then saves with untouched exercises marked skipped
+- [x] Ending a session with no sets logged discards it
+- [x] Closing and reopening the app mid-session restores the exact state
+- [x] Routine and sets/rep-range edits during a session don't change it, but weight edits do
+- [x] Core tests cover starting, logging, advancing, editing a done entry, ending, discarding empty sessions, resuming from the same store, and the snapshot rules

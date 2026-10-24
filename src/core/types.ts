@@ -26,11 +26,49 @@ export interface Settings {
   setupComplete: boolean;
 }
 
+export interface SetRecord {
+  reps: number;
+  /** kg. Absent for bodyweight exercises. */
+  weight?: number;
+}
+
+export type EntryState = "pending" | "done" | "incomplete" | "skipped";
+
+/** One exercise within a session, with the exercise's settings as they were when the session started. */
+export interface SessionEntry {
+  exerciseId: string;
+  exerciseName: string;
+  type: ExerciseType;
+  sets: number;
+  repMin: number;
+  repMax: number;
+  /** The working weight for this exercise in this session. Absent for bodyweight exercises. */
+  sessionWeight?: number;
+  loggedSets: SetRecord[];
+  state: EntryState;
+}
+
+export interface Session {
+  id: string;
+  routineId: string;
+  routineName: string;
+  /** ISO timestamps. */
+  startedAt: string;
+  endedAt?: string;
+  /** In queue order. */
+  entries: SessionEntry[];
+  /** The exercise on screen, or null once nothing is pending. */
+  currentExerciseId: string | null;
+}
+
 export interface AppData {
   version: 1;
   exercises: Exercise[];
   routines: Routine[];
   settings: Settings;
+  activeSession: Session | null;
+  /** Completed sessions, oldest first. */
+  sessions: Session[];
 }
 
 export interface ExerciseInput {

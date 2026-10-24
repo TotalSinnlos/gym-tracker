@@ -10,6 +10,7 @@ import {
   EXERCISE_TYPES,
   isWeighted,
 } from "../core";
+import { parseNumber } from "./format";
 import { useAction } from "./useAction";
 
 export const TYPE_LABELS: Record<ExerciseType, string> = {
@@ -17,9 +18,6 @@ export const TYPE_LABELS: Record<ExerciseType, string> = {
   freeWeight: "Free weight",
   bodyweight: "Bodyweight",
 };
-
-// Accepts "42,5" as well as "42.5", since Android keyboards may offer either.
-const parseNumber = (text: string) => (text.trim() === "" ? NaN : Number(text.replace(",", ".")));
 
 interface Props {
   initial?: Exercise;

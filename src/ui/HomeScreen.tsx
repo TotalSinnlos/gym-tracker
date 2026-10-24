@@ -1,9 +1,21 @@
 import { useCore } from "./CoreContext";
 import { describeExercise } from "./ExerciseList";
+import { useAction } from "./useAction";
 
-export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
+interface Props {
+  onOpenSettings: () => void;
+  onOpenSession: () => void;
+}
+
+export function HomeScreen({ onOpenSettings, onOpenSession }: Props) {
   const core = useCore();
   const routine = core.listRoutines()[0];
+  const active = core.activeSession();
+  const { error, run } = useAction();
+
+  async function start() {
+    if (await run(() => core.startSession(routine.id))) onOpenSession();
+  }
 
   return (
     <main className="screen">
@@ -13,6 +25,19 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
           Settings
         </button>
       </header>
+
+      {active ? (
+        <button className="primary wide" onClick={onOpenSession}>
+          Resume session
+        </button>
+      ) : (
+        routine && (
+          <button className="primary wide" onClick={start}>
+            Start session
+          </button>
+        )
+      )}
+      {error && <p className="error">{error}</p>}
 
       {routine && (
         <section className="stack">
@@ -29,11 +54,6 @@ export function HomeScreen({ onOpenSettings }: { onOpenSettings: () => void }) {
           </ol>
         </section>
       )}
-
-      <button className="primary wide" disabled>
-        Start session
-      </button>
-      <p className="muted center">Sessions arrive in the next update.</p>
     </main>
   );
 }

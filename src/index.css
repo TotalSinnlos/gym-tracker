@@ -190,3 +190,32 @@ button:disabled {
   padding: 0;
   background: #4b5563;
 }
+
+.big {
+  font-size: 1.5rem;
+  min-height: 3.5rem;
+  text-align: center;
+}
+
+.stepper {
+  align-items: flex-end;
+}
+
+.stepper .icon {
+  min-height: 3.5rem;
+  font-size: 1.5rem;
+}
+
+.logged-set {
+  align-items: stretch;
+}
+
+.set-button {
+  background: #111827;
+  border-radius: 0.5rem;
+}
+
+.current h2 {
+  margin: 0;
+  font-size: 1.6rem;
+}

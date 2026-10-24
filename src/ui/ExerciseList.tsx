@@ -4,8 +4,9 @@ import { useCore } from "./CoreContext";
 import { ExerciseForm, TYPE_LABELS } from "./ExerciseForm";
 
 export function describeExercise(exercise: Exercise) {
-  const load = isWeighted(exercise.type) ? `${exercise.weight} kg (+${exercise.increment})` : "Bodyweight";
-  return `${TYPE_LABELS[exercise.type]} · ${load} · ${exercise.sets} × ${exercise.repMin}–${exercise.repMax}`;
+  const reps = `${exercise.sets} × ${exercise.repMin}–${exercise.repMax}`;
+  if (!isWeighted(exercise.type)) return `${TYPE_LABELS[exercise.type]} · ${reps}`;
+  return `${TYPE_LABELS[exercise.type]} · ${exercise.weight} kg (+${exercise.increment}) · ${reps}`;
 }
 
 /** All exercises, each tappable to edit, plus a form to add new ones. */

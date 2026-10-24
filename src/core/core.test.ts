@@ -6,7 +6,7 @@ const ids = () => `id-${++counter}`;
 
 async function setup() {
   const store = createMemoryStore();
-  const core = await createCore(store, ids);
+  const core = await createCore(store, { newId: ids });
   return { store, core };
 }
 
@@ -153,7 +153,7 @@ describe("persistence", () => {
     const routine = await core.createRoutine("My routine", [exercise.id]);
     await core.completeSetup();
 
-    const reopened = await createCore(store, ids);
+    const reopened = await createCore(store, { newId: ids });
     expect(reopened.getExercise(exercise.id).weight).toBe(45);
     expect(reopened.routineExercises(routine.id).map((e) => e.name)).toEqual(["Row"]);
     expect(reopened.isSetupComplete()).toBe(true);
