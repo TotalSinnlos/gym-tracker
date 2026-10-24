@@ -1,9 +1,9 @@
+import { BackupSection } from "./BackupSection";
 import { ArchivedExercises } from "./ExerciseActions";
 import { ExerciseList } from "./ExerciseList";
 import { RoutineList } from "./RoutineList";
 
 export function SettingsScreen({ onBack }: { onBack: () => void }) {
-
   return (
     <main className="screen">
       <header className="row header">
@@ -29,6 +29,8 @@ export function SettingsScreen({ onBack }: { onBack: () => void }) {
         <h2>Archived exercises</h2>
         <ArchivedExercises />
       </section>
+
+      <BackupSection allowRestore />
     </main>
   );
 }

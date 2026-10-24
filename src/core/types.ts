@@ -24,6 +24,8 @@ export interface Routine {
 
 export interface Settings {
   setupComplete: boolean;
+  /** ISO time the last backup file was made. Absent until the first backup. */
+  lastBackupAt?: string;
 }
 
 export interface SetRecord {
@@ -33,6 +35,8 @@ export interface SetRecord {
 }
 
 export type EntryState = "pending" | "done" | "incomplete" | "skipped";
+
+export const ENTRY_STATES: readonly EntryState[] = ["pending", "done", "incomplete", "skipped"];
 
 /** One exercise within a session, with the exercise's settings as they were when the session started. */
 export interface SessionEntry {
