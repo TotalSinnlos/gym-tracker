@@ -6,7 +6,7 @@ The session keeps a snapshot of the routine and of each exercise's sets and rep 
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Home screen offers "Start session" (or "Resume session" if one is active), and only one session can be active
 - [x] The session screen shows the current exercise, its editable weight (hidden for bodyweight) and set inputs
