@@ -5,9 +5,10 @@ import { useAction } from "./useAction";
 interface Props {
   onOpenSettings: () => void;
   onOpenSession: () => void;
+  onOpenHistory: () => void;
 }
 
-export function HomeScreen({ onOpenSettings, onOpenSession }: Props) {
+export function HomeScreen({ onOpenSettings, onOpenSession, onOpenHistory }: Props) {
   const core = useCore();
   const routines = core.startableRoutines();
   const active = core.activeSession();
@@ -21,6 +22,9 @@ export function HomeScreen({ onOpenSettings, onOpenSession }: Props) {
     <main className="screen">
       <header className="row header">
         <h1 className="grow">Gym Tracker</h1>
+        <button className="secondary" onClick={onOpenHistory}>
+          History
+        </button>
         <button className="secondary" onClick={onOpenSettings}>
           Settings
         </button>

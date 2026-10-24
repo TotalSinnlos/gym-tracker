@@ -4,7 +4,7 @@ import { useCore } from "./CoreContext";
 import { formatEntryWeight, formatKg, formatReps } from "./format";
 import { useAction } from "./useAction";
 
-const STATE_LABELS: Record<EntryState, string> = {
+export const STATE_LABELS: Record<EntryState, string> = {
   done: "✓ Done",
   incomplete: "◐ Incomplete",
   skipped: "– Skipped",
