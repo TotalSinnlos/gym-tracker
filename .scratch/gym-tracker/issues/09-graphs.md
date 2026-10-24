@@ -4,7 +4,7 @@
 
 **Blocked by:** 04, 06
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] The exercise page shows the weight-over-time graph (hidden for bodyweight) and the reps-per-set graph
 - [x] Incomplete sessions are hollow points, and skipped entries aren't plotted

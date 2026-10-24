@@ -4,10 +4,10 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
-- [ ] Opening the app with a session older than 6 hours shows the prompt
-- [ ] "End it" saves the session with its start date, and "Continue" resumes it
-- [ ] Sessions younger than 6 hours resume without a prompt
-- [ ] A new version deployed during an active session doesn't activate until the session has ended, and then applies on the next app open
+- [x] Opening the app with a session older than 6 hours shows the prompt
+- [x] "End it" saves the session with its start date, and "Continue" resumes it
+- [x] Sessions younger than 6 hours resume without a prompt
+- [ ] A new version deployed during an active session doesn't activate until the session has ended, and then applies on the next app open (to confirm on the phone during a real session)
 - [x] Core tests cover the stale-session query (using a controllable clock)

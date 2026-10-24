@@ -4,9 +4,9 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] "Back up" on the summary and in settings opens the Android share menu with the backup file, and Google Drive works as a target on the user's phone
+- [x] "Back up" on the summary and in settings opens the Android share menu with the backup file, and Google Drive works as a target on the user's phone
 - [x] It falls back to a file download when file sharing isn't available
 - [x] Restore asks for confirmation, then replaces all data with the backup's contents
 - [x] Malformed or unsupported backup files are rejected with a clear message, and existing data is untouched

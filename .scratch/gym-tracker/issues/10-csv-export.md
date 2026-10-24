@@ -4,11 +4,11 @@
 
 **Blocked by:** 04
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] "Export to spreadsheet" in settings produces the CSV through the share menu or as a download
 - [x] The columns are exactly as specified, with one row per set
 - [x] Bodyweight sets have an empty weight, and skipped entries have no rows
 - [x] Names containing commas or quotes are escaped correctly
-- [ ] The file opens correctly in Google Sheets
+- [x] The file opens correctly in Google Sheets
 - [x] Core tests cover columns, rows, bodyweight, skipped entries and escaping

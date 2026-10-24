@@ -4,7 +4,7 @@
 
 **Blocked by:** 03
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] Routines can be created, renamed and deleted, and their exercises managed and reordered
 - [x] Starting a session lets the user pick a routine when there's more than one

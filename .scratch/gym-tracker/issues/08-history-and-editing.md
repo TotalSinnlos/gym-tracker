@@ -4,7 +4,7 @@
 
 **Blocked by:** 05, 06
 
-**Status:** ready-for-agent
+**Status:** done
 
 - [x] History lists past sessions, newest first, with their date and routine
 - [x] The session detail shows every exercise's state, sets, weights and reps
