@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] "Export to spreadsheet" in settings produces the CSV through the share menu or as a download
-- [ ] The columns are exactly as specified, with one row per set
-- [ ] Bodyweight sets have an empty weight, and skipped entries have no rows
-- [ ] Names containing commas or quotes are escaped correctly
+- [x] "Export to spreadsheet" in settings produces the CSV through the share menu or as a download
+- [x] The columns are exactly as specified, with one row per set
+- [x] Bodyweight sets have an empty weight, and skipped entries have no rows
+- [x] Names containing commas or quotes are escaped correctly
 - [ ] The file opens correctly in Google Sheets
-- [ ] Core tests cover columns, rows, bodyweight, skipped entries and escaping
+- [x] Core tests cover columns, rows, bodyweight, skipped entries and escaping
