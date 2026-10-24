@@ -12,11 +12,11 @@ The weight is never lowered unless the user taps the button. On the session scre
 
 **Status:** ready-for-agent
 
-- [ ] Qualifying weighted exercises increase by their increment when the session ends
-- [ ] No increase when any set is short of the threshold, when there are fewer sets than configured, or when any set was at a lower weight
-- [ ] A changed session weight becomes the basis for the new current weight
-- [ ] Skipped exercises are unchanged
-- [ ] The summary lists increases, bodyweight "rep range beaten" and below-range exercises
-- [ ] The "lower weight" button lowers by one increment (clamped at 0 kg) and records the choice on the entry, and it's not offered for bodyweight exercises
-- [ ] The session screen shows last time's results (latest completed entry from any routine) and the "↑ since last time" note
-- [ ] Core tests cover each progression case, below-range detection, lowering and clamping
+- [x] Qualifying weighted exercises increase by their increment when the session ends
+- [x] No increase when any set is short of the threshold, when there are fewer sets than configured, or when any set was at a lower weight
+- [x] A changed session weight becomes the basis for the new current weight
+- [x] Skipped exercises are unchanged
+- [x] The summary lists increases, bodyweight "rep range beaten" and below-range exercises
+- [x] The "lower weight" button lowers by one increment (clamped at 0 kg) and records the choice on the entry, and it's not offered for bodyweight exercises
+- [x] The session screen shows last time's results (latest completed entry from any routine) and the "↑ since last time" note
+- [x] Core tests cover each progression case, below-range detection, lowering and clamping

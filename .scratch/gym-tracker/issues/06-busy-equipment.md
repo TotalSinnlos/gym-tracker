@@ -6,10 +6,10 @@
 
 **Status:** ready-for-agent
 
-- [ ] "Skip for now" swaps the current exercise with the next pending one
-- [ ] "Skip for now" is hidden when only one exercise is pending, and the core rejects a skip in that state
-- [ ] The "Up next" list shows pending exercises in queue order, and tapping one makes it current while the previous one keeps its place
-- [ ] Partly logged exercises keep their sets when jumped away from
-- [ ] Ending the session marks partly logged exercises incomplete and untouched ones skipped
-- [ ] Incomplete exercises don't change the weight, and they count as "last time" (together with 05)
-- [ ] Core tests cover skip, the rejected skip, jump-to, partly logged entries and the incomplete/skipped marking
+- [x] "Skip for now" swaps the current exercise with the next pending one
+- [x] "Skip for now" is hidden when only one exercise is pending, and the core rejects a skip in that state
+- [x] The "Up next" list shows pending exercises in queue order, and tapping one makes it current while the previous one keeps its place
+- [x] Partly logged exercises keep their sets when jumped away from
+- [x] Ending the session marks partly logged exercises incomplete and untouched ones skipped
+- [x] Incomplete exercises don't change the weight, and they count as "last time" (together with 05)
+- [x] Core tests cover skip, the rejected skip, jump-to, partly logged entries and the incomplete/skipped marking
