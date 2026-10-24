@@ -99,7 +99,7 @@ describe("correcting during a session", () => {
     await core.logSet(press.id, { reps: 31 });
     expect(core.currentEntry()?.exerciseId).toBe(curl.id);
 
-    await core.goToExercise(press.id);
+    await core.goToEntry(press.id);
     expect(core.currentEntry()?.exerciseId).toBe(press.id);
     await core.editSet(press.id, 1, { reps: 13 });
     await core.logSet(press.id, { reps: 9 });
@@ -171,9 +171,9 @@ describe("ending a session", () => {
 
 describe("snapshot rules", () => {
   it("ignores routine and sets/rep-range edits made during the session", async () => {
-    const { core, routine, press, pullUp } = await setup();
+    const { core, routine, press } = await setup();
     await core.startSession(routine.id);
-    await core.removeExerciseFromRoutine(routine.id, pullUp.id);
+    await core.removeExerciseFromRoutine(routine.id, 2);
     await core.updateExercise(press.id, { sets: 4, repMax: 15, name: "Leg press 2" });
     expect(core.activeSession()!.entries).toHaveLength(3);
     expect(entry(core, press.id)).toMatchObject({ sets: 2, repMax: 12, exerciseName: "Leg press" });

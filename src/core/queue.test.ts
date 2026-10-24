@@ -47,8 +47,8 @@ describe("skip for now", () => {
   it("jumps over finished exercises to the next pending one", async () => {
     const { core, press, curl } = await setup();
     await finish(core, press.id);
-    await core.goToExercise(press.id);
-    await core.goToExercise(curl.id);
+    await core.goToEntry(press.id);
+    await core.goToEntry(curl.id);
     // Queue: Leg press (done), Curl (current), Pull-ups. Skipping Curl puts it after Pull-ups.
     await core.skipCurrent();
     expect(queue(core)).toEqual(["Leg press", "Pull-ups", "Curl"]);
@@ -57,7 +57,7 @@ describe("skip for now", () => {
 
   it("wraps round to an earlier pending exercise", async () => {
     const { core, pullUp } = await setup();
-    await core.goToExercise(pullUp.id);
+    await core.goToEntry(pullUp.id);
     await core.skipCurrent();
     expect(queue(core)).toEqual(["Leg press", "Pull-ups", "Curl"]);
     expect(current(core)).toBe("Leg press");
@@ -83,7 +83,7 @@ describe("skip for now", () => {
   it("is rejected when the exercise on screen is already finished", async () => {
     const { core, press } = await setup();
     await finish(core, press.id);
-    await core.goToExercise(press.id);
+    await core.goToEntry(press.id);
     expect(core.canSkip()).toBe(false);
     await expect(core.skipCurrent()).rejects.toThrow(CoreError);
   });
@@ -103,7 +103,7 @@ describe("skip for now", () => {
 describe("jump to", () => {
   it("makes a pending exercise current while the previous one keeps its place", async () => {
     const { core, pullUp } = await setup();
-    await core.goToExercise(pullUp.id);
+    await core.goToEntry(pullUp.id);
     expect(current(core)).toBe("Pull-ups");
     expect(queue(core)).toEqual(["Leg press", "Curl", "Pull-ups"]);
     expect(upNext(core)).toEqual(["Leg press", "Curl"]);
@@ -112,24 +112,46 @@ describe("jump to", () => {
   it("keeps the sets of a partly logged exercise, which stays pending and in up next", async () => {
     const { core, press, curl } = await setup();
     await core.logSet(press.id, { reps: 12 });
-    await core.goToExercise(curl.id);
+    await core.goToEntry(curl.id);
     expect(entry(core, press.id)).toMatchObject({ state: "pending", loggedSets: [{ reps: 12, weight: 60 }] });
-    expect(upNext(core)).toEqual(["Pull-ups", "Leg press"]);
-    await core.goToExercise(press.id);
+    // The exercise left behind comes up first.
+    expect(upNext(core)).toEqual(["Leg press", "Pull-ups"]);
+    await core.goToEntry(press.id);
     await core.logSet(press.id, { reps: 11 });
     expect(entry(core, press.id).state).toBe("done");
   });
 
-  it("moves on to the next pending exercise after the finished one, wrapping round", async () => {
+  it("goes back to the exercise left behind, then continues in queue order", async () => {
     const { core, press, curl, pullUp } = await setup();
-    await core.goToExercise(curl.id);
-    await finish(core, curl.id);
-    expect(current(core)).toBe("Pull-ups");
+    await core.goToEntry(pullUp.id);
+    expect(upNext(core)).toEqual(["Leg press", "Curl"]);
     await finish(core, pullUp.id);
     expect(current(core)).toBe("Leg press");
     await finish(core, press.id);
+    expect(current(core)).toBe("Curl");
+    await finish(core, curl.id);
     expect(core.currentEntry()).toBeNull();
     expect(upNext(core)).toEqual([]);
+  });
+
+  it("goes back to the most recently left exercise after several jumps", async () => {
+    const { core, curl, pullUp } = await setup();
+    await core.goToEntry(curl.id);
+    await core.goToEntry(pullUp.id);
+    expect(upNext(core)).toEqual(["Curl", "Leg press"]);
+    await finish(core, pullUp.id);
+    expect(current(core)).toBe("Curl");
+    await finish(core, curl.id);
+    expect(current(core)).toBe("Leg press");
+  });
+
+  it("keeps the exercise to go back to while a finished one is corrected", async () => {
+    const { core, press, curl } = await setup();
+    await finish(core, press.id);
+    await core.logSet(curl.id, { reps: 10 });
+    await core.goToEntry(press.id);
+    await core.editSet(press.id, 0, { reps: 12 });
+    expect(upNext(core)[0]).toBe("Curl");
   });
 });
 

@@ -43,7 +43,7 @@ export interface ProgressionSummary {
   /** Bodyweight exercises where every set beat the rep range. */
   repRangeBeaten: { exerciseId: string; name: string }[];
   /** Exercises with a set under the rep minimum. `lowerToKg` is offered for weighted ones only. */
-  belowRange: { exerciseId: string; name: string; lowerToKg?: number }[];
+  belowRange: { entryId: string; exerciseId: string; name: string; lowerToKg?: number }[];
 }
 
 /** The saved session with its summary, or `session: null` when nothing was logged and it was discarded. */
@@ -59,8 +59,7 @@ export interface LastResult {
 export async function createCore(store: Store, options: CoreOptions = {}) {
   const newId = options.newId ?? (() => crypto.randomUUID());
   const now = options.now ?? (() => new Date());
-  // Fill in fields added after the data was first saved.
-  let data: AppData = { ...emptyData(), ...(await store.load()) };
+  let data: AppData = normalize(await store.load());
   const listeners = new Set<() => void>();
 
   async function commit(next: AppData) {
@@ -90,24 +89,25 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     return data.activeSession;
   }
 
-  function findEntry(session: Session, exerciseId: string): SessionEntry {
-    const entry = session.entries.find((e) => e.exerciseId === exerciseId);
+  function findEntry(session: Session, entryId: string): SessionEntry {
+    const entry = session.entries.find((e) => e.id === entryId);
     if (!entry) throw new CoreError("That exercise isn't part of this session");
     return entry;
   }
 
   /** Applies `change` to one entry of the active session, then settles its state and the current exercise. */
-  async function changeEntry(exerciseId: string, change: (entry: SessionEntry) => SessionEntry) {
+  async function changeEntry(entryId: string, change: (entry: SessionEntry) => SessionEntry) {
     const session = requireActiveSession();
-    const before = findEntry(session, exerciseId);
+    const before = findEntry(session, entryId);
     const after = settleEntry(change(before));
-    const entries = session.entries.map((e) => (e.exerciseId === exerciseId ? after : e));
-    let currentExerciseId = session.currentExerciseId;
-    // Finishing the exercise on screen moves on to the next pending one in queue order.
-    if (before.state === "pending" && after.state === "done" && currentExerciseId === exerciseId) {
-      currentExerciseId = pendingAfter(entries, exerciseId)[0]?.exerciseId ?? null;
+    const entries = session.entries.map((e) => (e.id === entryId ? after : e));
+    let { currentEntryId, returnToEntryId } = session;
+    // Finishing the exercise on screen moves on: back to the one left behind, else the first pending one.
+    if (before.state === "pending" && after.state === "done" && currentEntryId === entryId) {
+      currentEntryId = nextInQueue(entries, returnToEntryId ?? null, entryId)[0]?.id ?? null;
+      returnToEntryId = null;
     }
-    await commit({ ...data, activeSession: { ...session, entries, currentExerciseId } });
+    await commit({ ...data, activeSession: { ...session, entries, currentEntryId, returnToEntryId } });
   }
 
   return {
@@ -139,9 +139,11 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
         }),
         archived: current.archived,
       };
-      // A weight change made in settings applies to a running session straight away.
+      // A weight change made in settings applies to a running session straight away: pending entries
+      // use it, and if the exercise was already done this session, it wins over that session's result.
       let activeSession = data.activeSession;
       if (activeSession && exercise.weight !== undefined && exercise.weight !== current.weight) {
+        const entries = activeSession.entries.filter((e) => e.exerciseId === id);
         activeSession = {
           ...activeSession,
           entries: activeSession.entries.map((e) =>
@@ -149,6 +151,9 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
               ? { ...e, sessionWeight: exercise.weight }
               : e,
           ),
+          weightOverrides: entries.some((e) => e.state !== "pending")
+            ? { ...activeSession.weightOverrides, [id]: exercise.weight }
+            : activeSession.weightOverrides,
         };
       }
       await commit({
@@ -163,6 +168,9 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
 
     getExercise: (id: string) => findExercise(id),
 
+    /** How far the −/+ buttons move an exercise's weight. */
+    weightStep: (exerciseId: string) => findExercise(exerciseId).increment ?? DEFAULT_INCREMENT,
+
     // --- Routines ---
 
     async createRoutine(name: string, exerciseIds: string[] = []): Promise<Routine> {
@@ -176,18 +184,18 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       await replaceRoutine({ ...findRoutine(id), name: requireName(name) });
     },
 
+    /** Adds an exercise to the end of the routine. The same exercise may appear more than once. */
     async addExerciseToRoutine(routineId: string, exerciseId: string) {
       const routine = findRoutine(routineId);
       findExercise(exerciseId);
-      if (routine.exerciseIds.includes(exerciseId)) {
-        throw new CoreError("That exercise is already in this routine");
-      }
       await replaceRoutine({ ...routine, exerciseIds: [...routine.exerciseIds, exerciseId] });
     },
 
-    async removeExerciseFromRoutine(routineId: string, exerciseId: string) {
+    /** Removes the exercise at `position` (zero-based) from the routine. */
+    async removeExerciseFromRoutine(routineId: string, position: number) {
       const routine = findRoutine(routineId);
-      await replaceRoutine({ ...routine, exerciseIds: routine.exerciseIds.filter((id) => id !== exerciseId) });
+      if (!(position in routine.exerciseIds)) throw new CoreError("Position out of range");
+      await replaceRoutine({ ...routine, exerciseIds: routine.exerciseIds.filter((_, i) => i !== position) });
     },
 
     /** Moves the exercise at position `from` to position `to` (both zero-based). */
@@ -225,12 +233,14 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       const routine = findRoutine(routineId);
       const exercises = routine.exerciseIds.map(findExercise);
       if (exercises.length === 0) throw new CoreError("This routine has no exercises");
+      const entryIds = entryIdsFor(exercises.map((e) => e.id));
       const session: Session = {
         id: newId(),
         routineId: routine.id,
         routineName: routine.name,
         startedAt: now().toISOString(),
-        entries: exercises.map((exercise) => ({
+        entries: exercises.map((exercise, i) => ({
+          id: entryIds[i],
           exerciseId: exercise.id,
           exerciseName: exercise.name,
           type: exercise.type,
@@ -241,7 +251,8 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
           loggedSets: [],
           state: "pending",
         })),
-        currentExerciseId: exercises[0].id,
+        currentEntryId: entryIds[0],
+        returnToEntryId: null,
       };
       await commit({ ...data, activeSession: session });
       return session;
@@ -252,28 +263,32 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     /** The entry on screen, or null when every exercise is finished. */
     currentEntry(): SessionEntry | null {
       const session = data.activeSession;
-      if (!session?.currentExerciseId) return null;
-      return findEntry(session, session.currentExerciseId);
+      if (!session?.currentEntryId) return null;
+      return findEntry(session, session.currentEntryId);
     },
 
-    async setSessionWeight(exerciseId: string, weight: number) {
+    /** Finished entries other than the one on screen, in queue order. */
+    finishedEntries: () =>
+      data.activeSession?.entries.filter((e) => e.state === "done" && e.id !== data.activeSession?.currentEntryId) ?? [],
+
+    async setSessionWeight(entryId: string, weight: number) {
       requireWeight(weight);
-      await changeEntry(exerciseId, (entry) => {
+      await changeEntry(entryId, (entry) => {
         if (entry.sessionWeight === undefined) throw new CoreError("Bodyweight exercises have no weight");
         return { ...entry, sessionWeight: weight };
       });
     },
 
     /** Logs a set. The weight defaults to the session weight. */
-    async logSet(exerciseId: string, set: { reps: number; weight?: number }) {
-      await changeEntry(exerciseId, (entry) => ({
+    async logSet(entryId: string, set: { reps: number; weight?: number }) {
+      await changeEntry(entryId, (entry) => ({
         ...entry,
         loggedSets: [...entry.loggedSets, buildSet(entry, set.reps, set.weight ?? entry.sessionWeight)],
       }));
     },
 
-    async editSet(exerciseId: string, index: number, change: { reps?: number; weight?: number }) {
-      await changeEntry(exerciseId, (entry) => {
+    async editSet(entryId: string, index: number, change: { reps?: number; weight?: number }) {
+      await changeEntry(entryId, (entry) => {
         const set = entry.loggedSets[index];
         if (!set) throw new CoreError("No such set");
         const edited = buildSet(entry, change.reps ?? set.reps, change.weight ?? set.weight);
@@ -281,18 +296,25 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       });
     },
 
-    async removeSet(exerciseId: string, index: number) {
-      await changeEntry(exerciseId, (entry) => {
+    async removeSet(entryId: string, index: number) {
+      await changeEntry(entryId, (entry) => {
         if (!entry.loggedSets[index]) throw new CoreError("No such set");
         return { ...entry, loggedSets: entry.loggedSets.filter((_, i) => i !== index) };
       });
     },
 
-    /** Puts an exercise of the running session on screen, e.g. to correct a finished one. */
-    async goToExercise(exerciseId: string) {
+    /**
+     * Puts an entry of the running session on screen: jumps to another exercise, or reopens a finished
+     * one to correct it. Leaving an unfinished exercise remembers it, so it comes up next.
+     */
+    async goToEntry(entryId: string) {
       const session = requireActiveSession();
-      findEntry(session, exerciseId);
-      await commit({ ...data, activeSession: { ...session, currentExerciseId: exerciseId } });
+      findEntry(session, entryId);
+      if (entryId === session.currentEntryId) return;
+      const current = session.currentEntryId ? findEntry(session, session.currentEntryId) : null;
+      const returnToEntryId =
+        current?.state === "pending" ? current.id : session.returnToEntryId === entryId ? null : session.returnToEntryId;
+      await commit({ ...data, activeSession: { ...session, currentEntryId: entryId, returnToEntryId } });
     },
 
     // --- Session queue ---
@@ -300,29 +322,30 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     /** Whether "Skip for now" is available: the exercise on screen is pending and another one is too. */
     canSkip(): boolean {
       const session = data.activeSession;
-      if (!session?.currentExerciseId) return false;
-      const current = findEntry(session, session.currentExerciseId);
-      return current.state === "pending" && pendingAfter(session.entries, current.exerciseId).length > 0;
+      if (!session?.currentEntryId) return false;
+      const current = findEntry(session, session.currentEntryId);
+      return current.state === "pending" && pendingAfter(session.entries, current.id).length > 0;
     },
 
     /** Swaps the exercise on screen with the next pending one, so it comes back straight after it. */
     async skipCurrent() {
       const session = requireActiveSession();
-      const currentId = session.currentExerciseId;
-      const current = currentId ? findEntry(session, currentId) : null;
-      const next = current?.state === "pending" ? pendingAfter(session.entries, current.exerciseId)[0] : undefined;
+      const current = session.currentEntryId ? findEntry(session, session.currentEntryId) : null;
+      const next = current?.state === "pending" ? pendingAfter(session.entries, current.id)[0] : undefined;
       if (!current || !next) throw new CoreError("There's no other exercise to do first");
       const entries = session.entries.filter((e) => e !== current);
       entries.splice(entries.indexOf(next) + 1, 0, current);
-      await commit({ ...data, activeSession: { ...session, entries, currentExerciseId: next.exerciseId } });
+      await commit({
+        ...data,
+        activeSession: { ...session, entries, currentEntryId: next.id, returnToEntryId: current.id },
+      });
     },
 
     /** The pending exercises other than the one on screen, in the order they come up. */
     upNext(): SessionEntry[] {
       const session = data.activeSession;
       if (!session) return [];
-      if (!session.currentExerciseId) return session.entries.filter((e) => e.state === "pending");
-      return pendingAfter(session.entries, session.currentExerciseId);
+      return nextInQueue(session.entries, session.returnToEntryId ?? null, session.currentEntryId);
     },
 
     /** How many exercises are still to do. */
@@ -343,14 +366,18 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       const ended: Session = {
         ...session,
         endedAt: now().toISOString(),
-        currentExerciseId: null,
+        currentEntryId: null,
+        returnToEntryId: null,
         entries: session.entries.map((e) =>
           e.state === "pending" ? { ...e, state: e.loggedSets.length > 0 ? "incomplete" : "skipped" } : e,
         ),
       };
       const exercises = data.exercises.map((exercise) => {
-        const entry = ended.entries.find((e) => e.exerciseId === exercise.id);
-        if (entry?.state !== "done" || entry.sessionWeight === undefined) return exercise;
+        const override = ended.weightOverrides?.[exercise.id];
+        if (override !== undefined) return { ...exercise, weight: override };
+        const entry = decidingEntry(ended, exercise.id, ["done"]);
+        // An exercise switched to bodyweight during the session gets no weight back.
+        if (!entry || entry.sessionWeight === undefined || !isWeighted(exercise.type)) return exercise;
         return { ...exercise, weight: progressedWeight(entry, exercise) };
       });
       await commit({ ...data, exercises, activeSession: null, sessions: [...data.sessions, ended] });
@@ -379,14 +406,13 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     /**
      * The "Lower to X kg next time?" button: sets the exercise's weight to one increment below the
      * session weight (never below 0 kg) and records the choice on the entry. Only allowed for a
-     * below-range weighted entry from the exercise's most recent completed session.
+     * below-range weighted entry that is the exercise's most recent result.
      */
-    async lowerWeightAfterSession(sessionId: string, exerciseId: string) {
-      const exercise = findExercise(exerciseId);
-      const session = data.sessions.find((s) => s.id === sessionId);
-      if (!session) throw new CoreError(`Unknown session: ${sessionId}`);
-      const entry = findEntry(session, exerciseId);
-      if (findLastResult(exerciseId)?.entry !== entry) {
+    async lowerWeightAfterSession(sessionId: string, entryId: string) {
+      const session = findSession(sessionId);
+      const entry = findEntry(session, entryId);
+      const exercise = findExercise(entry.exerciseId);
+      if (findLastResult(exercise.id)?.entry !== entry) {
         throw new CoreError("Only the exercise's most recent session can lower its weight");
       }
       if (entry.sessionWeight === undefined || exercise.increment === undefined) {
@@ -402,26 +428,73 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       };
       await commit({
         ...data,
-        exercises: data.exercises.map((e) => (e.id === exerciseId ? { ...e, weight } : e)),
+        exercises: data.exercises.map((e) => (e.id === exercise.id ? { ...e, weight } : e)),
         sessions: data.sessions.map((s) => (s.id === sessionId ? updated : s)),
       });
     },
+
+    /** Whether "Lower to X kg next time?" was chosen for this entry. */
+    wasLowered: (sessionId: string, entryId: string) => findEntry(findSession(sessionId), entryId).lowered === true,
   };
+
+  function findSession(id: string): Session {
+    const session = data.sessions.find((s) => s.id === id);
+    if (!session) throw new CoreError(`Unknown session: ${id}`);
+    return session;
+  }
 
   /** The latest done or incomplete entry for the exercise across completed sessions. */
   function findLastResult(exerciseId: string): LastResult | null {
     for (let i = data.sessions.length - 1; i >= 0; i--) {
       const session = data.sessions[i];
-      const entry = session.entries.find(
-        (e) => e.exerciseId === exerciseId && (e.state === "done" || e.state === "incomplete"),
-      );
+      const entry = decidingEntry(session, exerciseId, ["done", "incomplete"]);
       if (entry) return { entry, date: session.startedAt };
     }
     return null;
   }
 }
 
+// --- Data ---
+
+/** Fills in fields added after the data was first saved. */
+function normalize(loaded: AppData | null): AppData {
+  const empty = emptyData();
+  if (!loaded) return empty;
+  const upgradeSession = (session: Session): Session => {
+    // Before entries had ids, each exercise appeared once and the session tracked `currentExerciseId`.
+    const legacy = session as Session & { currentExerciseId?: string | null };
+    const ids = entryIdsFor(session.entries.map((e) => e.exerciseId));
+    return {
+      ...session,
+      entries: session.entries.map((e, i) => ({ ...e, id: e.id ?? ids[i] })),
+      currentEntryId: session.currentEntryId ?? legacy.currentExerciseId ?? null,
+    };
+  };
+  return {
+    ...empty,
+    ...loaded,
+    settings: { ...empty.settings, ...loaded.settings },
+    activeSession: loaded.activeSession ? upgradeSession(loaded.activeSession) : null,
+    sessions: (loaded.sessions ?? []).map(upgradeSession),
+  };
+}
+
+/** Entry ids for exercises in queue order: the exercise id, then `#2`, `#3`… for repeats. */
+function entryIdsFor(exerciseIds: string[]): string[] {
+  const seen = new Map<string, number>();
+  return exerciseIds.map((id) => {
+    const count = (seen.get(id) ?? 0) + 1;
+    seen.set(id, count);
+    return count === 1 ? id : `${id}#${count}`;
+  });
+}
+
 // --- Progression rules ---
+
+/** The exercise's entry that counts for this session: its last one in queue order with one of `states`. */
+function decidingEntry(session: Session, exerciseId: string, states: SessionEntry["state"][]) {
+  return session.entries.findLast((e) => e.exerciseId === exerciseId && states.includes(e.state));
+}
 
 /** Every configured set was logged and reached the rep maximum plus one, at the session weight or higher. */
 function beatsRepRange(entry: SessionEntry): boolean {
@@ -450,31 +523,51 @@ const loweredWeight = (sessionWeight: number, increment: number) => Math.max(0, 
 
 function summarizeProgression(session: Session, exercises: Exercise[]): ProgressionSummary {
   const summary: ProgressionSummary = { increases: [], repRangeBeaten: [], belowRange: [] };
-  for (const entry of session.entries) {
-    const { exerciseId, exerciseName: name, sessionWeight } = entry;
-    const increment = exercises.find((e) => e.id === exerciseId)?.increment;
-    if (entry.state === "done" && beatsRepRange(entry)) {
-      if (sessionWeight === undefined) summary.repRangeBeaten.push({ exerciseId, name });
-      else if (increment !== undefined) {
-        summary.increases.push({ exerciseId, name, fromKg: sessionWeight, toKg: sessionWeight + increment });
+  const exerciseIds = [...new Set(session.entries.map((e) => e.exerciseId))];
+  for (const exerciseId of exerciseIds) {
+    const exercise = exercises.find((e) => e.id === exerciseId);
+    // A weight set in settings during the session replaces the automatic result.
+    if (!exercise || session.weightOverrides?.[exerciseId] !== undefined) continue;
+    const { increment } = exercise;
+    const name = session.entries.find((e) => e.exerciseId === exerciseId)!.exerciseName;
+    const done = decidingEntry(session, exerciseId, ["done"]);
+    if (done && beatsRepRange(done)) {
+      if (done.sessionWeight === undefined) summary.repRangeBeaten.push({ exerciseId, name });
+      else if (increment !== undefined && isWeighted(exercise.type)) {
+        summary.increases.push({ exerciseId, name, fromKg: done.sessionWeight, toKg: done.sessionWeight + increment });
       }
     }
-    if ((entry.state === "done" || entry.state === "incomplete") && isBelowRange(entry)) {
-      summary.belowRange.push(
-        sessionWeight !== undefined && increment !== undefined
-          ? { exerciseId, name, lowerToKg: loweredWeight(sessionWeight, increment) }
-          : { exerciseId, name },
-      );
+    const last = decidingEntry(session, exerciseId, ["done", "incomplete"]);
+    if (last && isBelowRange(last)) {
+      const weighted = last.sessionWeight !== undefined && increment !== undefined && isWeighted(exercise.type);
+      summary.belowRange.push({
+        entryId: last.id,
+        exerciseId,
+        name,
+        ...(weighted && { lowerToKg: loweredWeight(last.sessionWeight!, increment!) }),
+      });
     }
   }
   return summary;
 }
 
-/** The pending entries other than `exerciseId`, in queue order starting after it and wrapping round to the start. */
-function pendingAfter(entries: SessionEntry[], exerciseId: string): SessionEntry[] {
-  const index = entries.findIndex((e) => e.exerciseId === exerciseId);
+// --- Queue rules ---
+
+/** The pending entries other than `entryId`, in queue order starting after it and wrapping round to the start. */
+function pendingAfter(entries: SessionEntry[], entryId: string): SessionEntry[] {
+  const index = entries.findIndex((e) => e.id === entryId);
   const rotated = [...entries.slice(index + 1), ...entries.slice(0, index)];
   return rotated.filter((e) => e.state === "pending");
+}
+
+/**
+ * The pending entries in the order they come up: the one the user left behind first,
+ * then the rest in queue order. Leaves out `excludeId` (the entry on screen).
+ */
+function nextInQueue(entries: SessionEntry[], returnToId: string | null, excludeId: string | null): SessionEntry[] {
+  const pending = entries.filter((e) => e.state === "pending" && e.id !== excludeId);
+  const returnTo = pending.find((e) => e.id === returnToId);
+  return returnTo ? [returnTo, ...pending.filter((e) => e !== returnTo)] : pending;
 }
 
 /** Marks an entry done once it has all its sets, and pending again if a set is removed. */

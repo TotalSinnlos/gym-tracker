@@ -8,7 +8,7 @@ export function RoutineEditor({ routineId }: { routineId: string }) {
   const core = useCore();
   const routine = core.getRoutine(routineId);
   const exercises = core.routineExercises(routineId);
-  const available = core.listExercises().filter((e) => !routine.exerciseIds.includes(e.id));
+  const available = core.listExercises();
   const [name, setName] = useState(routine.name);
   const { error, run } = useAction();
 
@@ -26,7 +26,8 @@ export function RoutineEditor({ routineId }: { routineId: string }) {
       {exercises.length === 0 && <p className="muted">No exercises yet. Add some from the list below.</p>}
       <ol className="stack routine-list">
         {exercises.map((exercise, index) => (
-          <li key={exercise.id} className="card routine-item">
+          // The same exercise can appear twice, so its position is the key.
+          <li key={index} className="card routine-item">
             <span className="grow">
               <strong>
                 {index + 1}. {exercise.name}
@@ -52,7 +53,7 @@ export function RoutineEditor({ routineId }: { routineId: string }) {
             <button
               className="icon"
               aria-label={`Remove ${exercise.name} from routine`}
-              onClick={() => run(() => core.removeExerciseFromRoutine(routineId, exercise.id))}
+              onClick={() => run(() => core.removeExerciseFromRoutine(routineId, index))}
             >
               ✕
             </button>
@@ -70,7 +71,10 @@ export function RoutineEditor({ routineId }: { routineId: string }) {
               onClick={() => run(() => core.addExerciseToRoutine(routineId, exercise.id))}
             >
               <strong>+ {exercise.name}</strong>
-              <span className="muted">{describeExercise(exercise)}</span>
+              <span className="muted">
+                {describeExercise(exercise)}
+                {routine.exerciseIds.includes(exercise.id) && " · already in routine, adds it again"}
+              </span>
             </button>
           ))}
         </>

@@ -129,9 +129,9 @@ describe("below range", () => {
       [pullUp.id]: [5, 9],
     });
     expect(summary.belowRange).toEqual([
-      { exerciseId: press.id, name: "Leg press", lowerToKg: 57.5 },
-      { exerciseId: curl.id, name: "Curl", lowerToKg: 10 },
-      { exerciseId: pullUp.id, name: "Pull-ups" },
+      { entryId: press.id, exerciseId: press.id, name: "Leg press", lowerToKg: 57.5 },
+      { entryId: curl.id, exerciseId: curl.id, name: "Curl", lowerToKg: 10 },
+      { entryId: pullUp.id, exerciseId: pullUp.id, name: "Pull-ups" },
     ]);
   });
 

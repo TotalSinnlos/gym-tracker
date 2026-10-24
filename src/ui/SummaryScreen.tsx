@@ -1,7 +1,6 @@
 import type { EndSessionResult, EntryState, ProgressionSummary } from "../core";
 import { useCore } from "./CoreContext";
-import { formatKg, formatReps } from "./format";
-import { formatEntryWeight } from "./SessionScreen";
+import { formatEntryWeight, formatKg, formatReps } from "./format";
 import { useAction } from "./useAction";
 
 const STATE_LABELS: Record<EntryState, string> = {
@@ -47,9 +46,6 @@ export function SummaryScreen({ result, onDone }: { result: EndSessionResult; on
 function Progression({ sessionId, summary }: { sessionId: string; summary: ProgressionSummary }) {
   const core = useCore();
   const { error, run } = useAction();
-  // Read the saved session so a lowering choice shows once it's recorded.
-  const saved = core.listSessions().find((s) => s.id === sessionId);
-  const wasLowered = (exerciseId: string) => saved?.entries.find((e) => e.exerciseId === exerciseId)?.lowered === true;
   const { increases, repRangeBeaten, belowRange } = summary;
   if (increases.length + repRangeBeaten.length + belowRange.length === 0) return null;
 
@@ -70,14 +66,14 @@ function Progression({ sessionId, summary }: { sessionId: string; summary: Progr
         </div>
       ))}
       {belowRange.map((item) => (
-        <div key={item.exerciseId} className="card">
+        <div key={item.entryId} className="card">
           <strong>↓ {item.name}</strong>
           <span className="muted">A set was below the rep range.</span>
           {item.lowerToKg !== undefined &&
-            (wasLowered(item.exerciseId) ? (
+            (core.wasLowered(sessionId, item.entryId) ? (
               <span>Lowered to {formatKg(item.lowerToKg)} for next time.</span>
             ) : (
-              <button className="secondary" onClick={() => run(() => core.lowerWeightAfterSession(sessionId, item.exerciseId))}>
+              <button className="secondary" onClick={() => run(() => core.lowerWeightAfterSession(sessionId, item.entryId))}>
                 Lower to {formatKg(item.lowerToKg)} next time?
               </button>
             ))}

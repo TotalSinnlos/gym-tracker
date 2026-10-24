@@ -8,3 +8,6 @@ export const formatKg = (kg: number) => `${kg.toLocaleString("en", { maximumFrac
 export const formatSet = (set: SetRecord) => (set.weight === undefined ? `${set.reps} reps` : `${set.reps} × ${formatKg(set.weight)}`);
 
 export const formatReps = (entry: SessionEntry) => entry.loggedSets.map((s) => s.reps).join(" / ");
+
+export const formatEntryWeight = (entry: SessionEntry) =>
+  entry.sessionWeight === undefined ? "Bodyweight" : formatKg(entry.sessionWeight);

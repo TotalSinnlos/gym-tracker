@@ -110,7 +110,7 @@ describe("routines", () => {
     expect(core.routineExercises(routine.id).map((e) => e.name)).toEqual(["C", "A", "B"]);
     await core.moveExerciseInRoutine(routine.id, 0, 1);
     expect(core.routineExercises(routine.id).map((e) => e.name)).toEqual(["A", "C", "B"]);
-    await core.removeExerciseFromRoutine(routine.id, c.id);
+    await core.removeExerciseFromRoutine(routine.id, 1);
     expect(core.routineExercises(routine.id).map((e) => e.name)).toEqual(["A", "B"]);
     await core.renameRoutine(routine.id, "Upper body");
     expect(core.getRoutine(routine.id).name).toBe("Upper body");
@@ -119,17 +119,26 @@ describe("routines", () => {
   it("keeps the exercise when it's removed from a routine", async () => {
     const { core, a } = await withExercises();
     const routine = await core.createRoutine("Day", [a.id]);
-    await core.removeExerciseFromRoutine(routine.id, a.id);
+    await core.removeExerciseFromRoutine(routine.id, 0);
     expect(core.getExercise(a.id).name).toBe("A");
   });
 
-  it("rejects duplicates, unknown exercises and out-of-range moves", async () => {
+  it("allows the same exercise twice and removes by position", async () => {
+    const { core, a, b } = await withExercises();
+    const routine = await core.createRoutine("Day", [a.id, b.id]);
+    await core.addExerciseToRoutine(routine.id, a.id);
+    expect(core.routineExercises(routine.id).map((e) => e.name)).toEqual(["A", "B", "A"]);
+    await core.removeExerciseFromRoutine(routine.id, 0);
+    expect(core.routineExercises(routine.id).map((e) => e.name)).toEqual(["B", "A"]);
+  });
+
+  it("rejects unknown exercises and out-of-range positions", async () => {
     const { core, a } = await withExercises();
     const routine = await core.createRoutine("Day", [a.id]);
-    await expect(core.addExerciseToRoutine(routine.id, a.id)).rejects.toThrow(CoreError);
     await expect(core.addExerciseToRoutine(routine.id, "nope")).rejects.toThrow(CoreError);
     await expect(core.createRoutine("Other", ["nope"])).rejects.toThrow(CoreError);
     await expect(core.moveExerciseInRoutine(routine.id, 0, 5)).rejects.toThrow(CoreError);
+    await expect(core.removeExerciseFromRoutine(routine.id, 3)).rejects.toThrow(CoreError);
   });
 });
 

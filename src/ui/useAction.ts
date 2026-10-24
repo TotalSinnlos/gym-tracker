@@ -15,5 +15,5 @@ export function useAction() {
     }
   }
 
-  return { error, run, clearError: () => setError(null) };
+  return { error, run };
 }

@@ -36,6 +36,8 @@ export type EntryState = "pending" | "done" | "incomplete" | "skipped";
 
 /** One exercise within a session, with the exercise's settings as they were when the session started. */
 export interface SessionEntry {
+  /** Unique within the session: the exercise id, or `<exercise id>#2`, `#3`… when it appears more than once. */
+  id: string;
   exerciseId: string;
   exerciseName: string;
   type: ExerciseType;
@@ -59,8 +61,12 @@ export interface Session {
   endedAt?: string;
   /** In queue order. */
   entries: SessionEntry[];
-  /** The exercise on screen, or null once nothing is pending. */
-  currentExerciseId: string | null;
+  /** The entry on screen, or null once nothing is pending. */
+  currentEntryId: string | null;
+  /** The pending entry the user jumped or skipped away from; it comes up next. */
+  returnToEntryId?: string | null;
+  /** Weights set in settings for an exercise after it was already done in this session; they win at the end. */
+  weightOverrides?: Record<string, number>;
 }
 
 export interface AppData {

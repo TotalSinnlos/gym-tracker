@@ -2,11 +2,12 @@ import { useState } from "react";
 import { type Exercise, isWeighted } from "../core";
 import { useCore } from "./CoreContext";
 import { ExerciseForm, TYPE_LABELS } from "./ExerciseForm";
+import { formatKg } from "./format";
 
 export function describeExercise(exercise: Exercise) {
   const reps = `${exercise.sets} × ${exercise.repMin}–${exercise.repMax}`;
   if (!isWeighted(exercise.type)) return `${TYPE_LABELS[exercise.type]} · ${reps}`;
-  return `${TYPE_LABELS[exercise.type]} · ${exercise.weight} kg (+${exercise.increment}) · ${reps}`;
+  return `${TYPE_LABELS[exercise.type]} · ${formatKg(exercise.weight!)} (+${exercise.increment}) · ${reps}`;
 }
 
 /** All exercises, each tappable to edit, plus a form to add new ones. */

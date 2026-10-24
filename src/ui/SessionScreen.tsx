@@ -19,7 +19,7 @@ export function SessionScreen({ onLeave, onEnded }: Props) {
   if (!session) return null;
   const pending = core.pendingCount();
   const upNext = core.upNext();
-  const finished = session.entries.filter((e) => e.state === "done" && e.exerciseId !== current?.exerciseId);
+  const finished = core.finishedEntries();
 
   async function end() {
     let result: EndSessionResult | undefined;
@@ -38,7 +38,7 @@ export function SessionScreen({ onLeave, onEnded }: Props) {
       </header>
 
       {current ? (
-        <CurrentExercise key={current.exerciseId} entry={current} />
+        <CurrentExercise key={current.id} entry={current} />
       ) : (
         <section className="card center">
           <h2>All exercises done!</h2>
@@ -57,9 +57,9 @@ export function SessionScreen({ onLeave, onEnded }: Props) {
           <h3>Up next</h3>
           {upNext.map((entry) => (
             <button
-              key={entry.exerciseId}
+              key={entry.id}
               className="card list-item"
-              onClick={() => run(() => core.goToExercise(entry.exerciseId))}
+              onClick={() => run(() => core.goToEntry(entry.id))}
             >
               <strong>{entry.exerciseName}</strong>
               <span className="muted">
@@ -77,9 +77,9 @@ export function SessionScreen({ onLeave, onEnded }: Props) {
           <h3>Finished</h3>
           {finished.map((entry) => (
             <button
-              key={entry.exerciseId}
+              key={entry.id}
               className="card list-item"
-              onClick={() => run(() => core.goToExercise(entry.exerciseId))}
+              onClick={() => run(() => core.goToEntry(entry.id))}
             >
               <strong>✓ {entry.exerciseName}</strong>
               <span className="muted">{formatReps(entry)} reps · tap to correct</span>
@@ -119,7 +119,7 @@ export function SessionScreen({ onLeave, onEnded }: Props) {
 function CurrentExercise({ entry }: { entry: SessionEntry }) {
   const core = useCore();
   const weighted = entry.sessionWeight !== undefined;
-  const increment = core.getExercise(entry.exerciseId).increment ?? 2.5;
+  const step = core.weightStep(entry.exerciseId);
   const last = core.lastResult(entry.exerciseId);
   const weightChange = core.weightChangeSinceLastTime(entry.exerciseId);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
@@ -146,8 +146,8 @@ function CurrentExercise({ entry }: { entry: SessionEntry }) {
         <WeightStepper
           key={entry.sessionWeight}
           weight={entry.sessionWeight!}
-          step={increment}
-          onChange={(weight) => run(() => core.setSessionWeight(entry.exerciseId, weight))}
+          step={step}
+          onChange={(weight) => run(() => core.setSessionWeight(entry.id, weight))}
         />
       )}
 
@@ -163,7 +163,7 @@ function CurrentExercise({ entry }: { entry: SessionEntry }) {
                   initialReps={String(set.reps)}
                   initialWeight={set.weight}
                   onSubmit={async (reps, weight) => {
-                    await core.editSet(entry.exerciseId, index, { reps, weight });
+                    await core.editSet(entry.id, index, { reps, weight });
                     setEditingIndex(null);
                   }}
                   onCancel={() => setEditingIndex(null)}
@@ -177,7 +177,7 @@ function CurrentExercise({ entry }: { entry: SessionEntry }) {
                 <button
                   className="icon"
                   aria-label={`Remove set ${index + 1}`}
-                  onClick={() => run(() => core.removeSet(entry.exerciseId, index))}
+                  onClick={() => run(() => core.removeSet(entry.id, index))}
                 >
                   ✕
                 </button>
@@ -197,7 +197,7 @@ function CurrentExercise({ entry }: { entry: SessionEntry }) {
           initialReps=""
           initialWeight={entry.sessionWeight}
           autoFocus
-          onSubmit={(reps, weight) => core.logSet(entry.exerciseId, { reps, weight })}
+          onSubmit={(reps, weight) => core.logSet(entry.id, { reps, weight })}
         />
       )}
 
@@ -290,8 +290,4 @@ function SetForm({ label, submitLabel, weighted, initialReps, initialWeight, aut
       </div>
     </form>
   );
-}
-
-export function formatEntryWeight(entry: SessionEntry) {
-  return entry.sessionWeight === undefined ? "Bodyweight" : formatKg(entry.sessionWeight);
 }
