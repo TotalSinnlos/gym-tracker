@@ -140,7 +140,7 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 - **Exercise type**: one of:
   - `machine` or `free weight`: weighted types, which also have a current weight and an increment. They behave identically; the type is a label for display and export.
   - `bodyweight`: has no weight and records reps only.
-- **Routine**: a named, ordered list of references to exercises. An exercise can appear in many routines. Routines hold no weights or history.
+- **Routine**: a named, ordered list of references to exercises. An exercise can appear in many routines, and more than once in the same routine (each occurrence becomes its own session entry; the last finished one decides the new weight). Routines hold no weights or history.
 - **Session**: one workout. It records the routine it was started from, its start and end times, and one **Session entry** per exercise in the routine. A session's date is its start time.
 - **Session entry**: an exercise's record within a session. It holds:
   - a session weight (the working weight that day, absent for bodyweight exercises);
@@ -164,12 +164,12 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 
 ### Session queue behaviour
 
-- When a session starts, the queue holds the routine's exercises in routine order, and the first one is current. The session keeps this snapshot of the routine and of each exercise's sets and rep range. Changes to them in settings apply from the next session. Changes to an exercise's current weight in settings update the session weight of its pending entry immediately.
+- When a session starts, the queue holds the routine's exercises in routine order, and the first one is current. The session keeps this snapshot of the routine and of each exercise's sets and rep range. Changes to them in settings apply from the next session. Changes to an exercise's current weight in settings update the session weight of its pending entries immediately; if the exercise was already done in this session, the weight set in settings wins at the end instead of the session's result. An exercise switched to bodyweight during a session gets no weight written back.
 - Only one session can be active at a time.
 - "Skip for now" swaps the current exercise with the next pending exercise, so the skipped exercise comes back immediately after it.
 - Skipping is only available while at least one other exercise is pending. When the current exercise is the only one left, the UI hides "Skip for now", and the user either does it or taps "End session" (which marks it skipped). The core rejects a skip command in that state.
-- "Jump to" makes any pending exercise current. The exercise that was current stays in the queue, keeping its position.
-- When an exercise's last configured set is logged, the entry becomes `done` and the next pending exercise becomes current. The user can still go back and edit a done entry during the session.
+- "Jump to" makes any pending exercise current. The exercise that was current stays in the queue, keeping its position, and is remembered as the one to go back to (as is an exercise skipped with "Skip for now").
+- When an exercise's last configured set is logged, the entry becomes `done` and the exercise the user jumped or skipped away from becomes current again; otherwise the first pending exercise in queue order does. "Up next" lists pending exercises in that same order. The user can still go back and edit a done entry during the session.
 - An exercise jumped away from after logging some of its sets stays pending, keeps its logged sets, and remains in the "Up next" list.
 - "End session" asks for confirmation when any entry is still pending.
 - Ending the session marks each remaining `pending` entry as `incomplete` if it has at least one set, and as `skipped` if it has none.
