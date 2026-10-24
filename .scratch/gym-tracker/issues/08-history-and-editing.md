@@ -6,11 +6,11 @@
 
 **Status:** ready-for-agent
 
-- [ ] History lists past sessions, newest first, with their date and routine
-- [ ] The session detail shows every exercise's state, sets, weights and reps
-- [ ] Sets in a past session can be corrected
-- [ ] Correcting the most recent completed session recalculates the exercise's current weight
-- [ ] A recorded lowering choice is respected on recalculation while the entry is still below range
-- [ ] Correcting an older session doesn't change current weights
-- [ ] A session can be deleted after confirmation
-- [ ] Core tests cover recalculation, non-recalculation for older sessions, the lowering choice and deletion
+- [x] History lists past sessions, newest first, with their date and routine
+- [x] The session detail shows every exercise's state, sets, weights and reps
+- [x] Sets in a past session can be corrected
+- [x] Correcting the most recent completed session recalculates the exercise's current weight
+- [x] A recorded lowering choice is respected on recalculation while the entry is still below range
+- [x] Correcting an older session doesn't change current weights
+- [x] A session can be deleted after confirmation
+- [x] Core tests cover recalculation, non-recalculation for older sessions, the lowering choice and deletion

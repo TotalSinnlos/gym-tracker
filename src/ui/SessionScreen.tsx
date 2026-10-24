@@ -247,7 +247,7 @@ interface SetFormProps {
   onCancel?: () => void;
 }
 
-function SetForm({ label, submitLabel, weighted, initialReps, initialWeight, autoFocus, onSubmit, onCancel }: SetFormProps) {
+export function SetForm({ label, submitLabel, weighted, initialReps, initialWeight, autoFocus, onSubmit, onCancel }: SetFormProps) {
   const [reps, setReps] = useState(initialReps);
   const [weight, setWeight] = useState(initialWeight === undefined ? "" : String(initialWeight));
   const { error, run } = useAction();

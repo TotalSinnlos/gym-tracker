@@ -488,6 +488,57 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     /** Completed sessions, newest first. */
     listSessions: () => [...data.sessions].reverse(),
 
+    // --- History ---
+
+    /** A completed session. */
+    getSession: (id: string) => findSession(id),
+
+    /**
+     * Whether correcting this entry works out the exercise's current weight again: it must count for the
+     * weight in the exercise's most recent completed session (see `editPastSet`).
+     */
+    editRecalculatesWeight: (sessionId: string, entryId: string) =>
+      recalculates(findSession(sessionId), findEntry(findSession(sessionId), entryId)),
+
+    /**
+     * Corrects a set's reps or weight in a completed session, checked like a set logged during one. Entry
+     * states stay as they were. When the entry counts for the weight in the exercise's most recent completed
+     * session, the exercise's current weight is worked out again as if that session had just ended (see
+     * `recalculatedWeight`). Correcting an older session, or another entry, only fixes the record.
+     * Waits until no session is running, so a running session's weights don't shift under it.
+     */
+    async editPastSet(sessionId: string, entryId: string, index: number, change: { reps?: number; weight?: number }) {
+      if (data.activeSession) throw new CoreError("Finish the running session before correcting history");
+      const session = findSession(sessionId);
+      const entry = findEntry(session, entryId);
+      const set = entry.loggedSets[index];
+      if (!set) throw new CoreError("No such set");
+      const edited = buildSet(entry, change.reps ?? set.reps, change.weight ?? set.weight);
+      const updated: Session = {
+        ...session,
+        entries: session.entries.map((e) =>
+          e === entry ? { ...e, loggedSets: e.loggedSets.map((s, i) => (i === index ? edited : s)) } : e,
+        ),
+      };
+      const exercise = data.exercises.find((e) => e.id === entry.exerciseId);
+      const weight = exercise && recalculates(session, entry) ? recalculatedWeight(updated, exercise) : undefined;
+      await commit({
+        ...data,
+        exercises: data.exercises.map((e) => (e === exercise && weight !== undefined ? { ...e, weight } : e)),
+        sessions: data.sessions.map((s) => (s.id === sessionId ? updated : s)),
+      });
+    },
+
+    /**
+     * Deletes a completed session. Current weights stay as they are: deleting only removes the record.
+     * Waits until no session is running.
+     */
+    async deleteSession(id: string) {
+      if (data.activeSession) throw new CoreError("Finish the running session before deleting from history");
+      findSession(id);
+      await commit({ ...data, sessions: data.sessions.filter((s) => s.id !== id) });
+    },
+
     // --- Progression ---
 
     /** Last time's results for an exercise, or null if it has never been done. */
@@ -610,6 +661,16 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       if (entry) return { entry, date: session.startedAt };
     }
     return null;
+  }
+
+  /**
+   * Whether the entry counts for its exercise's weight in the exercise's most recent completed session:
+   * it decided the weight when the session ended, or it is the result a lowering is recorded on.
+   */
+  function recalculates(session: Session, entry: SessionEntry): boolean {
+    const last = findLastResult(entry.exerciseId);
+    if (!last || !session.entries.includes(last.entry)) return false;
+    return entry === last.entry || entry === decidingEntry(session, entry.exerciseId, ["done"]);
   }
 }
 
@@ -801,6 +862,26 @@ function progressedWeight(entry: SessionEntry, exercise: Exercise): number {
 }
 
 const loweredWeight = (sessionWeight: number, increment: number) => Math.max(0, sessionWeight - increment);
+
+/**
+ * The exercise's current weight worked out again from a (corrected) session, as if it had just ended.
+ * In order: a "lower weight" choice, while its entry is still below range; a weight set in settings during
+ * the session; the done entry's progression. Undefined leaves the weight as it is: bodyweight exercises
+ * (also ones switched to or from bodyweight since), and an exercise only incomplete that session, which
+ * ending the session didn't change either, unless a lowering on it no longer applies.
+ */
+function recalculatedWeight(session: Session, exercise: Exercise): number | undefined {
+  if (!isWeighted(exercise.type) || exercise.increment === undefined) return undefined;
+  const last = decidingEntry(session, exercise.id, ["done", "incomplete"]);
+  if (last?.sessionWeight === undefined) return undefined;
+  if (last.lowered && isBelowRange(last)) return loweredWeight(last.sessionWeight, exercise.increment);
+  const override = session.weightOverrides?.[exercise.id];
+  if (override !== undefined) return override;
+  const done = decidingEntry(session, exercise.id, ["done"]);
+  if (done?.sessionWeight !== undefined) return progressedWeight(done, exercise);
+  // Undoing the lowering leaves the weight where the session left it: at its session weight.
+  return last.lowered ? last.sessionWeight : undefined;
+}
 
 function summarizeProgression(session: Session, exercises: Exercise[]): ProgressionSummary {
   const summary: ProgressionSummary = { increases: [], repRangeBeaten: [], belowRange: [] };
