@@ -16,6 +16,8 @@ export const DEFAULT_SETS = 2;
 export const DEFAULT_REP_MIN = 9;
 export const DEFAULT_REP_MAX = 12;
 export const DEFAULT_INCREMENT = 2.5;
+/** A session started longer ago than this was probably forgotten (see `isSessionStale`). */
+export const STALE_SESSION_HOURS = 6;
 
 /** Thrown when a command is given input the rules don't allow. */
 export class CoreError extends Error {}
@@ -108,6 +110,40 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       returnToEntryId = null;
     }
     await commit({ ...data, activeSession: { ...session, entries, currentEntryId, returnToEntryId } });
+  }
+
+  /** Ends the active session (see `endSession`), recording `endedAt` as when it ended. */
+  async function endSessionAt(endedAt: Date): Promise<EndSessionResult> {
+    const session = requireActiveSession();
+    if (session.entries.every((e) => e.loggedSets.length === 0)) {
+      await commit({ ...data, activeSession: null });
+      return { session: null };
+    }
+    const ended: Session = {
+      ...session,
+      endedAt: endedAt.toISOString(),
+      currentEntryId: null,
+      returnToEntryId: null,
+      entries: session.entries.map((e) =>
+        e.state === "pending" ? { ...e, state: e.loggedSets.length > 0 ? "incomplete" : "skipped" } : e,
+      ),
+    };
+    const exercises = data.exercises.map((exercise) => {
+      const override = ended.weightOverrides?.[exercise.id];
+      if (override !== undefined) return { ...exercise, weight: override };
+      const entry = decidingEntry(ended, exercise.id, ["done"]);
+      // An exercise switched to bodyweight during the session gets no weight back.
+      if (!entry || entry.sessionWeight === undefined || !isWeighted(exercise.type)) return exercise;
+      return { ...exercise, weight: progressedWeight(entry, exercise) };
+    });
+    await commit({ ...data, exercises, activeSession: null, sessions: [...data.sessions, ended] });
+    return { session: ended, summary: summarizeProgression(ended, data.exercises) };
+  }
+
+  function isStale(): boolean {
+    const session = data.activeSession;
+    if (!session) return false;
+    return now().getTime() - new Date(session.startedAt).getTime() > STALE_SESSION_HOURS * 60 * 60 * 1000;
   }
 
   return {
@@ -357,31 +393,22 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
      * plus one increment when they qualify (see "Progression rules" below).
      * A session with nothing logged is discarded.
      */
-    async endSession(): Promise<EndSessionResult> {
+    endSession: () => endSessionAt(now()),
+
+    // --- Forgotten sessions ---
+
+    /** Whether the running session started more than 6 hours ago, so the user probably forgot to end it. */
+    isSessionStale: () => isStale(),
+
+    /**
+     * "End it" for a forgotten session: saved (or discarded) exactly like `endSession`, but dated by its
+     * start. Its `endedAt` is the start time too: we don't know when the workout really finished, and
+     * "now" may be many hours later, even the next day.
+     */
+    async endStaleSession(): Promise<EndSessionResult> {
       const session = requireActiveSession();
-      if (session.entries.every((e) => e.loggedSets.length === 0)) {
-        await commit({ ...data, activeSession: null });
-        return { session: null };
-      }
-      const ended: Session = {
-        ...session,
-        endedAt: now().toISOString(),
-        currentEntryId: null,
-        returnToEntryId: null,
-        entries: session.entries.map((e) =>
-          e.state === "pending" ? { ...e, state: e.loggedSets.length > 0 ? "incomplete" : "skipped" } : e,
-        ),
-      };
-      const exercises = data.exercises.map((exercise) => {
-        const override = ended.weightOverrides?.[exercise.id];
-        if (override !== undefined) return { ...exercise, weight: override };
-        const entry = decidingEntry(ended, exercise.id, ["done"]);
-        // An exercise switched to bodyweight during the session gets no weight back.
-        if (!entry || entry.sessionWeight === undefined || !isWeighted(exercise.type)) return exercise;
-        return { ...exercise, weight: progressedWeight(entry, exercise) };
-      });
-      await commit({ ...data, exercises, activeSession: null, sessions: [...data.sessions, ended] });
-      return { session: ended, summary: summarizeProgression(ended, data.exercises) };
+      if (!isStale()) throw new CoreError("This session is still recent; end it normally");
+      return endSessionAt(new Date(session.startedAt));
     },
 
     /** Completed sessions, newest first. */

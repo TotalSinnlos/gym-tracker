@@ -10,4 +10,4 @@
 - [ ] "End it" saves the session with its start date, and "Continue" resumes it
 - [ ] Sessions younger than 6 hours resume without a prompt
 - [ ] A new version deployed during an active session doesn't activate until the session has ended, and then applies on the next app open
-- [ ] Core tests cover the stale-session query (using a controllable clock)
+- [x] Core tests cover the stale-session query (using a controllable clock)
