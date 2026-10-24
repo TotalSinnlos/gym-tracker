@@ -18,6 +18,7 @@ export function SessionScreen({ onLeave, onEnded }: Props) {
 
   if (!session) return null;
   const pending = core.pendingCount();
+  const upNext = core.upNext();
   const finished = session.entries.filter((e) => e.state === "done" && e.exerciseId !== current?.exerciseId);
 
   async function end() {
@@ -42,6 +43,32 @@ export function SessionScreen({ onLeave, onEnded }: Props) {
         <section className="card center">
           <h2>All exercises done!</h2>
           <p className="muted">Correct anything below, or end the session.</p>
+        </section>
+      )}
+
+      {core.canSkip() && (
+        <button className="secondary wide" onClick={() => run(() => core.skipCurrent())}>
+          Skip for now
+        </button>
+      )}
+
+      {upNext.length > 0 && (
+        <section className="stack">
+          <h3>Up next</h3>
+          {upNext.map((entry) => (
+            <button
+              key={entry.exerciseId}
+              className="card list-item"
+              onClick={() => run(() => core.goToExercise(entry.exerciseId))}
+            >
+              <strong>{entry.exerciseName}</strong>
+              <span className="muted">
+                {entry.loggedSets.length > 0
+                  ? `${entry.loggedSets.length} of ${entry.sets} sets logged · tap to continue`
+                  : "Tap to do this now"}
+              </span>
+            </button>
+          ))}
         </section>
       )}
 

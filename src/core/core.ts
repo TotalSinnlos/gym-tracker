@@ -88,9 +88,9 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     const after = settleEntry(change(before));
     const entries = session.entries.map((e) => (e.exerciseId === exerciseId ? after : e));
     let currentExerciseId = session.currentExerciseId;
-    // Finishing the exercise on screen moves on to the next pending one.
+    // Finishing the exercise on screen moves on to the next pending one in queue order.
     if (before.state === "pending" && after.state === "done" && currentExerciseId === exerciseId) {
-      currentExerciseId = entries.find((e) => e.state === "pending")?.exerciseId ?? null;
+      currentExerciseId = pendingAfter(entries, exerciseId)[0]?.exerciseId ?? null;
     }
     await commit({ ...data, activeSession: { ...session, entries, currentExerciseId } });
   }
@@ -280,6 +280,36 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       await commit({ ...data, activeSession: { ...session, currentExerciseId: exerciseId } });
     },
 
+    // --- Session queue ---
+
+    /** Whether "Skip for now" is available: the exercise on screen is pending and another one is too. */
+    canSkip(): boolean {
+      const session = data.activeSession;
+      if (!session?.currentExerciseId) return false;
+      const current = findEntry(session, session.currentExerciseId);
+      return current.state === "pending" && pendingAfter(session.entries, current.exerciseId).length > 0;
+    },
+
+    /** Swaps the exercise on screen with the next pending one, so it comes back straight after it. */
+    async skipCurrent() {
+      const session = requireActiveSession();
+      const currentId = session.currentExerciseId;
+      const current = currentId ? findEntry(session, currentId) : null;
+      const next = current?.state === "pending" ? pendingAfter(session.entries, current.exerciseId)[0] : undefined;
+      if (!current || !next) throw new CoreError("There's no other exercise to do first");
+      const entries = session.entries.filter((e) => e !== current);
+      entries.splice(entries.indexOf(next) + 1, 0, current);
+      await commit({ ...data, activeSession: { ...session, entries, currentExerciseId: next.exerciseId } });
+    },
+
+    /** The pending exercises other than the one on screen, in the order they come up. */
+    upNext(): SessionEntry[] {
+      const session = data.activeSession;
+      if (!session) return [];
+      if (!session.currentExerciseId) return session.entries.filter((e) => e.state === "pending");
+      return pendingAfter(session.entries, session.currentExerciseId);
+    },
+
     /** How many exercises are still to do. */
     pendingCount: () => data.activeSession?.entries.filter((e) => e.state === "pending").length ?? 0,
 
@@ -314,6 +344,13 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     /** Completed sessions, newest first. */
     listSessions: () => [...data.sessions].reverse(),
   };
+}
+
+/** The pending entries other than `exerciseId`, in queue order starting after it and wrapping round to the start. */
+function pendingAfter(entries: SessionEntry[], exerciseId: string): SessionEntry[] {
+  const index = entries.findIndex((e) => e.exerciseId === exerciseId);
+  const rotated = [...entries.slice(index + 1), ...entries.slice(0, index)];
+  return rotated.filter((e) => e.state === "pending");
 }
 
 /** Marks an entry done once it has all its sets, and pending again if a set is removed. */
