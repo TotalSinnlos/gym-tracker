@@ -4,9 +4,9 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-human
+**Status:** done
 
-- [ ] Node.js (current LTS) is installed and `node --version` and `npm --version` work in a new terminal
-- [ ] GitHub CLI is installed and `gh --version` works
-- [ ] `gh auth status` shows the user logged in to their GitHub account
-- [ ] Git commits made by Claude Code can be pushed to GitHub (GitHub CLI's git login helper is set up)
+- [x] Node.js (current LTS) is installed and `node --version` and `npm --version` work in a new terminal
+- [x] GitHub CLI is installed and `gh --version` works
+- [x] `gh auth status` shows the user logged in to their GitHub account
+- [x] Git commits made by Claude Code can be pushed to GitHub (GitHub CLI's git login helper is set up)
