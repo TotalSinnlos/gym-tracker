@@ -93,6 +93,8 @@ function CurrentExercise({ entry }: { entry: SessionEntry }) {
   const core = useCore();
   const weighted = entry.sessionWeight !== undefined;
   const increment = core.getExercise(entry.exerciseId).increment ?? 2.5;
+  const last = core.lastResult(entry.exerciseId);
+  const weightChange = core.weightChangeSinceLastTime(entry.exerciseId);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const { error, run } = useAction();
 
@@ -105,6 +107,13 @@ function CurrentExercise({ entry }: { entry: SessionEntry }) {
       <p className="muted">
         Target: {entry.sets} × {entry.repMin}–{entry.repMax} reps
       </p>
+
+      {last && (
+        <p className="muted">
+          Last time: {last.entry.loggedSets.map(formatSet).join(", ")}
+          {weightChange !== null && weightChange > 0 && <strong> (↑ +{formatKg(weightChange)} since last time)</strong>}
+        </p>
+      )}
 
       {weighted && (
         <WeightStepper
