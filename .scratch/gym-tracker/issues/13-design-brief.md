@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] The brief is saved under this feature's `.scratch` folder as a markdown document
-- [ ] It covers every screen and state listed above, with realistic sample data
-- [ ] It states the constraints: Android phone, installable web app, works offline, large touch targets, readable at a glance, English
-- [ ] It says what to hand back and in what form
+- [x] The brief is saved under this feature's `.scratch` folder as a markdown document
+- [x] It covers every screen and state listed above, with realistic sample data
+- [x] It states the constraints: Android phone, installable web app, works offline, large touch targets, readable at a glance, English
+- [x] It says what to hand back and in what form
 - [ ] The user has read it and confirmed it's ready to take to Claude Design
