@@ -6,13 +6,13 @@ This ticket introduces the **core module** described in the spec: all rules sit 
 
 **Blocked by:** 02
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] First launch shows the setup flow: add exercises, then build the routine
+- [x] First launch shows the setup flow: add exercises, then build the routine
 - [x] Exercises can be created and edited, with weight and increment fields only for machine and free-weight types
 - [x] New exercises default to 2 sets and a 9–12 rep range
 - [x] Weights can't be negative
 - [x] A routine can be built by picking exercises, reordering them, adding more and removing some
-- [ ] Data survives closing and reopening the app
-- [ ] Later launches skip the setup flow and show the home screen
+- [x] Data survives closing and reopening the app
+- [x] Later launches skip the setup flow and show the home screen
 - [x] Core tests (against the in-memory store) cover creating and editing exercises and building and reordering a routine
