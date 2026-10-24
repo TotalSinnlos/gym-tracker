@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { type Core, type EndSessionResult, createCore } from "./core";
 import { createIndexedDbStore } from "./storage/indexedDbStore";
 import { CoreContext, useCore } from "./ui/CoreContext";
+import { ExercisePage } from "./ui/ExercisePage";
 import { HistoryScreen } from "./ui/HistoryScreen";
 import { HomeScreen } from "./ui/HomeScreen";
+import { OverviewScreen } from "./ui/OverviewScreen";
 import { SessionScreen } from "./ui/SessionScreen";
 import { useSafeUpdate } from "./ui/safeUpdate";
 import { SettingsScreen } from "./ui/SettingsScreen";
@@ -42,7 +44,9 @@ type Screen =
   | { name: "settings" }
   | { name: "history" }
   | { name: "session" }
-  | { name: "summary"; result: EndSessionResult };
+  | { name: "summary"; result: EndSessionResult }
+  | { name: "overview" }
+  | { name: "exercise"; exerciseId: string };
 
 function Screens() {
   const core = useCore();
@@ -78,12 +82,19 @@ function Screens() {
       return <SessionScreen onLeave={home} onEnded={(result) => setScreen({ name: "summary", result })} />;
     case "summary":
       return <SummaryScreen result={screen.result} onDone={home} />;
+    case "overview":
+      return (
+        <OverviewScreen onBack={home} onOpenExercise={(exerciseId) => setScreen({ name: "exercise", exerciseId })} />
+      );
+    case "exercise":
+      return <ExercisePage exerciseId={screen.exerciseId} onBack={() => setScreen({ name: "overview" })} />;
     default:
       return (
         <HomeScreen
           onOpenSettings={() => setScreen({ name: "settings" })}
           onOpenSession={() => setScreen({ name: "session" })}
           onOpenHistory={() => setScreen({ name: "history" })}
+          onOpenOverview={() => setScreen({ name: "overview" })}
         />
       );
   }

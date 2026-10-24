@@ -90,6 +90,45 @@ export interface BackupInfo {
   sessions: number;
 }
 
+/** One session's value in a graph: an exercise's weight, or its total reps. */
+export interface ChartPoint {
+  sessionId: string;
+  /** ISO start time of the session. */
+  date: string;
+  value: number;
+  /** The exercise was left incomplete in that session, so it is drawn as a hollow point. */
+  incomplete: boolean;
+}
+
+/** One session's reps for an exercise, set by set. */
+export interface RepsPoint {
+  sessionId: string;
+  /** ISO start time of the session. */
+  date: string;
+  reps: number[];
+  incomplete: boolean;
+}
+
+/** The data behind an exercise's graphs, oldest session first. */
+export interface ExerciseHistory {
+  /** Session weight per session, or null for bodyweight exercises (no weight graph). */
+  weight: ChartPoint[] | null;
+  /** Reps of every logged set, per session. */
+  reps: RepsPoint[];
+}
+
+/** One line of the overview page. */
+export interface OverviewRow {
+  exercise: Exercise;
+  /** ISO start time of the session after which the weight last went up (see `lastIncreaseDate`). */
+  lastIncrease: string | null;
+  /** The last few sessions: weight for weighted exercises, total reps for bodyweight ones. */
+  trend: ChartPoint[];
+}
+
+/** How many recent sessions a trend line (overview, session screen) shows. */
+export const TREND_SESSIONS = 10;
+
 export async function createCore(store: Store, options: CoreOptions = {}) {
   const newId = options.newId ?? (() => crypto.randomUUID());
   const now = options.now ?? (() => new Date());
@@ -568,6 +607,46 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       return exercise.weight - last.entry.sessionWeight;
     },
 
+    // --- Graphs ---
+
+    /**
+     * An exercise's history for its graphs: one point per completed session it was done or left
+     * incomplete in (its deciding entry, like `lastResult`). Skipped entries give no point, and the
+     * running session isn't included. The weight is the session weight (the working weight).
+     */
+    exerciseHistory(exerciseId: string): ExerciseHistory {
+      const exercise = findExercise(exerciseId);
+      const history = historyEntries(exerciseId);
+      return {
+        weight: isWeighted(exercise.type) ? weightPoints(history) : null,
+        reps: history.map(({ session, entry }) => ({
+          sessionId: session.id,
+          date: session.startedAt,
+          reps: entry.loggedSets.map((s) => s.reps),
+          incomplete: entry.state === "incomplete",
+        })),
+      };
+    },
+
+    /**
+     * The start time of the latest session after which the exercise's weight went up, or null if it
+     * never has (or it's a bodyweight exercise). "Went up" compares each session's weight with the
+     * next session's, and the last session's with the current weight. So an increase earned in a
+     * session is dated by that session, even before it has been lifted. A weight raised by hand (in
+     * settings or on the session screen) counts too, dated by the session before it; lowering never does.
+     */
+    lastIncreaseDate: (exerciseId: string) => lastIncreaseDate(findExercise(exerciseId)),
+
+    /** The recent sessions' trend for an exercise: see `OverviewRow.trend`. */
+    exerciseTrend: (exerciseId: string) => trend(findExercise(exerciseId)),
+
+    /** The overview page: every active exercise with its last increase and trend line. */
+    overview(): OverviewRow[] {
+      return data.exercises
+        .filter((e) => !e.archived)
+        .map((exercise) => ({ exercise, lastIncrease: lastIncreaseDate(exercise), trend: trend(exercise) }));
+    },
+
     /**
      * The "Lower to X kg next time?" button: sets the exercise's weight to one increment below the
      * session weight (never below 0 kg) and records the choice on the entry. Only allowed for a
@@ -680,6 +759,37 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     return session;
   }
 
+  /** The exercise's deciding done or incomplete entry in each completed session, oldest first. */
+  function historyEntries(exerciseId: string): HistoryEntry[] {
+    return data.sessions.flatMap((session) => {
+      const entry = decidingEntry(session, exerciseId, ["done", "incomplete"]);
+      return entry ? [{ session, entry }] : [];
+    });
+  }
+
+  function lastIncreaseDate(exercise: Exercise): string | null {
+    if (exercise.weight === undefined) return null;
+    const points = weightPoints(historyEntries(exercise.id));
+    const weights = [...points.map((p) => p.value), exercise.weight];
+    for (let i = points.length - 1; i >= 0; i--) {
+      if (weights[i + 1] > weights[i]) return points[i].date;
+    }
+    return null;
+  }
+
+  function trend(exercise: Exercise): ChartPoint[] {
+    const history = historyEntries(exercise.id);
+    const points = isWeighted(exercise.type)
+      ? weightPoints(history)
+      : history.map(({ session, entry }) => ({
+          sessionId: session.id,
+          date: session.startedAt,
+          value: entry.loggedSets.reduce((sum, s) => sum + s.reps, 0),
+          incomplete: entry.state === "incomplete",
+        }));
+    return points.slice(-TREND_SESSIONS);
+  }
+
   /** The latest done or incomplete entry for the exercise across completed sessions. */
   function findLastResult(exerciseId: string): LastResult | null {
     for (let i = data.sessions.length - 1; i >= 0; i--) {
@@ -747,6 +857,19 @@ const formatCsvNumber = (n: number) => String(Math.round(n * 1000) / 1000);
 function toCsv(rows: string[][]): string {
   const field = (value: string) => (/[",\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value);
   return "﻿" + rows.map((row) => row.map(field).join(",") + "\r\n").join("");
+}
+
+// --- Graph rules ---
+
+type HistoryEntry = { session: Session; entry: SessionEntry };
+
+/** A point per session for the entries with a weight (an exercise switched from bodyweight has none before). */
+function weightPoints(history: HistoryEntry[]): ChartPoint[] {
+  return history.flatMap(({ session, entry }) =>
+    entry.sessionWeight === undefined
+      ? []
+      : [{ sessionId: session.id, date: session.startedAt, value: entry.sessionWeight, incomplete: entry.state === "incomplete" }],
+  );
 }
 
 // --- Data ---

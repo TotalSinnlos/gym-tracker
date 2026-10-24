@@ -6,9 +6,10 @@ interface Props {
   onOpenSettings: () => void;
   onOpenSession: () => void;
   onOpenHistory: () => void;
+  onOpenOverview: () => void;
 }
 
-export function HomeScreen({ onOpenSettings, onOpenSession, onOpenHistory }: Props) {
+export function HomeScreen({ onOpenSettings, onOpenSession, onOpenHistory, onOpenOverview }: Props) {
   const core = useCore();
   const routines = core.startableRoutines();
   const active = core.activeSession();
@@ -79,6 +80,10 @@ export function HomeScreen({ onOpenSettings, onOpenSession, onOpenHistory }: Pro
           ))}
         </section>
       )}
+
+      <button className="secondary wide" onClick={onOpenOverview}>
+        Progress
+      </button>
     </main>
   );
 }

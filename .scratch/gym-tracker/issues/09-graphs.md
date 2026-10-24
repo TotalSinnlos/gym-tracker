@@ -6,9 +6,9 @@
 
 **Status:** ready-for-agent
 
-- [ ] The exercise page shows the weight-over-time graph (hidden for bodyweight) and the reps-per-set graph
-- [ ] Incomplete sessions are hollow points, and skipped entries aren't plotted
-- [ ] The overview lists active exercises with current weight, last increase date and a trend line, linking to each exercise's page
-- [ ] The session screen shows a compact chart for the current exercise
-- [ ] Graphs work offline (no chart library loaded from the internet at runtime)
-- [ ] Core tests cover the history-series and overview queries
+- [x] The exercise page shows the weight-over-time graph (hidden for bodyweight) and the reps-per-set graph
+- [x] Incomplete sessions are hollow points, and skipped entries aren't plotted
+- [x] The overview lists active exercises with current weight, last increase date and a trend line, linking to each exercise's page
+- [x] The session screen shows a compact chart for the current exercise
+- [x] Graphs work offline (no chart library loaded from the internet at runtime)
+- [x] Core tests cover the history-series and overview queries
