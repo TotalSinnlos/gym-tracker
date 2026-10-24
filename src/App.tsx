@@ -4,8 +4,10 @@ import { createIndexedDbStore } from "./storage/indexedDbStore";
 import { CoreContext, useCore } from "./ui/CoreContext";
 import { HomeScreen } from "./ui/HomeScreen";
 import { SessionScreen } from "./ui/SessionScreen";
+import { useSafeUpdate } from "./ui/safeUpdate";
 import { SettingsScreen } from "./ui/SettingsScreen";
 import { SetupScreen } from "./ui/SetupScreen";
+import { StaleSessionPrompt, useStaleSessionCheck } from "./ui/StaleSessionPrompt";
 import { SummaryScreen } from "./ui/SummaryScreen";
 
 export function App() {
@@ -41,8 +43,26 @@ function Screens() {
   // A running session reopens straight onto the session screen.
   const [screen, setScreen] = useState<Screen>(() => ({ name: core.activeSession() ? "session" : "home" }));
   const home = () => setScreen({ name: "home" });
+  const askAboutStaleSession = useStaleSessionCheck();
+
+  // Updates wait until no session is running and the user is on the home screen (not mid-form).
+  useSafeUpdate(core.isSetupComplete() && !core.activeSession() && screen.name === "home");
 
   if (!core.isSetupComplete()) return <SetupScreen />;
+  if (askAboutStaleSession.asking) {
+    return (
+      <StaleSessionPrompt
+        onContinue={() => {
+          askAboutStaleSession.dismiss();
+          setScreen({ name: "session" });
+        }}
+        onEnded={(result) => {
+          askAboutStaleSession.dismiss();
+          setScreen({ name: "summary", result });
+        }}
+      />
+    );
+  }
   switch (screen.name) {
     case "settings":
       return <SettingsScreen onBack={home} />;
