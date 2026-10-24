@@ -93,14 +93,20 @@ describe("an exercise's history for its graphs", () => {
     expect(core.exerciseHistory(press.id).weight?.map((p) => p.value)).toEqual([70]);
   });
 
-  it("gives one point when the exercise appears twice in a session, from its last done or incomplete entry", async () => {
+  it("gives one point when the exercise appears twice in a session, from the entry that decided the weight", async () => {
     const { core, press, runSession } = await setup();
     const twice = await core.createRoutine("Twice", [press.id, press.id]);
     await runSession({ [press.id]: [12, 12], [`${press.id}#2`]: [8] }, twice.id);
-    expect(core.exerciseHistory(press.id).reps).toMatchObject([{ reps: [8], incomplete: true }]);
+    expect(core.exerciseHistory(press.id).reps).toMatchObject([{ reps: [12, 12], incomplete: false }]);
 
     await runSession({ [press.id]: [11, 11] }, twice.id); // second entry skipped
-    expect(core.exerciseHistory(press.id).reps.map((p) => p.reps)).toEqual([[8], [11, 11]]);
+    // Neither finished: the last incomplete one.
+    await runSession({ [press.id]: [9], [`${press.id}#2`]: [10] }, twice.id);
+    expect(core.exerciseHistory(press.id).reps.map((p) => [p.reps, p.incomplete])).toEqual([
+      [[12, 12], false],
+      [[11, 11], false],
+      [[10], true],
+    ]);
   });
 
   it("leaves out the running session", async () => {

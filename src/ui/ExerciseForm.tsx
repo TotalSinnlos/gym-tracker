@@ -8,16 +8,11 @@ import {
   type ExerciseInput,
   type ExerciseType,
   EXERCISE_TYPES,
+  EXERCISE_TYPE_LABELS,
   isWeighted,
 } from "../core";
 import { parseNumber } from "./format";
 import { useAction } from "./useAction";
-
-export const TYPE_LABELS: Record<ExerciseType, string> = {
-  machine: "Machine",
-  freeWeight: "Free weight",
-  bodyweight: "Bodyweight",
-};
 
 interface Props {
   initial?: Exercise;
@@ -73,7 +68,7 @@ export function ExerciseForm({ initial, submitLabel, onSubmit, onCancel }: Props
             className={type === t ? "selected" : ""}
             onClick={() => setType(t)}
           >
-            {TYPE_LABELS[t]}
+            {EXERCISE_TYPE_LABELS[t]}
           </button>
         ))}
       </div>

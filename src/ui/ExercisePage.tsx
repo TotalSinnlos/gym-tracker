@@ -1,20 +1,11 @@
-import { type ChartPoint, type Exercise, type RepsPoint, isWeighted } from "../core";
-import { Chart, type DrawPoint, SERIES_COLORS, type Series, formatShortDate } from "./charts";
+import { useState } from "react";
+import type { RepsPoint } from "../core";
+import { Chart, SERIES_COLORS, type Series, toDrawPoints } from "./charts";
 import { useCore } from "./CoreContext";
+import { ExerciseActions } from "./ExerciseActions";
+import { ExerciseForm } from "./ExerciseForm";
 import { describeExercise } from "./ExerciseList";
-import { formatKg } from "./format";
-
-const kgLabel = (kg: number) => kg.toLocaleString("en", { maximumFractionDigits: 2 });
-
-/** Points for a one-line chart: a session's weight, or its total reps. */
-function toDrawPoints(points: ChartPoint[], unit: string): DrawPoint[] {
-  return points.map((p, index) => ({
-    index,
-    value: p.value,
-    hollow: p.incomplete,
-    label: `${formatShortDate(p.date, true)}: ${kgLabel(p.value)} ${unit}${p.incomplete ? " (incomplete)" : ""}`,
-  }));
-}
+import { formatKg, formatNumber, formatShortDate, lastIncreaseText } from "./format";
 
 /** One line per set number: set 1's reps across sessions, set 2's, and so on. */
 function repsSeries(points: RepsPoint[]): Series[] {
@@ -36,14 +27,10 @@ function repsSeries(points: RepsPoint[]): Series[] {
   }));
 }
 
-export function lastIncreaseText(exercise: Exercise, lastIncrease: string | null) {
-  if (!isWeighted(exercise.type)) return null;
-  return lastIncrease ? `Last increase: ${formatShortDate(lastIncrease, true)}` : "No increase yet";
-}
-
 /** An exercise's page: its weight and reps graphs and its settings. */
 export function ExercisePage({ exerciseId, onBack }: { exerciseId: string; onBack: () => void }) {
   const core = useCore();
+  const [editing, setEditing] = useState(false);
   const exercise = core.getExercise(exerciseId);
   const history = core.exerciseHistory(exerciseId);
   const dates = history.reps.map((p) => p.date);
@@ -76,7 +63,7 @@ export function ExercisePage({ exerciseId, onBack }: { exerciseId: string; onBac
               series={[{ color: SERIES_COLORS[0], points: toDrawPoints(history.weight, "kg") }]}
               count={history.weight.length}
               xLabel={(i) => formatShortDate(weightDates[i])}
-              yLabel={kgLabel}
+              yLabel={formatNumber}
             />
           </div>
         </section>
@@ -109,30 +96,29 @@ export function ExercisePage({ exerciseId, onBack }: { exerciseId: string; onBac
       </section>
 
       {anyIncomplete && <p className="muted">Hollow points are sessions where the exercise was left incomplete.</p>}
-    </main>
-  );
-}
 
-/** The compact chart on the session screen: the exercise's recent weight (or total reps for bodyweight). */
-export function CompactProgress({ exerciseId }: { exerciseId: string }) {
-  const core = useCore();
-  const exercise = core.getExercise(exerciseId);
-  const trend = core.exerciseTrend(exerciseId);
-  if (trend.length === 0) return null;
-  const weighted = isWeighted(exercise.type);
-  return (
-    <div className="compact-chart">
-      <span className="muted">
-        {weighted ? "Weight" : "Total reps"}, last {trend.length} {trend.length === 1 ? "session" : "sessions"}
-      </span>
-      <Chart
-        title={`${exercise.name}: recent ${weighted ? "weight" : "total reps"}`}
-        series={[{ color: SERIES_COLORS[0], points: toDrawPoints(trend, weighted ? "kg" : "reps") }]}
-        count={trend.length}
-        xLabel={(i) => formatShortDate(trend[i].date)}
-        yLabel={weighted ? kgLabel : String}
-        height={120}
-      />
-    </div>
+      <section className="stack">
+        <h2>Settings</h2>
+        {editing ? (
+          <>
+            <ExerciseForm
+              initial={exercise}
+              submitLabel="Save"
+              onSubmit={async (input) => {
+                await core.updateExercise(exercise.id, input);
+                setEditing(false);
+              }}
+              onCancel={() => setEditing(false)}
+            />
+            {/* Archived or deleted, the exercise leaves the overview, so go back to it. */}
+            <ExerciseActions exerciseId={exercise.id} onDone={onBack} />
+          </>
+        ) : (
+          <button className="secondary wide" onClick={() => setEditing(true)}>
+            Edit {exercise.name}
+          </button>
+        )}
+      </section>
+    </main>
   );
 }

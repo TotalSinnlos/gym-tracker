@@ -1,15 +1,8 @@
-import type { EndSessionResult, EntryState, ProgressionSummary } from "../core";
+import type { EndSessionResult, ProgressionSummary } from "../core";
 import { BackupSection } from "./BackupSection";
 import { useCore } from "./CoreContext";
-import { formatEntryWeight, formatKg, formatReps } from "./format";
+import { STATE_LABELS, formatEntryWeight, formatKg, formatReps } from "./format";
 import { useAction } from "./useAction";
-
-export const STATE_LABELS: Record<EntryState, string> = {
-  done: "✓ Done",
-  incomplete: "◐ Incomplete",
-  skipped: "– Skipped",
-  pending: "Pending",
-};
 
 export function SummaryScreen({ result, onDone }: { result: EndSessionResult; onDone: () => void }) {
   return (

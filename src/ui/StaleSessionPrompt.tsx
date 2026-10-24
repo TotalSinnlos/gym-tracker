@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { EndSessionResult } from "../core";
 import { useCore } from "./CoreContext";
+import { formatDay } from "./format";
 import { useAction } from "./useAction";
 
 interface Props {
@@ -15,7 +16,6 @@ export function StaleSessionPrompt({ onEnded, onContinue }: Props) {
   const { error, run } = useAction();
 
   if (!session) return null;
-  const day = new Date(session.startedAt).toLocaleDateString("en", { weekday: "long", day: "numeric", month: "long" });
 
   async function end() {
     let result: EndSessionResult | undefined;
@@ -25,7 +25,7 @@ export function StaleSessionPrompt({ onEnded, onContinue }: Props) {
   return (
     <main className="screen">
       <section className="card center">
-        <h2>Finish your session from {day}?</h2>
+        <h2>Finish your session from {formatDay(session.startedAt)}?</h2>
         <p className="muted">{session.routineName} is still running. End it to save it under that day.</p>
       </section>
       {error && <p className="error">{error}</p>}

@@ -1,5 +1,6 @@
 import { useCore } from "./CoreContext";
 import { describeExercise } from "./ExerciseList";
+import { formatExerciseNames } from "./format";
 import { useAction } from "./useAction";
 
 interface Props {
@@ -70,12 +71,7 @@ export function HomeScreen({ onOpenSettings, onOpenSession, onOpenHistory, onOpe
           {routines.map((routine) => (
             <button key={routine.id} className="card list-item" onClick={() => start(routine.id)}>
               <strong>{routine.name}</strong>
-              <span className="muted">
-                {core
-                  .routineExercises(routine.id)
-                  .map((e) => e.name)
-                  .join(" · ")}
-              </span>
+              <span className="muted">{formatExerciseNames(core.routineExercises(routine.id))}</span>
             </button>
           ))}
         </section>

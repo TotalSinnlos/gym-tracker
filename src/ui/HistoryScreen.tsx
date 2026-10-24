@@ -1,13 +1,9 @@
 import { useState } from "react";
 import type { Session, SessionEntry } from "../core";
 import { useCore } from "./CoreContext";
-import { formatEntryWeight, formatKg, formatSet } from "./format";
-import { SetForm } from "./SessionScreen";
-import { STATE_LABELS } from "./SummaryScreen";
+import { STATE_LABELS, formatDate, formatEntryWeight, formatKg, formatSet } from "./format";
+import { SetForm } from "./SetForm";
 import { useAction } from "./useAction";
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString("en", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 
 /** Past sessions, newest first. Tapping one opens it to review, correct or delete it. */
 export function HistoryScreen({ onBack }: { onBack: () => void }) {
@@ -48,8 +44,7 @@ function SessionDetail({ session, onBack }: { session: Session; onBack: () => vo
   const core = useCore();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { error, run } = useAction();
-  // Corrections could shift a running session's weights, so they wait until it ends.
-  const locked = core.activeSession() !== null;
+  const locked = !core.canEditHistory();
 
   async function remove() {
     if (await run(() => core.deleteSession(session.id))) onBack();
@@ -85,7 +80,10 @@ function SessionDetail({ session, onBack }: { session: Session; onBack: () => vo
       {!locked &&
         (confirmingDelete ? (
           <section className="card">
-            <p>Delete this session? Its sets are removed from your history. Current weights stay as they are.</p>
+            <p>
+              Delete this session? Its sets are removed from your history. Exercises whose latest result was in it go
+              back to the weight they had before.
+            </p>
             <div className="row">
               <button className="secondary" onClick={() => setConfirmingDelete(false)}>
                 Keep it
@@ -110,7 +108,7 @@ function EntryDetail({ sessionId, entry, locked }: { sessionId: string; entry: S
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const weighted = entry.sessionWeight !== undefined;
   const recalculates = core.editRecalculatesWeight(sessionId, entry.id);
-  const currentWeight = weighted ? core.getData().exercises.find((e) => e.id === entry.exerciseId)?.weight : undefined;
+  const currentWeight = core.getExercise(entry.exerciseId).weight;
 
   return (
     <section className="card stack">

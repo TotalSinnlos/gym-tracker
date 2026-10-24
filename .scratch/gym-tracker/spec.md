@@ -201,10 +201,11 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
   - Only an edit to the entry that counts recalculates: the one that decided the weight when the session ended, or the latest result the lowering is recorded on. Correcting another occurrence of the same exercise only fixes the record.
   - Recalculating replaces any weight set in settings since that session. In order, the new weight is: the lowered weight, if a lowering was chosen and the entry is still below range (no longer below range, the lowering no longer applies); else a weight set in settings during that session, which still wins; else the done entry's progression. An exercise that was only incomplete keeps its weight, unless a lowering on it no longer applies (then it goes back to that session weight).
   - Bodyweight exercises, and exercises switched to or from bodyweight since, never get a weight from a recalculation. Archived exercises are recalculated like any other and keep the weight for when they're unarchived.
-  - Deleting a session never changes current weights; it only removes the record.
+  - Deleting a session that holds an exercise's latest result rolls its weight back to what the session before left it at (worked out as for a correction), or, with no session before, to the weight it was done at in the deleted session. Deleting an older session only removes the record.
   - Corrections and deletions wait until no session is running, so a running session's weights never shift under it. History can still be viewed.
 - To show "↑ +2.5 since last time", the core compares the exercise's current weight with the session weight of its most recent completed entry.
 - "Last time" on the session screen and the "most recent completed entry" mean the latest `done` or `incomplete` entry for that exercise, from any routine.
+- Graphs show one point per session for an exercise: when it appears more than once, the finished occurrence that decided its weight, or, if none was finished, the last incomplete one.
 
 ### Backup and export
 

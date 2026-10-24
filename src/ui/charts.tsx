@@ -1,6 +1,9 @@
 // Small charts drawn with plain SVG, so they work offline without a chart library.
 // They only draw what they're given: the numbers come from the core's graph queries.
 
+import type { ChartPoint } from "../core";
+import { formatNumber, formatShortDate } from "./format";
+
 /** One point to draw. Sessions are spaced evenly from left to right, in the order given. */
 export interface DrawPoint {
   /** Position from the left, counting sessions from 0. */
@@ -15,6 +18,16 @@ export interface DrawPoint {
 export interface Series {
   points: DrawPoint[];
   color: string;
+}
+
+/** Points for a one-line chart: a session's weight, or its total reps. */
+export function toDrawPoints(points: ChartPoint[], unit: string): DrawPoint[] {
+  return points.map((p, index) => ({
+    index,
+    value: p.value,
+    hollow: p.incomplete,
+    label: `${formatShortDate(p.date, true)}: ${formatNumber(p.value)} ${unit}${p.incomplete ? " (incomplete)" : ""}`,
+  }));
 }
 
 export const SERIES_COLORS = ["#f59e0b", "#38bdf8", "#a78bfa", "#34d399", "#f472b6"];
@@ -161,15 +174,4 @@ export function niceTicks(min: number, max: number): number[] {
   while (ticks[ticks.length - 1] < max - step * 1e-9) ticks.push(Number((start + ticks.length * step).toFixed(6)));
   if (ticks.length < 2) ticks.push(start + step);
   return ticks;
-}
-
-/** "24 Oct", with the year added when it isn't this year. */
-export function formatShortDate(iso: string, withYearIfOld = false): string {
-  const date = new Date(iso);
-  const sameYear = date.getFullYear() === new Date().getFullYear();
-  return date.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    ...(withYearIfOld && !sameYear && { year: "numeric" }),
-  });
 }

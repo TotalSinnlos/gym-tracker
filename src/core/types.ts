@@ -2,6 +2,13 @@ export type ExerciseType = "machine" | "freeWeight" | "bodyweight";
 
 export const EXERCISE_TYPES: readonly ExerciseType[] = ["machine", "freeWeight", "bodyweight"];
 
+/** How each exercise type is named in the app and in the spreadsheet export. */
+export const EXERCISE_TYPE_LABELS: Record<ExerciseType, string> = {
+  machine: "Machine",
+  freeWeight: "Free weight",
+  bodyweight: "Bodyweight",
+};
+
 export interface Exercise {
   id: string;
   name: string;

@@ -170,6 +170,17 @@ describe("recalculating the weight", () => {
     expect(core.getExercise(press.id).weight).toBe(62.5);
   });
 
+  it("only fixes the record when a later, incomplete occurrence is corrected", async () => {
+    const { core, press } = await setup();
+    const twice = await core.createRoutine("Twice", [press.id, press.id]);
+    const session = await runSession(core, twice.id, { [press.id]: [10, 10], [`${press.id}#2`]: [10] });
+    await core.updateExercise(press.id, { weight: 65 });
+    // The finished first occurrence decided the weight; the incomplete second one has no lowering on it.
+    expect(core.editRecalculatesWeight(session.id, `${press.id}#2`)).toBe(false);
+    await core.editPastSet(session.id, `${press.id}#2`, 0, { reps: 11 });
+    expect(core.getExercise(press.id).weight).toBe(65);
+  });
+
   it("leaves the weight alone for an exercise that was only incomplete", async () => {
     const { core, routine, curl } = await setup();
     const session = await runSession(core, routine.id, { [curl.id]: [13, 13] });
@@ -250,19 +261,54 @@ describe("recalculating with a recorded lowering", () => {
 });
 
 describe("deleting a session", () => {
-  it("removes it from history but leaves current weights alone", async () => {
-    const { core, nextDay, routine, press } = await setup();
-    const first = await runSession(core, routine.id, { [press.id]: [10, 10] });
+  it("removes it from history and rolls back the weight it set as the exercise's latest result", async () => {
+    const { core, nextDay, routine, press, curl } = await setup();
+    const first = await runSession(core, routine.id, { [press.id]: [10, 10], [curl.id]: [13, 13, 13] });
     nextDay();
-    const second = await runSession(core, routine.id, { [press.id]: [13, 13] });
+    const second = await runSession(core, routine.id, { [press.id]: [13, 13] }); // curl skipped
     expect(core.getExercise(press.id).weight).toBe(62.5);
+    expect(core.getExercise(curl.id).weight).toBe(14);
     await core.deleteSession(second.id);
     expect(core.listSessions().map((s) => s.id)).toEqual([first.id]);
-    expect(core.getExercise(press.id).weight).toBe(62.5);
+    // As if the session never happened: the weight the session before left it at.
+    expect(core.getExercise(press.id).weight).toBe(60);
+    // Curl's latest result is in the session before, so it stays.
+    expect(core.getExercise(curl.id).weight).toBe(14);
     // "Last time" now comes from the session before.
     expect(core.lastResult(press.id)?.date).toBe("2026-10-01T18:00:00.000Z");
     expect(() => core.getSession(second.id)).toThrow(CoreError);
     await expect(core.deleteSession(second.id)).rejects.toThrow(CoreError);
+  });
+
+  it("leaves current weights alone when an older session is deleted", async () => {
+    const { core, nextDay, routine, press } = await setup();
+    const first = await runSession(core, routine.id, { [press.id]: [13, 13] });
+    nextDay();
+    await runSession(core, routine.id, { [press.id]: [10, 10] });
+    await core.deleteSession(first.id);
+    expect(core.getExercise(press.id).weight).toBe(62.5);
+  });
+
+  it("goes back to the weight the exercise was done at when its only session is deleted", async () => {
+    const { core, routine, press, pullUp } = await setup();
+    const session = await runSession(core, routine.id, { [press.id]: [13, 13], [pullUp.id]: [13, 13] });
+    await core.deleteSession(session.id);
+    expect(core.getExercise(press.id).weight).toBe(60);
+    expect(core.getExercise(pullUp.id)).toEqual(pullUp);
+  });
+
+  it("goes back to the weight set in settings during the session before", async () => {
+    const { core, nextDay, routine, press } = await setup();
+    await core.startSession(routine.id);
+    await core.logSet(press.id, { reps: 10 });
+    await core.logSet(press.id, { reps: 10 });
+    await core.updateExercise(press.id, { weight: 70 });
+    await core.endSession();
+    nextDay();
+    const second = await runSession(core, routine.id, { [press.id]: [13, 13] });
+    expect(core.getExercise(press.id).weight).toBe(72.5);
+    await core.deleteSession(second.id);
+    expect(core.getExercise(press.id).weight).toBe(70);
   });
 
   it("lets an exercise whose only history was deleted be deleted too", async () => {

@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from "react";
 import { useCore } from "./CoreContext";
+import { formatExerciseNames } from "./format";
 import { RoutineEditor } from "./RoutineEditor";
 import { useAction } from "./useAction";
 
@@ -32,12 +33,7 @@ export function RoutineList() {
           <button key={routine.id} className="card list-item" onClick={() => setOpenId(routine.id)}>
             <strong>{routine.name}</strong>
             <span className="muted">
-              {routine.exerciseIds.length === 0
-                ? "No exercises yet"
-                : core
-                    .routineExercises(routine.id)
-                    .map((e) => e.name)
-                    .join(" · ")}
+              {routine.exerciseIds.length === 0 ? "No exercises yet" : formatExerciseNames(core.routineExercises(routine.id))}
             </span>
           </button>
         ),
@@ -59,7 +55,7 @@ function RoutineActions({ routineId, onClose }: { routineId: string; onClose: ()
   const core = useCore();
   const [confirming, setConfirming] = useState(false);
   const { error, run } = useAction();
-  const isLast = core.listRoutines().length === 1;
+  const problem = core.routineDeleteProblem(routineId);
 
   async function remove() {
     if (await run(() => core.deleteRoutine(routineId))) onClose();
@@ -84,15 +80,11 @@ function RoutineActions({ routineId, onClose }: { routineId: string; onClose: ()
 
   return (
     <div className="stack">
-      {!isLast && !core.canDeleteRoutine(routineId) && (
-        <p className="muted">The running session uses this routine, so it can't be deleted until the session ends.</p>
-      )}
+      {problem && <p className="muted">{problem}, so it can't be deleted.</p>}
       <div className="row">
-        {!isLast && (
-          <button className="secondary" disabled={!core.canDeleteRoutine(routineId)} onClick={() => setConfirming(true)}>
-            Delete
-          </button>
-        )}
+        <button className="secondary" disabled={problem !== null} onClick={() => setConfirming(true)}>
+          Delete
+        </button>
         <button className="secondary" onClick={onClose}>
           Done
         </button>

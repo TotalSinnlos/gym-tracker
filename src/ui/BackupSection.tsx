@@ -1,17 +1,12 @@
 import { type ChangeEvent, useRef, useState } from "react";
 import type { BackupInfo } from "../core";
 import { useCore } from "./CoreContext";
+import { fileStamp, formatDateTime } from "./format";
 import { shareOrDownload } from "./share";
 import { useAction } from "./useAction";
 
-const formatTime = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-
 // The file holds JSON, but Chrome on Android only shares certain file types and .json isn't one of them, so it's a .txt.
-const backupFileName = (iso: string) => {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `gym-tracker-backup-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}.txt`;
-};
+const backupFileName = (iso: string) => `gym-tracker-backup-${fileStamp(iso, true)}.txt`;
 
 /** "Back up" with the last backup time, plus "Restore from backup" when `allowRestore` is set. */
 export function BackupSection({ allowRestore = false }: { allowRestore?: boolean }) {
@@ -55,7 +50,7 @@ export function BackupSection({ allowRestore = false }: { allowRestore?: boolean
   return (
     <section className="stack">
       <h2>Backup</h2>
-      <p className="muted">{lastBackupAt ? `Last backup: ${formatTime(lastBackupAt)}` : "No backup made yet."}</p>
+      <p className="muted">{lastBackupAt ? `Last backup: ${formatDateTime(lastBackupAt)}` : "No backup made yet."}</p>
       <button className="secondary wide" onClick={backUp}>
         Back up
       </button>
@@ -78,7 +73,7 @@ export function BackupSection({ allowRestore = false }: { allowRestore?: boolean
           <strong>Replace all your data with this backup?</strong>
           <span className="muted">
             Your current exercises, routines, history and any running session will be replaced by the backup
-            {picked.info.createdAt && ` from ${formatTime(picked.info.createdAt)}`} ({picked.info.exercises} exercises,{" "}
+            {picked.info.createdAt && ` from ${formatDateTime(picked.info.createdAt)}`} ({picked.info.exercises} exercises,{" "}
             {picked.info.sessions} sessions). This can't be undone.
           </span>
           <div className="row">
