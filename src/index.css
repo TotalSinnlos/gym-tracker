@@ -702,6 +702,11 @@ button.li:active {
   gap: 8px;
 }
 
+/* Its margin above would otherwise undo .push-down. */
+.dock.push-down {
+  margin-top: auto;
+}
+
 .with-nav .dock {
   bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
   padding-bottom: 20px;
@@ -1253,11 +1258,14 @@ button.li:active {
 }
 
 .wt {
+  flex: 1;
   display: flex;
   align-items: baseline;
   justify-content: center;
   gap: 6px;
   min-width: 0;
+  /* Lets the number's font size depend on this space's width (cqi). */
+  container-type: inline-size;
 }
 
 .wt b {
@@ -1268,14 +1276,17 @@ button.li:active {
 }
 
 .wt-in {
-  font-size: 84px;
+  /* 84px, or smaller when the weight's characters (about 0.5em each) plus "kg" wouldn't fit. */
+  font-size: min(84px, calc((100cqi - 40px) / (var(--chars) * 0.5)));
   font-weight: 720;
-  letter-spacing: -3px;
+  letter-spacing: -0.035em;
   line-height: 1;
   border: none;
   background: transparent;
   padding: 0;
   text-align: center;
+  /* Sized to the number, so "kg" sits right after it. */
+  field-sizing: content;
   max-width: 100%;
   min-width: 0.6em;
   border-radius: 12px;

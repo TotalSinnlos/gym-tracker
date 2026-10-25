@@ -54,7 +54,9 @@ function Screens() {
   const askAboutStaleSession = useStaleSessionCheck();
 
   // Every new screen starts at the top.
-  useEffect(() => window.scrollTo(0, 0), [screen]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [screen]);
 
   // Updates wait until no session is running and the user is on the home screen (not mid-form).
   useSafeUpdate(core.isSetupComplete() && !core.activeSession() && screen.name === "home");

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type CSSProperties, useState } from "react";
 import { EXERCISE_TYPE_LABELS, type EndSessionResult, type SessionEntry } from "../core";
 import { CompactProgress } from "./CompactProgress";
 import { Badge } from "./Badge";
@@ -361,8 +361,8 @@ function WeightStepper({ weight, step, onChange }: { weight: number; step: numbe
         <input
           inputMode="decimal"
           className="wt-in num"
-          // Sized to the number, so "kg" sits right after it.
-          style={{ width: `${Math.max(1, text.length) * 0.6}em` }}
+          // Its length sets the font size (see .wt-in), so long weights like "102.5" still fit.
+          style={{ "--chars": Math.max(2, text.length) } as CSSProperties}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onFocus={(e) => e.target.select()}
