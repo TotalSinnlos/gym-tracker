@@ -41,7 +41,7 @@ export function ExportSection() {
           <Icon name="table" />
           <span className="li-m">
             <span className="li-t">Export to spreadsheet</span>
-            <span className="li-s">All finished sessions as a CSV file, one row per set, for Excel or Google Sheets.</span>
+            <span className="li-s">A CSV file for Google Sheets or Excel, one row per set.</span>
           </span>
         </button>
       </div>

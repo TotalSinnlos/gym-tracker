@@ -17,8 +17,7 @@ export function OverviewScreen({ onOpenExercise }: { onOpenExercise: (id: string
           <h1 className="h1">Progress</h1>
           {rows.length > 0 && (
             <p className="page-intro">
-              Each line shows an exercise's last 10 sessions: its weight, or total reps for bodyweight. The amber dot is
-              the latest.
+              The last 10 sessions: weight, or total reps for bodyweight.
             </p>
           )}
         </div>

@@ -181,8 +181,7 @@ function SessionDetail({ session, onBack }: { session: Session; onBack: () => vo
               Delete this session?
             </div>
             <div className="dlg-b">
-              Its sets are removed from your history. Exercises whose latest result was in it go back to the weight they
-              had before.
+              Its sets are removed. Weights it changed go back to what they were before.
             </div>
             <button className="btn lg out" onClick={() => setConfirmingDelete(false)}>
               Keep it
@@ -233,8 +232,8 @@ function CorrectSet({ sessionId, entry, index, onClose }: { sessionId: string; e
         recalculates &&
         currentWeight !== undefined && (
           <>
-            This is {entry.exerciseName}'s latest result, so saving works out its current weight (now{" "}
-            {formatKg(currentWeight)}) again.
+            This is {entry.exerciseName}'s latest result, so saving also updates its current weight (now{" "}
+            {formatKg(currentWeight)}).
           </>
         )
       }

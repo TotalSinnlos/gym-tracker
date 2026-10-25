@@ -122,7 +122,7 @@ export function BackupSection({ allowRestore = false }: { allowRestore?: boolean
               </div>
             </div>
             <div className="dlg-b">
-              Your current exercises, routines, history and any running session are replaced. This can't be undone.
+              Everything on this phone is replaced. This can't be undone.
             </div>
             <button className="btn lg out" onClick={() => setPicked(null)}>
               Cancel
