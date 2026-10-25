@@ -1,16 +1,12 @@
+import { MainArea } from "./BottomNav";
 import { useCore } from "./CoreContext";
-import { describeExercise } from "./ExerciseList";
 import { formatExerciseNames } from "./format";
+import { Icon } from "./icons";
+import { Brand } from "./Logo";
+import { Progress } from "./Progress";
 import { useAction } from "./useAction";
 
-interface Props {
-  onOpenSettings: () => void;
-  onOpenSession: () => void;
-  onOpenHistory: () => void;
-  onOpenOverview: () => void;
-}
-
-export function HomeScreen({ onOpenSettings, onOpenSession, onOpenHistory, onOpenOverview }: Props) {
+export function HomeScreen({ onOpenSession }: { onOpenSession: () => void }) {
   const core = useCore();
   const routines = core.startableRoutines();
   const active = core.activeSession();
@@ -21,65 +17,86 @@ export function HomeScreen({ onOpenSettings, onOpenSession, onOpenHistory, onOpe
   }
 
   return (
-    <main className="screen">
-      <header className="row header">
-        <h1 className="grow">Gym Tracker</h1>
-        <button className="secondary" onClick={onOpenHistory}>
-          History
-        </button>
-        <button className="secondary" onClick={onOpenSettings}>
-          Settings
-        </button>
-      </header>
-
-      {active ? (
-        <button className="primary wide" onClick={onOpenSession}>
-          Resume session
-        </button>
-      ) : (
-        routines.length === 1 && (
-          <button className="primary wide" onClick={() => start(routines[0].id)}>
-            Start session
-          </button>
-        )
-      )}
-      {error && <p className="error">{error}</p>}
-
-      {routines.length === 0 && <p className="muted">Add exercises to a routine in settings to start a session.</p>}
-
-      {routines.length === 1 && (
-        <section className="stack">
-          <h2>{routines[0].name}</h2>
-          <ol className="stack routine-list">
-            {core.routineExercises(routines[0].id).map((exercise, index) => (
-              // The same exercise can appear twice, so its position is the key.
-              <li key={index} className="card">
-                <strong>
-                  {index + 1}. {exercise.name}
-                </strong>
-                <span className="muted">{describeExercise(exercise)}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
-
-      {!active && routines.length > 1 && (
-        <section className="stack">
-          <h2>Start a session</h2>
-          <p className="muted">Pick a routine.</p>
-          {routines.map((routine) => (
-            <button key={routine.id} className="card list-item" onClick={() => start(routine.id)}>
-              <strong>{routine.name}</strong>
-              <span className="muted">{formatExerciseNames(core.routineExercises(routine.id))}</span>
+    <MainArea area="home">
+      <Brand />
+      {/* Everything to act on sits low on the screen, in thumb reach. */}
+      <div className="home push-down">
+        {active ? (
+          <section className="running">
+            <div className="running-label">
+              <span className="dot" />
+              Session running
+            </div>
+            <div>
+              <h1 className="h1">{active.routineName}</h1>
+              <div className="running-count num">
+                {active.entries.length - core.pendingCount()} of {active.entries.length} done
+              </div>
+            </div>
+            <Progress session={active} onAmber />
+            <button className="btn lg dark" onClick={onOpenSession}>
+              <Icon name="play" />
+              Resume session
             </button>
-          ))}
-        </section>
-      )}
-
-      <button className="secondary wide" onClick={onOpenOverview}>
-        Progress
-      </button>
-    </main>
+          </section>
+        ) : routines.length === 1 ? (
+          <>
+            <div>
+              <div className="mut home-kicker">Your routine</div>
+              <h1 className="h1">{routines[0].name}</h1>
+            </div>
+            <ol className="ol">
+              {core.routineExercises(routines[0].id).map((exercise, index) => (
+                // The same exercise can appear twice, so its position is the key.
+                <li key={index}>
+                  <span>{index + 1}</span>
+                  {exercise.name}
+                </li>
+              ))}
+            </ol>
+            <button className="btn lg pri" onClick={() => start(routines[0].id)}>
+              <Icon name="play" />
+              Start session
+            </button>
+          </>
+        ) : routines.length > 1 ? (
+          <>
+            <div className="home-pick">
+              <h1 className="h1 big-title">Start a session</h1>
+              <div className="mut">Pick a routine</div>
+            </div>
+            {routines.map((routine, index) => {
+              const exercises = core.routineExercises(routine.id);
+              return (
+                <button
+                  key={routine.id}
+                  className={index === 0 ? "rc rc-hero" : "rc rc-tonal"}
+                  onClick={() => start(routine.id)}
+                >
+                  <span className="rc-top">
+                    <span className="rc-head">
+                      <span className="rc-n">{routine.name}</span>
+                      <span className="rc-c">
+                        {exercises.length} {exercises.length === 1 ? "exercise" : "exercises"}
+                      </span>
+                    </span>
+                    <span className="play">
+                      <Icon name="play" />
+                    </span>
+                  </span>
+                  <span className="rc-x">{formatExerciseNames(exercises)}</span>
+                </button>
+              );
+            })}
+          </>
+        ) : (
+          <div className="nothing">
+            <h1 className="nothing-t">Nothing to start yet</h1>
+            <p className="body mut">Add exercises to a routine in settings to start a session.</p>
+          </div>
+        )}
+        {error && <p className="errmsg">{error}</p>}
+      </div>
+    </MainArea>
   );
 }

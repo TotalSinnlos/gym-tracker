@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useCore } from "./CoreContext";
 import { fileStamp } from "./format";
+import { Icon } from "./icons";
 import { shareOrDownload } from "./share";
+import { Snack } from "./Snack";
 import { useAction } from "./useAction";
 
 // Unlike .json (see BackupSection), .csv with text/csv is on the list of files Chrome on Android can share.
@@ -12,13 +14,16 @@ export function ExportSection() {
   const core = useCore();
   const { error, run } = useAction();
   const [message, setMessage] = useState<string | null>(null);
+  const [nothing, setNothing] = useState(false);
+  const closeMessage = useCallback(() => setMessage(null), []);
 
   function exportHistory() {
     setMessage(null);
+    setNothing(false);
     // No waiting before the share: the browser only allows it straight after the tap.
     const exported = core.exportSpreadsheet();
     if (!exported) {
-      setMessage("Nothing to export yet. Finish a session first.");
+      setNothing(true);
       return;
     }
     run(async () => {
@@ -29,14 +34,25 @@ export function ExportSection() {
   }
 
   return (
-    <section className="stack">
-      <h2>Export</h2>
-      <p className="muted">All finished sessions as a CSV file, one row per set, for Excel or Google Sheets.</p>
-      <button className="secondary wide" onClick={exportHistory}>
-        Export to spreadsheet
-      </button>
-      {message && <p>{message}</p>}
-      {error && <p className="error">{error}</p>}
-    </section>
+    <>
+      <div className="h2">Export</div>
+      <div className="list">
+        <button className="li" onClick={exportHistory}>
+          <Icon name="table" />
+          <span className="li-m">
+            <span className="li-t">Export to spreadsheet</span>
+            <span className="li-s">All finished sessions as a CSV file, one row per set, for Excel or Google Sheets.</span>
+          </span>
+        </button>
+      </div>
+      {nothing && <p className="hint">Nothing to export yet. Finish a session first.</p>}
+      {error && (
+        <p className="errmsg section-msg" role="alert">
+          <Icon name="error" />
+          {error}
+        </p>
+      )}
+      {message && <Snack message={message} onClose={closeMessage} />}
+    </>
   );
 }

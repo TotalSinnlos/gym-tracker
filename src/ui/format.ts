@@ -18,9 +18,9 @@ export const formatEntryWeight = (entry: SessionEntry) =>
 export const formatExerciseNames = (exercises: Exercise[]) => exercises.map((e) => e.name).join(" · ");
 
 export const STATE_LABELS: Record<EntryState, string> = {
-  done: "✓ Done",
-  incomplete: "◐ Incomplete",
-  skipped: "– Skipped",
+  done: "Done",
+  incomplete: "Incomplete",
+  skipped: "Skipped",
   pending: "Pending",
 };
 
@@ -48,6 +48,10 @@ export function formatShortDate(iso: string, withYearIfOld = false): string {
 /** "Sat 24 Oct 2026" */
 export const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString(LOCALE, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+
+/** "Sat 24 Oct" */
+export const formatDayShort = (iso: string) =>
+  new Date(iso).toLocaleDateString(LOCALE, { weekday: "short", day: "numeric", month: "short" });
 
 /** "Saturday 24 October" */
 export const formatDay = (iso: string) =>

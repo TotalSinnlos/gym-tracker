@@ -1,15 +1,17 @@
 import { useState } from "react";
+import type { Exercise } from "../core";
 import { useCore } from "./CoreContext";
 import { describeExercise } from "./ExerciseList";
+import { Icon } from "./icons";
 import { useAction } from "./useAction";
 
 /**
- * Archive and delete buttons for an exercise being edited, each asking for confirmation.
- * Delete is only offered when the exercise has no history.
+ * Archiving and deleting an exercise, each confirmed in a dialog. Delete is only possible when the
+ * exercise has no history. `ask` opens a dialog; render `dialog` somewhere on the screen.
  */
-export function ExerciseActions({ exerciseId, onDone }: { exerciseId: string; onDone: () => void }) {
+export function useExerciseActions(exercise: Exercise, onDone: () => void) {
   const core = useCore();
-  const exercise = core.getExercise(exerciseId);
+  const exerciseId = exercise.id;
   const canDelete = !core.hasHistory(exerciseId);
   const routineNames = core.routinesWithExercise(exerciseId).map((r) => r.name);
   const [confirming, setConfirming] = useState<"archive" | "delete" | null>(null);
@@ -20,43 +22,39 @@ export function ExerciseActions({ exerciseId, onDone }: { exerciseId: string; on
     if (await run(() => action(exerciseId))) onDone();
   }
 
-  if (confirming) {
-    const inRoutines = routineNames.length > 0 ? ` It will be taken out of: ${routineNames.join(", ")}.` : "";
-    return (
-      <div className="card stack">
-        <p>
-          {confirming === "archive"
-            ? `Archive ${exercise.name}? It's hidden from your lists and its history is kept.${inRoutines}`
-            : `Delete ${exercise.name} for good?${inRoutines}`}
-        </p>
-        <div className="row">
-          <button className="secondary" onClick={() => setConfirming(null)}>
-            Cancel
-          </button>
-          <button className="primary" onClick={confirm}>
-            {confirming === "archive" ? "Archive" : "Delete"}
-          </button>
+  const dialog = confirming && (
+    <>
+      <div className="scrim" onClick={() => setConfirming(null)} />
+      <div className="dlg" role="alertdialog" aria-labelledby="exercise-action-title">
+        <div className="dlg-t" id="exercise-action-title">
+          {confirming === "archive" ? `Archive ${exercise.name}?` : `Delete ${exercise.name} for good?`}
         </div>
-        {error && <p className="error">{error}</p>}
-      </div>
-    );
-  }
-
-  return (
-    <div className="stack">
-      <div className="row">
-        <button className="secondary" onClick={() => setConfirming("archive")}>
-          Archive
-        </button>
-        {canDelete && (
-          <button className="secondary" onClick={() => setConfirming("delete")}>
-            Delete
-          </button>
+        {(confirming === "archive" || routineNames.length > 0) && (
+          <div className="body mut">
+            {confirming === "archive" && "It's hidden and its history is kept. "}
+            {routineNames.length > 0 && "It will be taken out of these routines:"}
+          </div>
         )}
+        {routineNames.length > 0 && (
+          <div className="chips">
+            {routineNames.map((name, i) => (
+              <span key={i}>{name}</span>
+            ))}
+          </div>
+        )}
+        {error && <p className="errmsg">{error}</p>}
+        <div className="dlg-gap" />
+        <button className="btn lg out" onClick={() => setConfirming(null)}>
+          Keep it
+        </button>
+        <button className={confirming === "archive" ? "btn lg dark" : "btn lg dng"} onClick={confirm}>
+          {confirming === "archive" ? "Archive" : "Delete"}
+        </button>
       </div>
-      {!canDelete && <p className="muted">This exercise has history, so it can be archived but not deleted.</p>}
-    </div>
+    </>
   );
+
+  return { canDelete, ask: setConfirming, dialog };
 }
 
 /** Archived exercises, each with a button to bring it back. */
@@ -65,22 +63,29 @@ export function ArchivedExercises() {
   const archived = core.listArchivedExercises();
   const { error, run } = useAction();
 
-  if (archived.length === 0) return <p className="muted">No archived exercises.</p>;
+  if (archived.length === 0) return <div className="empty">No archived exercises.</div>;
   return (
-    <div className="stack">
-      {archived.map((exercise) => (
-        <div key={exercise.id} className="card routine-item">
-          <span className="grow">
-            <strong>{exercise.name}</strong>
-            <span className="muted">{describeExercise(exercise)}</span>
-          </span>
-          <button className="secondary" onClick={() => run(() => core.unarchiveExercise(exercise.id))}>
-            Unarchive
-          </button>
-        </div>
-      ))}
-      <p className="muted">Unarchived exercises come back without a routine; add them to one above.</p>
-      {error && <p className="error">{error}</p>}
-    </div>
+    <>
+      <div className="list">
+        {archived.map((exercise) => (
+          <div key={exercise.id} className="li">
+            <span className="li-m">
+              <span className="li-t">{exercise.name}</span>
+              <span className="li-s">{describeExercise(exercise)}</span>
+            </span>
+            <button className="btn sm out" onClick={() => run(() => core.unarchiveExercise(exercise.id))}>
+              Unarchive
+            </button>
+          </div>
+        ))}
+      </div>
+      <p className="hint">Unarchived exercises come back without a routine; add them to one above.</p>
+      {error && (
+        <p className="errmsg section-msg">
+          <Icon name="error" />
+          {error}
+        </p>
+      )}
+    </>
   );
 }

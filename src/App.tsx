@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { type Core, type EndSessionResult, createCore } from "./core";
 import { createIndexedDbStore } from "./storage/indexedDbStore";
+import { type Area, NavigateContext } from "./ui/BottomNav";
 import { CoreContext, useCore } from "./ui/CoreContext";
 import { ExercisePage } from "./ui/ExercisePage";
 import { HistoryScreen } from "./ui/HistoryScreen";
@@ -26,7 +27,7 @@ export function App() {
   if (error) {
     return (
       <main className="screen">
-        <p className="error">Couldn't open your data: {error}</p>
+        <p className="errmsg app-error">Couldn't open your data: {error}</p>
       </main>
     );
   }
@@ -40,9 +41,7 @@ export function App() {
 }
 
 type Screen =
-  | { name: "home" }
-  | { name: "settings" }
-  | { name: "history" }
+  | { name: Area }
   | { name: "session" }
   | { name: "summary"; result: EndSessionResult }
   | { name: "overview" }
@@ -52,8 +51,10 @@ function Screens() {
   const core = useCore();
   // A running session reopens straight onto the session screen.
   const [screen, setScreen] = useState<Screen>(() => ({ name: core.activeSession() ? "session" : "home" }));
-  const home = () => setScreen({ name: "home" });
   const askAboutStaleSession = useStaleSessionCheck();
+
+  // Every new screen starts at the top.
+  useEffect(() => window.scrollTo(0, 0), [screen]);
 
   // Updates wait until no session is running and the user is on the home screen (not mid-form).
   useSafeUpdate(core.isSetupComplete() && !core.activeSession() && screen.name === "home");
@@ -73,29 +74,29 @@ function Screens() {
       />
     );
   }
+  return (
+    <NavigateContext.Provider value={(area: Area) => setScreen({ name: area })}>
+      <CurrentScreen screen={screen} setScreen={setScreen} />
+    </NavigateContext.Provider>
+  );
+}
+
+function CurrentScreen({ screen, setScreen }: { screen: Screen; setScreen: (screen: Screen) => void }) {
+  const home = () => setScreen({ name: "home" });
   switch (screen.name) {
     case "settings":
-      return <SettingsScreen onBack={home} />;
+      return <SettingsScreen />;
     case "history":
-      return <HistoryScreen onBack={home} />;
+      return <HistoryScreen />;
     case "session":
       return <SessionScreen onLeave={home} onEnded={(result) => setScreen({ name: "summary", result })} />;
     case "summary":
       return <SummaryScreen result={screen.result} onDone={home} />;
     case "overview":
-      return (
-        <OverviewScreen onBack={home} onOpenExercise={(exerciseId) => setScreen({ name: "exercise", exerciseId })} />
-      );
+      return <OverviewScreen onOpenExercise={(exerciseId) => setScreen({ name: "exercise", exerciseId })} />;
     case "exercise":
       return <ExercisePage exerciseId={screen.exerciseId} onBack={() => setScreen({ name: "overview" })} />;
     default:
-      return (
-        <HomeScreen
-          onOpenSettings={() => setScreen({ name: "settings" })}
-          onOpenSession={() => setScreen({ name: "session" })}
-          onOpenHistory={() => setScreen({ name: "history" })}
-          onOpenOverview={() => setScreen({ name: "overview" })}
-        />
-      );
+      return <HomeScreen onOpenSession={() => setScreen({ name: "session" })} />;
   }
 }

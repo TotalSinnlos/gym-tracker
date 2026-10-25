@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="18 18 72 72" width="512" height="512">
+  <title>CDT Gym</title>
+  <circle cx="54" cy="54" r="36" fill="#FFB300"/>
+  <g transform="translate(54 54) scale(0.64) translate(-50 -50)">
+    <path d="M28 66 C28 54 36 50 50 50 C64 50 72 54 72 66 Z" fill="#151412"/>
+    <path d="M37 40 L35 19 L46 32 Z M63 40 L65 19 L54 32 Z" fill="#151412" stroke="#151412" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M33 45 C33 36 40 30 50 30 C60 30 67 36 67 45 C67 53 60 60 50 62 C40 60 33 53 33 45 Z" fill="#151412"/>
+    <rect x="14" y="62" width="72" height="8" rx="4" fill="#FFFFFF"/>
+    <rect x="12" y="50" width="12" height="32" rx="5" fill="#FFFFFF"/>
+    <rect x="76" y="50" width="12" height="32" rx="5" fill="#FFFFFF"/>
+    <rect x="36" y="58" width="11" height="17" rx="5.5" fill="#151412"/>
+    <rect x="53" y="58" width="11" height="17" rx="5.5" fill="#151412"/>
+  </g>
+</svg>

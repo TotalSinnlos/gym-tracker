@@ -1,40 +1,58 @@
 import { isWeighted } from "../core";
+import { MainArea } from "./BottomNav";
 import { Sparkline, toDrawPoints } from "./charts";
 import { useCore } from "./CoreContext";
-import { formatKg, lastIncreaseText } from "./format";
+import { formatNumber, lastIncreaseText } from "./format";
+import { Icon } from "./icons";
 
 /** Every active exercise with its current weight, last increase and trend line. */
-export function OverviewScreen({ onBack, onOpenExercise }: { onBack: () => void; onOpenExercise: (id: string) => void }) {
+export function OverviewScreen({ onOpenExercise }: { onOpenExercise: (id: string) => void }) {
   const core = useCore();
   const rows = core.overview();
 
   return (
-    <main className="screen">
-      <header className="row header">
-        <button className="secondary" onClick={onBack}>
-          ← Home
-        </button>
-        <h1 className="grow">Progress</h1>
-      </header>
-
-      {rows.length === 0 && <p className="muted">No exercises yet.</p>}
-      {rows.map(({ exercise, lastIncrease, trend }) => {
-        const increase = lastIncreaseText(exercise, lastIncrease);
-        return (
-          <button key={exercise.id} className="card list-item overview-row" onClick={() => onOpenExercise(exercise.id)}>
-            <span className="grow stack-tight">
-              <strong>{exercise.name}</strong>
-              <span>{exercise.weight === undefined ? "Bodyweight" : formatKg(exercise.weight)}</span>
-              {increase && <span className="muted">{increase}</span>}
-            </span>
-            <Sparkline
-              title={`${exercise.name}: trend over the last ${trend.length} sessions`}
-              points={toDrawPoints(trend, isWeighted(exercise.type) ? "kg" : "reps")}
-            />
-          </button>
-        );
-      })}
-      <p className="muted">Trend: weight per session (total reps for bodyweight). Tap an exercise for its graphs.</p>
-    </main>
+    <MainArea area="overview">
+      <div className="page area">
+        <div>
+          <h1 className="h1">Progress</h1>
+          {rows.length > 0 && (
+            <p className="page-intro">
+              Each line shows an exercise's last 10 sessions: its weight, or total reps for bodyweight. The amber dot is
+              the latest.
+            </p>
+          )}
+        </div>
+        {rows.length === 0 ? (
+          <div className="nothing area-empty">
+            <Icon name="progress" />
+            <h2 className="nothing-t">No exercises yet.</h2>
+            <p className="body mut">Add some in settings and your trends will show up here.</p>
+          </div>
+        ) : (
+          <div className="list">
+            {rows.map(({ exercise, lastIncrease, trend }) => {
+              const increase = lastIncreaseText(exercise, lastIncrease);
+              return (
+                <button key={exercise.id} className="li progress-row" onClick={() => onOpenExercise(exercise.id)}>
+                  <span className="li-m">
+                    <span className="li-t">{exercise.name}</span>
+                    {exercise.weight === undefined ? (
+                      <span className="li-w bw">Bodyweight</span>
+                    ) : (
+                      <span className="li-w num">{formatNumber(exercise.weight)} kg</span>
+                    )}
+                    {increase && <span className="li-s">{increase}</span>}
+                  </span>
+                  <Sparkline
+                    title={`${exercise.name}: trend over the last ${trend.length} sessions`}
+                    points={toDrawPoints(trend, isWeighted(exercise.type) ? "kg" : "reps")}
+                  />
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </MainArea>
   );
 }
