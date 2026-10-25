@@ -4,7 +4,7 @@
 
 **Blocked by:** 13
 
-**Status:** ready-for-human
+**Status:** done
 
-- [ ] Every screen in the brief has a design
-- [ ] The design is handed back as a link, exported code or screenshots
+- [x] Every screen in the brief has a design
+- [x] The design is handed back as a link, exported code or screenshots
