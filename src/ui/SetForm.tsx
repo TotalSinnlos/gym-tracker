@@ -15,13 +15,26 @@ interface SetFormProps {
   onCancel?: () => void;
   /** An explanation above the buttons, e.g. that saving works out the current weight again. */
   note?: ReactNode;
+  /**
+   * In the page, with the button on the same line as the fields, instead of a sheet at the bottom of the
+   * screen. The session screen uses it, so the phone's keyboard covers neither the button nor the weight.
+   */
+  inline?: boolean;
 }
 
-/**
- * Reps (and weight, for weighted exercises) of one set, in the white sheet at the bottom of the screen:
- * logging a new set, or correcting one.
- */
-export function SetForm({ title, submitLabel, weighted, initialReps, initialWeight, autoFocus, onSubmit, onCancel, note }: SetFormProps) {
+/** Reps (and weight, for weighted exercises) of one set: logging a new set, or correcting one. */
+export function SetForm({
+  title,
+  submitLabel,
+  weighted,
+  initialReps,
+  initialWeight,
+  autoFocus,
+  onSubmit,
+  onCancel,
+  note,
+  inline = false,
+}: SetFormProps) {
   const [reps, setReps] = useState(initialReps);
   const [weight, setWeight] = useState(initialWeight === undefined ? "" : String(initialWeight));
   const { error, run } = useAction();
@@ -34,15 +47,25 @@ export function SetForm({ title, submitLabel, weighted, initialReps, initialWeig
   }
 
   const submitButton = (
-    <button type="submit" className="btn lg pri" disabled={reps.trim() === ""}>
+    <button type="submit" className={inline ? "btn pri" : "btn lg pri"} disabled={reps.trim() === ""}>
       {submitLabel}
     </button>
   );
 
   return (
-    <form className="dock sheet" onSubmit={submit}>
-      {title && <div className="sh-t">{title}</div>}
-      <div className={weighted ? "g2" : undefined}>
+    <form className={inline ? "setform" : "dock sheet"} onSubmit={submit}>
+      {title &&
+        (inline && onCancel ? (
+          <div className="setform-h">
+            <div className="sh-t">{title}</div>
+            <button type="button" className="btn sm txt" onClick={onCancel}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <div className="sh-t">{title}</div>
+        ))}
+      <div className={inline ? "setform-row" : weighted ? "g2" : undefined}>
         <label className={badField === "reps" ? "fld bad" : "fld"}>
           Reps
           <input
@@ -68,6 +91,7 @@ export function SetForm({ title, submitLabel, weighted, initialReps, initialWeig
             />
           </label>
         )}
+        {inline && submitButton}
       </div>
       {error && (
         <p className="errmsg" role="alert">
@@ -81,16 +105,17 @@ export function SetForm({ title, submitLabel, weighted, initialReps, initialWeig
           <span>{note}</span>
         </div>
       )}
-      {onCancel ? (
-        <div className="g2">
-          <button type="button" className="btn lg out" onClick={onCancel}>
-            Cancel
-          </button>
-          {submitButton}
-        </div>
-      ) : (
-        submitButton
-      )}
+      {!inline &&
+        (onCancel ? (
+          <div className="g2">
+            <button type="button" className="btn lg out" onClick={onCancel}>
+              Cancel
+            </button>
+            {submitButton}
+          </div>
+        ) : (
+          submitButton
+        ))}
     </form>
   );
 }

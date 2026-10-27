@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CoreError, createCore, createMemoryStore } from ".";
+import { createCore, createMemoryStore } from ".";
 
 async function setup() {
   let counter = 0;
@@ -27,81 +27,34 @@ async function finish(core: Core, exerciseId: string) {
   while (entry(core, exerciseId).state === "pending") await core.logSet(exerciseId, { reps: 10 });
 }
 
-describe("skip for now", () => {
-  it("swaps the current exercise with the next pending one", async () => {
-    const { core } = await setup();
-    expect(core.canSkip()).toBe(true);
-    await core.skipCurrent();
-    expect(queue(core)).toEqual(["Curl", "Leg press", "Pull-ups"]);
-    expect(current(core)).toBe("Curl");
-    expect(upNext(core)).toEqual(["Leg press", "Pull-ups"]);
-  });
+describe("flipping between exercises", () => {
+  const neighbours = (core: Core) => {
+    const { previous, next } = core.neighbourEntries();
+    return [previous?.exerciseName ?? null, next?.exerciseName ?? null];
+  };
 
-  it("brings the skipped exercise back straight after the one done instead", async () => {
-    const { core, curl } = await setup();
-    await core.skipCurrent();
-    await finish(core, curl.id);
-    expect(current(core)).toBe("Leg press");
-  });
-
-  it("jumps over finished exercises to the next pending one", async () => {
-    const { core, press, curl } = await setup();
-    await finish(core, press.id);
-    await core.goToEntry(press.id);
+  it("gives the exercises before and after the one on screen, in queue order", async () => {
+    const { core, press, curl, pullUp } = await setup();
+    expect(neighbours(core)).toEqual([null, "Curl"]);
     await core.goToEntry(curl.id);
-    // Queue: Leg press (done), Curl (current), Pull-ups. Skipping Curl puts it after Pull-ups.
-    await core.skipCurrent();
-    expect(queue(core)).toEqual(["Leg press", "Pull-ups", "Curl"]);
-    expect(current(core)).toBe("Pull-ups");
-  });
-
-  it("wraps round to an earlier pending exercise", async () => {
-    const { core, pullUp } = await setup();
+    expect(neighbours(core)).toEqual(["Leg press", "Pull-ups"]);
     await core.goToEntry(pullUp.id);
-    await core.skipCurrent();
-    expect(queue(core)).toEqual(["Leg press", "Pull-ups", "Curl"]);
-    expect(current(core)).toBe("Leg press");
-  });
-
-  it("keeps the sets already logged for the skipped exercise", async () => {
-    const { core, press } = await setup();
-    await core.logSet(press.id, { reps: 12 });
-    await core.skipCurrent();
-    expect(entry(core, press.id)).toMatchObject({ state: "pending", loggedSets: [{ reps: 12, weight: 60 }] });
-  });
-
-  it("is rejected when the current exercise is the only one left", async () => {
-    const { core, press, curl } = await setup();
-    await finish(core, press.id);
-    await finish(core, curl.id);
-    expect(current(core)).toBe("Pull-ups");
-    expect(core.canSkip()).toBe(false);
-    await expect(core.skipCurrent()).rejects.toThrow(CoreError);
-    expect(queue(core)).toEqual(["Leg press", "Curl", "Pull-ups"]);
-  });
-
-  it("is rejected when the exercise on screen is already finished", async () => {
-    const { core, press } = await setup();
-    await finish(core, press.id);
+    expect(neighbours(core)).toEqual(["Curl", null]);
+    // Finished exercises can be flipped back to as well.
     await core.goToEntry(press.id);
-    expect(core.canSkip()).toBe(false);
-    await expect(core.skipCurrent()).rejects.toThrow(CoreError);
+    await finish(core, press.id);
+    expect(neighbours(core)).toEqual(["Leg press", "Pull-ups"]);
   });
 
-  it("is rejected once everything is done or when no session is running", async () => {
+  it("gives no neighbours once everything is done or when no session is running", async () => {
     const { core, press, curl, pullUp } = await setup();
     for (const id of [press.id, curl.id, pullUp.id]) await finish(core, id);
-    expect(core.currentEntry()).toBeNull();
-    expect(core.canSkip()).toBe(false);
-    await expect(core.skipCurrent()).rejects.toThrow(CoreError);
+    expect(neighbours(core)).toEqual([null, null]);
     await core.endSession();
-    expect(core.canSkip()).toBe(false);
-    await expect(core.skipCurrent()).rejects.toThrow(CoreError);
+    expect(neighbours(core)).toEqual([null, null]);
   });
-});
 
-describe("jump to", () => {
-  it("makes a pending exercise current while the previous one keeps its place", async () => {
+  it("makes the exercise flipped to current while the queue keeps its order", async () => {
     const { core, pullUp } = await setup();
     await core.goToEntry(pullUp.id);
     expect(current(core)).toBe("Pull-ups");
@@ -114,17 +67,16 @@ describe("jump to", () => {
     await core.logSet(press.id, { reps: 12 });
     await core.goToEntry(curl.id);
     expect(entry(core, press.id)).toMatchObject({ state: "pending", loggedSets: [{ reps: 12, weight: 60 }] });
-    // The exercise left behind comes up first.
     expect(upNext(core)).toEqual(["Leg press", "Pull-ups"]);
     await core.goToEntry(press.id);
     await core.logSet(press.id, { reps: 11 });
     expect(entry(core, press.id).state).toBe("done");
   });
 
-  it("goes back to the exercise left behind, then continues in queue order", async () => {
+  it("moves on to the first exercise still to do after finishing one out of order", async () => {
     const { core, press, curl, pullUp } = await setup();
+    // Leg press is busy, so Pull-ups first.
     await core.goToEntry(pullUp.id);
-    expect(upNext(core)).toEqual(["Leg press", "Curl"]);
     await finish(core, pullUp.id);
     expect(current(core)).toBe("Leg press");
     await finish(core, press.id);
@@ -134,24 +86,37 @@ describe("jump to", () => {
     expect(upNext(core)).toEqual([]);
   });
 
-  it("goes back to the most recently left exercise after several jumps", async () => {
-    const { core, curl, pullUp } = await setup();
+  it("isn't thrown off by flipping through exercises just to look at them", async () => {
+    const { core, press, curl, pullUp } = await setup();
     await core.goToEntry(curl.id);
     await core.goToEntry(pullUp.id);
-    expect(upNext(core)).toEqual(["Curl", "Leg press"]);
-    await finish(core, pullUp.id);
-    expect(current(core)).toBe("Curl");
+    await core.goToEntry(curl.id);
     await finish(core, curl.id);
     expect(current(core)).toBe("Leg press");
+    await finish(core, press.id);
+    expect(current(core)).toBe("Pull-ups");
+    await finish(core, pullUp.id);
+    expect(core.currentEntry()).toBeNull();
   });
 
-  it("keeps the exercise to go back to while a finished one is corrected", async () => {
+  it("stays on a finished exercise reopened to correct it", async () => {
     const { core, press, curl } = await setup();
     await finish(core, press.id);
     await core.logSet(curl.id, { reps: 10 });
     await core.goToEntry(press.id);
     await core.editSet(press.id, 0, { reps: 12 });
-    expect(upNext(core)[0]).toBe("Curl");
+    expect(current(core)).toBe("Leg press");
+    expect(upNext(core)).toEqual(["Curl", "Pull-ups"]);
+  });
+
+  it("loads a session saved with an exercise to go back to (from \"Skip for now\") without it", async () => {
+    const { store, core, curl } = await setup();
+    await core.goToEntry(curl.id);
+    const saved = (await store.load())!;
+    await store.save({ ...saved, activeSession: { ...saved.activeSession!, returnToEntryId: "id-1" } as never });
+    const reloaded = await createCore(store);
+    expect(reloaded.activeSession()).not.toHaveProperty("returnToEntryId");
+    expect(reloaded.currentEntry()?.exerciseName).toBe("Curl");
   });
 });
 
@@ -159,12 +124,12 @@ describe("ending with exercises left", () => {
   it("marks partly logged exercises incomplete and untouched ones skipped", async () => {
     const { core, press, curl, pullUp } = await setup();
     await core.logSet(press.id, { reps: 12 });
-    await core.skipCurrent();
+    await core.goToEntry(curl.id);
     await finish(core, curl.id);
     const { session } = await core.endSession();
     expect(session!.entries.map((e) => [e.exerciseName, e.state])).toEqual([
-      ["Curl", "done"],
       ["Leg press", "incomplete"],
+      ["Curl", "done"],
       ["Pull-ups", "skipped"],
     ]);
     expect(session!.entries.find((e) => e.exerciseId === press.id)!.loggedSets).toEqual([{ reps: 12, weight: 60 }]);

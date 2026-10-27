@@ -126,6 +126,19 @@ export function summarizeProgression(session: Session, exercises: Exercise[]): P
   return summary;
 }
 
+/**
+ * Whether the entry earned its exercise a weight increase when its session ended: it is the weighted
+ * exercise's deciding done entry, it beat the rep range, and no weight was set in settings during the session.
+ */
+export function earnedIncrease(session: Session, entry: SessionEntry): boolean {
+  return (
+    entry.sessionWeight !== undefined &&
+    entry === decidingEntry(session, entry.exerciseId, ["done"]) &&
+    session.weightOverrides?.[entry.exerciseId] === undefined &&
+    beatsRepRange(entry)
+  );
+}
+
 /** Every configured set was logged and reached the rep maximum plus one, at the session weight or higher. */
 function beatsRepRange(entry: SessionEntry): boolean {
   return (

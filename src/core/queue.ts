@@ -12,21 +12,9 @@ export function entryIdsFor(exerciseIds: string[]): string[] {
   });
 }
 
-/** The pending entries other than `entryId`, in queue order starting after it and wrapping round to the start. */
-export function pendingAfter(entries: SessionEntry[], entryId: string): SessionEntry[] {
-  const index = entries.findIndex((e) => e.id === entryId);
-  const rotated = [...entries.slice(index + 1), ...entries.slice(0, index)];
-  return rotated.filter((e) => e.state === "pending");
-}
-
-/**
- * The pending entries in the order they come up: the one the user left behind first,
- * then the rest in queue order. Leaves out `excludeId` (the entry on screen).
- */
-export function nextInQueue(entries: SessionEntry[], returnToId: string | null, excludeId: string | null): SessionEntry[] {
-  const pending = entries.filter((e) => e.state === "pending" && e.id !== excludeId);
-  const returnTo = pending.find((e) => e.id === returnToId);
-  return returnTo ? [returnTo, ...pending.filter((e) => e !== returnTo)] : pending;
+/** The pending entries other than `excludeId` (the entry on screen), in queue order: the order they come up in. */
+export function pendingExcept(entries: SessionEntry[], excludeId: string | null): SessionEntry[] {
+  return entries.filter((e) => e.state === "pending" && e.id !== excludeId);
 }
 
 /** Marks an entry done once it has all its sets, and pending again if a set is removed. */

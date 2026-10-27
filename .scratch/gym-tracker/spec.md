@@ -15,7 +15,7 @@ I want my own app on my Android phone that handles all of this, keeps my data sa
 A web app I install from Chrome to my phone's home screen. It opens full screen with its own icon, works offline at the gym, and stores all data on the phone. There are no accounts and no server.
 
 - I set up my **Exercises**. Each is a machine, a free-weight exercise or a bodyweight exercise, with a number of sets and a target rep range. Machine and free-weight exercises also have a current weight and a weight increment. I put exercises in order to build one or more **Routines**.
-- I start a **Session** by picking a routine. The app shows one exercise at a time, with its weight already filled in and a small chart of my recent progress on that exercise. I enter the reps for each set. If an exercise's equipment is busy, I tap "Skip for now" and the app shows the next exercise, then brings the skipped one straight back. I can also jump to any remaining exercise from an "Up next" list.
+- I start a **Session** by picking a routine. The app shows one exercise at a time, with its weight already filled in and a small chart of my recent progress on that exercise. I enter the reps for each set. I can flip (swipe or tap the arrows) through the session's exercises: back to finished ones, or ahead to one whose equipment is free when the current one is busy. Once I finish an exercise, the app moves on to the first one I haven't done yet. I can also jump to any remaining exercise from an "Up next" list.
 - When I end the session, the app saves it and raises the weight on every weighted exercise where I hit 13+ reps on all sets. It marks any exercise I never got to as skipped and then offers a one-tap backup to Google Drive through Android's share menu.
 - Each exercise has a page with graphs of weight over time and reps per session. An overview page lists all exercises with their current weight, their last increase and a small trend line.
 - I can export my full history as a CSV for spreadsheets, and save or restore a complete backup file.
@@ -57,8 +57,8 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 28. As a lifter, I want to add an extra set or remove a set during a session, so that the record matches what I actually did.
 29. As a lifter, I want to see my results from last time on this exercise (weight and reps per set), so that I know what to beat.
 30. As a lifter, I want a compact chart of the exercise's recent progress on the session screen, so that I can see my trend right when I'm about to lift.
-31. As a lifter, I want to tap "Skip for now" when an exercise's equipment is busy and have the exercise come back right after the next one, so that I can do another exercise and then return to it.
-32. As a lifter, I want "Skip for now" to be hidden when the current exercise is the only one left, so that I'm never offered a skip that can't do anything.
+31. As a lifter, I want to flip ahead to another exercise when an exercise's equipment is busy, and be brought back to the busy one once I finish, so that I can do another exercise and then return to it. (This replaced "Skip for now" after the first gym visit.)
+32. As a lifter, I want to flip back through the exercises I've finished in this session, so that I can look at or correct them.
 33. As a lifter, I want an "Up next" list of the remaining exercises, so that I can see what's left in my workout.
 34. As a lifter, I want to tap any exercise in the "Up next" list to do it now, so that I can work around several busy machines at once.
 35. As a lifter, I want to go back to an exercise I already finished in this session and correct its reps, so that I can fix a typo straight away.
@@ -158,13 +158,13 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 - Commands the core exposes, roughly:
   - Exercises: create, update, archive, unarchive and delete (only allowed for exercises with no history).
   - Routines: create, rename, delete, reorder, add an exercise and remove an exercise.
-  - Sessions: start a session from a routine, set the session weight, log a set, edit a set, add a set, remove a set, skip the current exercise, jump to an exercise, end the session, lower an exercise's weight from the summary, edit a past session and delete a session.
+  - Sessions: start a session from a routine, set the session weight, log a set, edit a set, add a set, remove a set, flip or jump to an exercise, end the session, lower an exercise's weight from the summary, edit a past session and delete a session.
   - Data: create a backup, restore a backup and export CSV.
-- Queries the core exposes, roughly: the active session (the current exercise, the "Up next" list in order, whether skipping is available, how many exercises are left, whether the session is stale, and last time's results for the current exercise), session history, an exercise's history series for graphs, the overview summary and the date of the last backup.
+- Queries the core exposes, roughly: the active session (the current exercise, the "Up next" list in order, the exercises before and after the current one, how many exercises are left, whether the session is stale, and last time's results for the current exercise), session history, an exercise's history series for graphs, the overview summary and the date of the last backup.
 
 ### Routine and exercise management
 
-- A routine can be deleted, except the routine of the running session and the last remaining routine (so there's always one to start from). Past sessions keep the deleted routine's name.
+- A routine can be deleted, except the routine of the running session and the last remaining routine (so there's always one to start from). Past sessions keep the deleted routine's name. Renaming a routine renames its past sessions and the running one too.
 - Starting a session offers only routines with at least one exercise. With one such routine, "Start session" starts it; with several, the home screen asks which one.
 - Archiving an exercise hides it from exercise lists and "add to routine" pickers, keeps its history and current weight, and takes it out of every routine (the user is told which ones before confirming). So no routine, and no new session, ever contains an archived exercise; starting a session from a routine that somehow does is rejected. Archived exercises can't be added to routines. A running session keeps an exercise archived mid-session, and its result still counts. Unarchiving brings it back with its history but doesn't put it back into any routine.
 - An exercise has history when any saved session or the running session has an entry for it, even a skipped one. Only an exercise without history can be deleted; deleting also takes it out of every routine.
@@ -173,11 +173,9 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 
 - When a session starts, the queue holds the routine's exercises in routine order, and the first one is current. The session keeps this snapshot of the routine and of each exercise's sets and rep range. Changes to them in settings apply from the next session. Changes to an exercise's current weight in settings update the session weight of its pending entries immediately; if the exercise was already done in this session, the weight set in settings wins at the end instead of the session's result. An exercise switched to bodyweight during a session gets no weight written back.
 - Only one session can be active at a time.
-- "Skip for now" swaps the current exercise with the next pending exercise, so the skipped exercise comes back immediately after it.
-- Skipping is only available while at least one other exercise is pending. When the current exercise is the only one left, the UI hides "Skip for now", and the user either does it or taps "End session" (which marks it skipped). The core rejects a skip command in that state.
-- "Jump to" makes any pending exercise current. The exercise that was current stays in the queue, keeping its position, and is remembered as the one to go back to (as is an exercise skipped with "Skip for now").
-- When an exercise's last configured set is logged, the entry becomes `done` and the exercise the user jumped or skipped away from becomes current again; otherwise the first pending exercise in queue order does. "Up next" lists pending exercises in that same order. The user can still go back and edit a done entry during the session.
-- An exercise jumped away from after logging some of its sets stays pending, keeps its logged sets, and remains in the "Up next" list.
+- The queue keeps its order for the whole session. Flipping (swiping, or the previous and next arrows) moves to the exercise before or after the current one in queue order, finished or not, and makes it current. "Jump to" (tapping one in "Up next" or "Finished") does the same for any exercise.
+- When an exercise's last configured set is logged, the entry becomes `done` and the first pending exercise in queue order becomes current. So an exercise flipped past because it was busy comes back next, and just looking at other exercises changes nothing. "Up next" lists pending exercises in that same order. The user can still go back and edit a done entry during the session.
+- An exercise flipped away from after logging some of its sets stays pending, keeps its logged sets, and remains in the "Up next" list.
 - "End session" asks for confirmation when any entry is still pending.
 - Ending the session marks each remaining `pending` entry as `incomplete` if it has at least one set, and as `skipped` if it has none.
 - A session that ends with no sets logged at all is discarded instead of saved.
@@ -218,20 +216,20 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 ### Screens
 
 - **Home**: start a session (pick a routine), or resume an active one. Links to the overview, history and settings.
-- **Session screen**: the current exercise, its weight (editable, hidden for bodyweight), last time's results, a compact progress chart, set inputs, "Skip for now" (hidden when only one exercise is left), the "Up next" list and "End session".
+- **Session screen**: the current exercise, its weight (editable, hidden for bodyweight), last time's results, a compact progress chart, set inputs right under the weight (so the phone's keyboard covers neither), previous and next arrows and swiping to flip between exercises, the "Up next" list (left out on the last exercise) and "End session".
 - **End-of-session summary**: exercises done, incomplete and skipped, upcoming weight increases, bodyweight exercises that beat the rep range, below-range exercises (with a "lower weight" button for weighted ones), and the "Back up" button.
 - **Overview**: all active exercises with their current weight (or "bodyweight"), the date of the last increase and a small trend line.
 - **Exercise page**: a weight-over-time graph (weighted exercises only), a reps-per-session graph (incomplete sessions shown as hollow points) and the exercise's settings.
 - **History**: a list of past sessions. Each opens a detail view where sets can be edited and the session deleted.
 - **Settings**: manage exercises (including archived ones), manage routines, back up, restore and export CSV.
-- **First-run setup**: add exercises, then build the first routine.
+- **History**: a list of past sessions. Each opens a detail view where sets can be edited and the session deleted. Exercises that earned a weight increase in that session are highlighted.
 - The visual design will be done separately in Claude Design. A design brief describing these screens will be written when the build reaches that point, and the result will be built into the app.
 
 ## Testing Decisions
 
 - A good test checks behaviour the user would notice, through the core module's commands and queries. Tests don't depend on internal details such as how data is laid out in storage, so the inside of the core can be reorganised freely without breaking tests.
 - The core module is the single test seam. Tests run it against an in-memory store and cover:
-  - the session queue: starting, skip, skip being unavailable (and rejected) when only one exercise is left, jump to (including away from a partly logged exercise), completing entries, going back to edit a done entry, ending with pending entries becoming incomplete or skipped, and discarding an empty session;
+  - the session queue: starting, flipping (and the neighbours at either end), jump to (including away from a partly logged exercise), moving on to the first pending exercise after finishing one out of order, completing entries, going back to edit a done entry, ending with pending entries becoming incomplete or skipped, and discarding an empty session;
   - session snapshots: routine and sets/rep-range edits during a session don't affect it, and weight edits do;
   - the progression rule: qualifying, one set short of the threshold, fewer sets than configured, a dropped weight on one set, a changed session weight, skipped and incomplete entries, and bodyweight exercises being flagged but never changed;
   - below range: detection, lowering by one increment only when chosen, clamping at 0 kg, and no lowering offered for bodyweight;

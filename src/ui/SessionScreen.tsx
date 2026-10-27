@@ -8,6 +8,7 @@ import { Icon } from "./icons";
 import { Progress } from "./Progress";
 import { SetForm } from "./SetForm";
 import { useAction } from "./useAction";
+import { useSwipe } from "./useSwipe";
 
 interface Props {
   onLeave: () => void;
@@ -20,6 +21,10 @@ export function SessionScreen({ onLeave, onEnded }: Props) {
   const current = core.currentEntry();
   const [confirmingEnd, setConfirmingEnd] = useState(false);
   const { error, run } = useAction();
+  // Which side an exercise slides in from: the left when flipping back to an earlier one.
+  const index = session && current ? session.entries.indexOf(current) : -1;
+  const [shown, setShown] = useState({ index, from: "right" });
+  if (shown.index !== index) setShown({ index, from: index !== -1 && index < shown.index ? "left" : "right" });
 
   if (!session) return null;
   const pending = core.pendingCount();
@@ -50,8 +55,8 @@ export function SessionScreen({ onLeave, onEnded }: Props) {
       <Progress session={session} />
 
       {current ? (
-        // Keyed by entry, so moving to the next exercise starts fresh (and slides in).
-        <CurrentExercise key={current.id} entry={current} />
+        // Keyed by entry, so moving to another exercise starts fresh (and slides in).
+        <CurrentExercise key={current.id} entry={current} enterFrom={shown.from} />
       ) : (
         <AllDone />
       )}
@@ -59,7 +64,7 @@ export function SessionScreen({ onLeave, onEnded }: Props) {
       {error && <p className="errmsg session-error">{error}</p>}
 
       {!current && (
-        <div className="dock sheet">
+        <div className="dock sheet push-down">
           <button className="btn lg pri" onClick={end}>
             End session
           </button>
@@ -94,7 +99,7 @@ function joinNames(names: string[]): string {
   return names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
-function CurrentExercise({ entry }: { entry: SessionEntry }) {
+function CurrentExercise({ entry, enterFrom }: { entry: SessionEntry; enterFrom: string }) {
   const core = useCore();
   const session = core.activeSession()!;
   const exercise = core.getExercise(entry.exerciseId);
@@ -104,9 +109,17 @@ function CurrentExercise({ entry }: { entry: SessionEntry }) {
   const weightChange = core.weightChangeSinceLastTime(entry.exerciseId);
   const upNext = core.upNext();
   const finished = core.finishedEntries();
+  const { previous, next } = core.neighbourEntries();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  // The keyboard stays up between sets, but doesn't pop up when an exercise first appears.
+  const [loggedHere, setLoggedHere] = useState(false);
   const { error, run } = useAction();
   const editing = editingIndex !== null;
+  const flip = (to: SessionEntry | null) => run(() => (to ? core.goToEntry(to.id) : Promise.resolve()));
+  const swipe = useSwipe((direction) => flip(direction === 1 ? next : previous), {
+    previous: !editing && previous !== null,
+    next: !editing && next !== null,
+  });
 
   const nextSetNumber = entry.loggedSets.length + 1;
   const extraSet = nextSetNumber > entry.sets;
@@ -114,69 +127,151 @@ function CurrentExercise({ entry }: { entry: SessionEntry }) {
   const position = (id: string) => session.entries.findIndex((e) => e.id === id) + 1;
 
   return (
-    <>
-      <section className="current">
-        <div className="nrow">
-          <div>
-            <h1 className="ename">{entry.exerciseName}</h1>
-            <div className="etype">
-              {EXERCISE_TYPE_LABELS[entry.type]}
-              {weighted && ` · steps of ${formatKg(step)}`}
-            </div>
+    <section
+      className={`current swipe from-${enterFrom}${swipe.dragging ? " dragging" : ""}`}
+      style={swipe.offset ? { transform: `translateX(${swipe.offset}px)` } : undefined}
+      {...swipe.handlers}
+    >
+      <div className="nrow">
+        <div>
+          <h1 className="ename">{entry.exerciseName}</h1>
+          <div className="etype">
+            {EXERCISE_TYPE_LABELS[entry.type]}
+            {weighted && ` · steps of ${formatKg(step)}`}
           </div>
-          {core.canSkip() && !editing && (
-            <button className="btn sm" onClick={() => run(() => core.skipCurrent())}>
-              Skip for now
-            </button>
-          )}
         </div>
+        <div className="flip">
+          <button
+            className="ib"
+            aria-label={previous ? `Previous exercise: ${previous.exerciseName}` : "Previous exercise"}
+            disabled={editing || !previous}
+            onClick={() => flip(previous)}
+          >
+            <Icon name="back" />
+          </button>
+          <button
+            className="ib"
+            aria-label={next ? `Next exercise: ${next.exerciseName}` : "Next exercise"}
+            disabled={editing || !next}
+            onClick={() => flip(next)}
+          >
+            <Icon name="next" />
+          </button>
+        </div>
+      </div>
 
-        <div className={editing ? "dimmed" : undefined}>
-          {weighted ? (
-            <>
-              <WeightStepper
-                key={entry.sessionWeight}
-                weight={entry.sessionWeight!}
-                step={step}
-                onChange={(weight) => run(() => core.setSessionWeight(entry.id, weight))}
-              />
-              <div className="setrow">
-                <div className="setpill num" key={nextSetNumber}>
-                  {extraSet ? (
-                    "Extra set"
-                  ) : (
-                    <>
-                      Set {nextSetNumber} <span>of {entry.sets}</span>
-                    </>
-                  )}
-                </div>
-                <div className="tgt">Target: {target}</div>
-              </div>
-            </>
-          ) : (
-            // Bodyweight: no weight to show, so the set number takes the big panel.
-            <div className="slab slab-sets">
-              <div className="wt num" key={nextSetNumber}>
+      <div className={editing ? "dimmed" : undefined}>
+        {weighted ? (
+          <>
+            <WeightStepper
+              key={entry.sessionWeight}
+              weight={entry.sessionWeight!}
+              step={step}
+              onChange={(weight) => run(() => core.setSessionWeight(entry.id, weight))}
+            />
+            <div className="setrow">
+              <div className="setpill num" key={nextSetNumber}>
                 {extraSet ? (
-                  <b>Extra set</b>
+                  "Extra set"
                 ) : (
                   <>
-                    <b>Set {nextSetNumber}</b>
-                    <span>of {entry.sets}</span>
+                    Set {nextSetNumber} <span>of {entry.sets}</span>
                   </>
                 )}
               </div>
-              <div className="tgt">
-                Target
-                <br />
-                {target}
-              </div>
+              <div className="tgt">Target: {target}</div>
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          // Bodyweight: no weight to show, so the set number takes the big panel.
+          <div className="slab slab-sets">
+            <div className="wt num" key={nextSetNumber}>
+              {extraSet ? (
+                <b>Extra set</b>
+              ) : (
+                <>
+                  <b>Set {nextSetNumber}</b>
+                  <span>of {entry.sets}</span>
+                </>
+              )}
+            </div>
+            <div className="tgt">
+              Target
+              <br />
+              {target}
+            </div>
+          </div>
+        )}
+      </div>
 
-        {!editing &&
-          (last ? (
+      {editing ? (
+        <SetForm
+          key={`edit-${editingIndex}`}
+          inline
+          title={`Correct set ${editingIndex + 1}`}
+          submitLabel="Save"
+          weighted={weighted}
+          initialReps={String(entry.loggedSets[editingIndex].reps)}
+          initialWeight={entry.loggedSets[editingIndex].weight}
+          autoFocus
+          onSubmit={async (reps, weight) => {
+            await core.editSet(entry.id, editingIndex, { reps, weight });
+            setEditingIndex(null);
+          }}
+          onCancel={() => setEditingIndex(null)}
+        />
+      ) : (
+        <SetForm
+          // Re-created after each set and whenever the session weight changes, so the weight field follows it.
+          key={`${entry.loggedSets.length}-${entry.sessionWeight}`}
+          inline
+          submitLabel="Log set"
+          weighted={weighted}
+          initialReps=""
+          initialWeight={entry.sessionWeight}
+          autoFocus={loggedHere}
+          onSubmit={(reps, weight) => {
+            // Before logging, so the fresh form that replaces this one already takes the focus.
+            setLoggedHere(true);
+            return core.logSet(entry.id, { reps, weight });
+          }}
+        />
+      )}
+
+      {error && <p className="errmsg session-error">{error}</p>}
+
+      {entry.loggedSets.length > 0 && (
+        <>
+          <div className="sec">Logged</div>
+          <ol className="logged-list">
+            {entry.loggedSets.map((set, index) => (
+              <li key={index} className={editingIndex === index ? "logged on" : "logged"}>
+                <button className="logged-open" disabled={editing} onClick={() => setEditingIndex(index)}>
+                  <span className="k">Set {index + 1}</span>
+                  <span className="v num">{formatSet(set)}</span>
+                </button>
+                {editingIndex === index ? (
+                  <span className="e">Editing</span>
+                ) : (
+                  !editing && (
+                    <button
+                      className="ib plain"
+                      aria-label={`Remove set ${index + 1}`}
+                      onClick={() => run(() => core.removeSet(entry.id, index))}
+                    >
+                      <Icon name="close" />
+                    </button>
+                  )
+                )}
+              </li>
+            ))}
+          </ol>
+        </>
+      )}
+
+      {!editing && (
+        <>
+          {last ? (
             <div className="last">
               <div className="last-m">
                 <div className="lab">Last time</div>
@@ -194,41 +289,11 @@ function CurrentExercise({ entry }: { entry: SessionEntry }) {
                 <b>First time for this one.</b> <span className="mut">Nothing to compare with yet.</span>
               </span>
             </div>
-          ))}
+          )}
 
-        {entry.loggedSets.length > 0 && (
-          <>
-            <div className="sec">Logged</div>
-            <ol className="logged-list">
-              {entry.loggedSets.map((set, index) => (
-                <li key={index} className={editingIndex === index ? "logged on" : "logged"}>
-                  <button className="logged-open" disabled={editing} onClick={() => setEditingIndex(index)}>
-                    <span className="k">Set {index + 1}</span>
-                    <span className="v num">{formatSet(set)}</span>
-                  </button>
-                  {editingIndex === index ? (
-                    <span className="e">Editing</span>
-                  ) : (
-                    !editing && (
-                      <button
-                        className="ib plain"
-                        aria-label={`Remove set ${index + 1}`}
-                        onClick={() => run(() => core.removeSet(entry.id, index))}
-                      >
-                        <Icon name="close" />
-                      </button>
-                    )
-                  )}
-                </li>
-              ))}
-            </ol>
-          </>
-        )}
-
-        {!editing && (
-          <>
-            <div className="sec">Up next</div>
-            {upNext.length > 0 ? (
+          {upNext.length > 0 && (
+            <>
+              <div className="sec">Up next</div>
               <div className="list">
                 {upNext.map((next) => {
                   const partly = next.loggedSets.length > 0;
@@ -247,49 +312,17 @@ function CurrentExercise({ entry }: { entry: SessionEntry }) {
                   );
                 })}
               </div>
-            ) : (
-              <div className="empty">This is the last one.</div>
-            )}
-            {finished.length > 0 && (
-              <>
-                <div className="sec">Finished</div>
-                <FinishedList entries={finished} />
-              </>
-            )}
-          </>
-        )}
-
-        {error && <p className="errmsg session-error">{error}</p>}
-      </section>
-
-      {editing ? (
-        <SetForm
-          key={`edit-${editingIndex}`}
-          title={`Correct set ${editingIndex + 1}`}
-          submitLabel="Save"
-          weighted={weighted}
-          initialReps={String(entry.loggedSets[editingIndex].reps)}
-          initialWeight={entry.loggedSets[editingIndex].weight}
-          autoFocus
-          onSubmit={async (reps, weight) => {
-            await core.editSet(entry.id, editingIndex, { reps, weight });
-            setEditingIndex(null);
-          }}
-          onCancel={() => setEditingIndex(null)}
-        />
-      ) : (
-        <SetForm
-          // Re-created after each set and whenever the session weight changes, so the weight field follows it.
-          key={`${entry.loggedSets.length}-${entry.sessionWeight}`}
-          submitLabel="Log set"
-          weighted={weighted}
-          initialReps=""
-          initialWeight={entry.sessionWeight}
-          autoFocus
-          onSubmit={(reps, weight) => core.logSet(entry.id, { reps, weight })}
-        />
+            </>
+          )}
+          {finished.length > 0 && (
+            <>
+              <div className="sec">Finished</div>
+              <FinishedList entries={finished} />
+            </>
+          )}
+        </>
       )}
-    </>
+    </section>
   );
 }
 
@@ -327,10 +360,7 @@ function AllDone() {
     <section className="current">
       <div className="hero">
         <Badge />
-        <div>
-          <div className="hero-t">All exercises done!</div>
-          <div className="hero-s">Correct anything below, or end the session.</div>
-        </div>
+        <div className="hero-t">All exercises done!</div>
       </div>
       <div className="sec">Finished · tap one to correct it</div>
       <FinishedList entries={core.finishedEntries()} withWeight />

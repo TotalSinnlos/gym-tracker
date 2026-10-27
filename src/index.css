@@ -594,6 +594,11 @@ button.li:active {
   color: var(--ink);
 }
 
+.tag.raised {
+  background: var(--amber);
+  color: var(--ink);
+}
+
 .tag.skip {
   background: transparent;
   color: var(--ink-2);
@@ -865,7 +870,14 @@ button.li:active {
 @keyframes enter-from-right {
   from {
     opacity: 0;
-    transform: translateX(32px);
+    transform: translateX(45%);
+  }
+}
+
+@keyframes enter-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-45%);
   }
 }
 
@@ -1213,11 +1225,31 @@ button.li:active {
   margin-top: 10px;
 }
 
+/* Exercises slide in from the side, so cut off what sticks out instead of scrolling sideways. */
+.session {
+  overflow-x: clip;
+}
+
 .current {
   display: flex;
   flex-direction: column;
-  padding-bottom: 24px;
-  animation: enter-from-right var(--dur-medium) var(--ease-emphasized-out);
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  animation: enter-from-right var(--dur-long) var(--ease-emphasized-out);
+  /* Springs back when a swipe isn't far enough to flip. */
+  transition: transform var(--dur-medium) var(--ease-emphasized-out);
+}
+
+.current.from-left {
+  animation-name: enter-from-left;
+}
+
+/* Swipeable sideways; scrolling up and down stays with the browser. */
+.swipe {
+  touch-action: pan-y;
+}
+
+.swipe.dragging {
+  transition: none;
 }
 
 .nrow {
@@ -1241,9 +1273,11 @@ button.li:active {
   color: var(--ink-2);
 }
 
-.nrow .btn.sm {
-  font-size: 14px;
-  padding: 0 16px;
+/* Previous and next exercise */
+.flip {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 /* The big weight panel with − and + */
@@ -1516,6 +1550,38 @@ button.li:active {
   font-weight: 700;
 }
 
+/* Logging a set in the page, right under the weight: the fields and the button on one line. */
+.setform {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.setform-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -4px -14px -4px 0;
+}
+
+.setform-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.setform-row .fld {
+  flex: 1;
+}
+
+.setform-row .btn {
+  /* As tall as the fields next to it. */
+  height: 60px;
+  flex-shrink: 0;
+  padding: 0 20px;
+}
+
 .fld.bad {
   color: var(--error);
 }
@@ -1539,14 +1605,6 @@ button.li:active {
   font-size: 22px;
   font-weight: 750;
   line-height: 1.2;
-}
-
-.hero-s {
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--amber-ink-strong);
-  margin-top: 4px;
-  line-height: 1.4;
 }
 
 .badge-svg {
@@ -2249,6 +2307,12 @@ button.li:active {
   gap: 10px;
   padding: 0 8px 6px;
   min-height: 32px;
+}
+
+/* An exercise whose weight went up after this session. */
+.ex.raised {
+  background: var(--amber-soft);
+  border-color: var(--amber);
 }
 
 .exh b {

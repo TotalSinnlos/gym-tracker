@@ -101,6 +101,7 @@ function SessionDetail({ session, onBack }: { session: Session; onBack: () => vo
   const [editing, setEditing] = useState<{ entry: SessionEntry; index: number } | null>(null);
   const { error, run } = useAction();
   const locked = !core.canEditHistory();
+  const increased = core.increasedEntryIds(session.id);
 
   async function remove() {
     if (await run(() => core.deleteSession(session.id))) onBack();
@@ -130,9 +131,10 @@ function SessionDetail({ session, onBack }: { session: Session; onBack: () => vo
         )}
 
         {session.entries.map((entry) => (
-          <div key={entry.id} className="ex">
+          <div key={entry.id} className={increased.includes(entry.id) ? "ex raised" : "ex"}>
             <div className="exh">
               <b className={entry.state === "skipped" ? "mut" : undefined}>{entry.exerciseName}</b>
+              {increased.includes(entry.id) && <span className="tag raised">↑ Weight up</span>}
               <StateTag state={entry.state} />
             </div>
             {entry.loggedSets.map((set, index) => {

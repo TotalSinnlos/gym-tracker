@@ -74,8 +74,6 @@ export interface Session {
   entries: SessionEntry[];
   /** The entry on screen, or null once nothing is pending. */
   currentEntryId: string | null;
-  /** The pending entry the user jumped or skipped away from; it comes up next. */
-  returnToEntryId?: string | null;
   /** Weights set in settings for an exercise after it was already done in this session; they win at the end. */
   weightOverrides?: Record<string, number>;
 }

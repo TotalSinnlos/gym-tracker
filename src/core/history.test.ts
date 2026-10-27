@@ -60,6 +60,31 @@ describe("listing history", () => {
   });
 });
 
+describe("weight increases in a past session", () => {
+  it("lists the weighted exercises that earned an increase", async () => {
+    const { core, routine, press, curl, pullUp } = await setup();
+    const session = await runSession(core, routine.id, {
+      [press.id]: [13, 14],
+      [curl.id]: [13, 13, 12],
+      [pullUp.id]: [13, 13],
+    });
+    // Pull-ups beat the rep range too, but bodyweight exercises have no weight to raise.
+    expect(core.increasedEntryIds(session.id)).toEqual([press.id]);
+  });
+
+  it("follows corrections, and leaves out exercises given a weight in settings during the session", async () => {
+    const { core, routine, press, curl } = await setup();
+    await core.startSession(routine.id);
+    for (const reps of [13, 13]) await core.logSet(press.id, { reps });
+    for (const reps of [13, 13, 13]) await core.logSet(curl.id, { reps });
+    await core.updateExercise(curl.id, { weight: 20 });
+    const { session } = await core.endSession();
+    expect(core.increasedEntryIds(session!.id)).toEqual([press.id]);
+    await core.editPastSet(session!.id, press.id, 0, { reps: 12 });
+    expect(core.increasedEntryIds(session!.id)).toEqual([]);
+  });
+});
+
 describe("correcting a past set", () => {
   it("changes reps and weight, keeping the entry's state", async () => {
     const { core, routine, press, curl } = await setup();

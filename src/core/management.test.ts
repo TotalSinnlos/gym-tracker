@@ -59,6 +59,27 @@ describe("several routines", () => {
   });
 });
 
+describe("renaming a routine", () => {
+  it("renames its past sessions and the running one, but not other routines' sessions", async () => {
+    const { core, upper, legs } = await setup();
+    await train(core, upper.id, 10);
+    await train(core, legs.id, 10);
+    await core.startSession(upper.id);
+    await core.renameRoutine(upper.id, "Push day");
+    expect(core.listSessions().map((s) => s.routineName)).toEqual(["Legs", "Push day"]);
+    expect(core.activeSession()?.routineName).toBe("Push day");
+  });
+
+  it("brings sessions saved under an earlier name up to date when the data is loaded", async () => {
+    const { store, core, upper } = await setup();
+    await train(core, upper.id, 10);
+    const saved = (await store.load())!;
+    await store.save({ ...saved, routines: saved.routines.map((r) => (r.id === upper.id ? { ...r, name: "Push day" } : r)) });
+    const reloaded = await createCore(store);
+    expect(reloaded.listSessions()[0].routineName).toBe("Push day");
+  });
+});
+
 describe("deleting a routine", () => {
   it("removes it and keeps its exercises and past sessions", async () => {
     const { core, press, upper, legs } = await setup();

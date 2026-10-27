@@ -16,14 +16,21 @@ export const emptyData = (): AppData => ({
 export function normalize(loaded: AppData | null): AppData {
   const empty = emptyData();
   if (!loaded) return empty;
-  const upgradeSession = (session: Session): Session => {
+  const upgradeSession = (saved: Session): Session => {
     // Before entries had ids, each exercise appeared once and the session tracked `currentExerciseId`.
-    const legacy = session as Session & { currentExerciseId?: string | null };
+    // `returnToEntryId` belonged to "Skip for now", which flipping between exercises replaced.
+    const { currentExerciseId, returnToEntryId, ...session } = saved as Session & {
+      currentExerciseId?: string | null;
+      returnToEntryId?: string | null;
+    };
     const ids = entryIdsFor(session.entries.map((e) => e.exerciseId));
+    // Sessions show their routine's current name: renames made before renaming did this too.
+    const routine = loaded.routines?.find((r) => r.id === session.routineId);
     return {
       ...session,
+      routineName: routine?.name ?? session.routineName,
       entries: session.entries.map((e, i) => ({ ...e, id: e.id ?? ids[i] })),
-      currentEntryId: session.currentEntryId ?? legacy.currentExerciseId ?? null,
+      currentEntryId: session.currentEntryId ?? currentExerciseId ?? null,
     };
   };
   return {

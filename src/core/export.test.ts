@@ -116,7 +116,7 @@ describe("exporting to a spreadsheet", () => {
     ]);
   });
 
-  it("uses the names as they were in each session, even after renaming or deleting", async () => {
+  it("uses the names as they were in each session, even after renaming an exercise or deleting a routine", async () => {
     const { core, setTime, routine, press, curl } = await setup();
     const other = await core.createRoutine("Day B", [curl.id]);
     await core.startSession(routine.id);
@@ -142,8 +142,8 @@ describe("exporting to a spreadsheet", () => {
     await core.startSession(routine.id);
     await core.logSet(squat.id, { reps: 8 });
     await core.endSession();
-    await core.renameRoutine(routine.id, "Beine & Rücken");
-    await core.startSession(routine.id);
+    const other = await core.createRoutine("Beine & Rücken", [squat.id]);
+    await core.startSession(other.id);
     await core.logSet(squat.id, { reps: 9 });
     await core.endSession();
 

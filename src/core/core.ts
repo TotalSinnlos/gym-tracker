@@ -9,6 +9,7 @@ import {
   type LastResult,
   type ProgressionSummary,
   countsForWeight,
+  earnedIncrease,
   findLastResult,
   isBelowRange,
   loweredWeight,
@@ -17,7 +18,7 @@ import {
   weightFromSession,
   weightWithoutSession,
 } from "./progression";
-import { entryIdsFor, nextInQueue, pendingAfter, settleEntry } from "./queue";
+import { entryIdsFor, pendingExcept, settleEntry } from "./queue";
 import { type SpreadsheetExport, spreadsheetCsv } from "./spreadsheet";
 import type { Store } from "./store";
 import {
@@ -90,13 +91,12 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     const before = findEntry(session, entryId);
     const after = settleEntry(change(before));
     const entries = session.entries.map((e) => (e.id === entryId ? after : e));
-    let { currentEntryId, returnToEntryId } = session;
-    // Finishing the exercise on screen moves on: back to the one left behind, else the first pending one.
+    let { currentEntryId } = session;
+    // Finishing the exercise on screen moves on to the first one still to do, in queue order.
     if (before.state === "pending" && after.state === "done" && currentEntryId === entryId) {
-      currentEntryId = nextInQueue(entries, returnToEntryId ?? null, entryId)[0]?.id ?? null;
-      returnToEntryId = null;
+      currentEntryId = pendingExcept(entries, entryId)[0]?.id ?? null;
     }
-    await commit({ ...data, activeSession: { ...session, entries, currentEntryId, returnToEntryId } });
+    await commit({ ...data, activeSession: { ...session, entries, currentEntryId } });
   }
 
   /** Ends the active session (see `endSession`), recording `endedAt` as when it ended. */
@@ -110,7 +110,6 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       ...session,
       endedAt: endedAt.toISOString(),
       currentEntryId: null,
-      returnToEntryId: null,
       entries: session.entries.map((e) =>
         e.state === "pending" ? { ...e, state: e.loggedSets.length > 0 ? "incomplete" : "skipped" } : e,
       ),
@@ -238,8 +237,16 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       return routine;
     },
 
+    /** Renames a routine, and with it the running session and past sessions started from it. */
     async renameRoutine(id: string, name: string) {
-      await replaceRoutine({ ...findRoutine(id), name: requireName(name) });
+      const routine = { ...findRoutine(id), name: requireName(name) };
+      const renamed = (session: Session) => (session.routineId === id ? { ...session, routineName: routine.name } : session);
+      await commit({
+        ...data,
+        routines: data.routines.map((r) => (r.id === id ? routine : r)),
+        activeSession: data.activeSession && renamed(data.activeSession),
+        sessions: data.sessions.map(renamed),
+      });
     },
 
     /** Adds an exercise to the end of the routine. The same exercise may appear more than once. */
@@ -267,7 +274,7 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     },
 
     /**
-     * Deletes a routine. Past sessions keep its name. The routine of the running session can't be
+     * Deletes a routine. Past sessions keep its last name. The routine of the running session can't be
      * deleted, and neither can the last routine, so there's always one to start a session from.
      */
     async deleteRoutine(id: string) {
@@ -329,7 +336,6 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
           state: "pending",
         })),
         currentEntryId: entryIds[0],
-        returnToEntryId: null,
       };
       await commit({ ...data, activeSession: session });
       return session;
@@ -381,48 +387,31 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     },
 
     /**
-     * Puts an entry of the running session on screen: jumps to another exercise, or reopens a finished
-     * one to correct it. Leaving an unfinished exercise remembers it, so it comes up next.
+     * Puts an entry of the running session on screen: flips to another exercise, or reopens a finished one
+     * to correct it. An unfinished exercise flipped away from keeps its sets and stays in the queue.
      */
     async goToEntry(entryId: string) {
       const session = requireActiveSession();
       findEntry(session, entryId);
       if (entryId === session.currentEntryId) return;
-      const current = session.currentEntryId ? findEntry(session, session.currentEntryId) : null;
-      const returnToEntryId =
-        current?.state === "pending" ? current.id : session.returnToEntryId === entryId ? null : session.returnToEntryId;
-      await commit({ ...data, activeSession: { ...session, currentEntryId: entryId, returnToEntryId } });
+      await commit({ ...data, activeSession: { ...session, currentEntryId: entryId } });
     },
 
     // --- Session queue ---
 
-    /** Whether "Skip for now" is available: the exercise on screen is pending and another one is too. */
-    canSkip(): boolean {
+    /** The entries just before and after the one on screen in queue order, for flipping through them. */
+    neighbourEntries(): { previous: SessionEntry | null; next: SessionEntry | null } {
       const session = data.activeSession;
-      if (!session?.currentEntryId) return false;
-      const current = findEntry(session, session.currentEntryId);
-      return current.state === "pending" && pendingAfter(session.entries, current.id).length > 0;
-    },
-
-    /** Swaps the exercise on screen with the next pending one, so it comes back straight after it. */
-    async skipCurrent() {
-      const session = requireActiveSession();
-      const current = session.currentEntryId ? findEntry(session, session.currentEntryId) : null;
-      const next = current?.state === "pending" ? pendingAfter(session.entries, current.id)[0] : undefined;
-      if (!current || !next) throw new CoreError("There's no other exercise to do first");
-      const entries = session.entries.filter((e) => e !== current);
-      entries.splice(entries.indexOf(next) + 1, 0, current);
-      await commit({
-        ...data,
-        activeSession: { ...session, entries, currentEntryId: next.id, returnToEntryId: current.id },
-      });
+      const index = session?.entries.findIndex((e) => e.id === session.currentEntryId) ?? -1;
+      if (!session || index === -1) return { previous: null, next: null };
+      return { previous: session.entries[index - 1] ?? null, next: session.entries[index + 1] ?? null };
     },
 
     /** The pending exercises other than the one on screen, in the order they come up. */
     upNext(): SessionEntry[] {
       const session = data.activeSession;
       if (!session) return [];
-      return nextInQueue(session.entries, session.returnToEntryId ?? null, session.currentEntryId);
+      return pendingExcept(session.entries, session.currentEntryId);
     },
 
     /** How many exercises are still to do. */
@@ -459,6 +448,12 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
 
     /** A completed session. */
     getSession: (id: string) => findSession(id),
+
+    /** The entries of a completed session that earned their exercise a weight increase. */
+    increasedEntryIds(sessionId: string): string[] {
+      const session = findSession(sessionId);
+      return session.entries.filter((e) => earnedIncrease(session, e)).map((e) => e.id);
+    },
 
     /** Whether past sessions can be corrected or deleted: only while no session is running. */
     canEditHistory: () => data.activeSession === null,
@@ -640,8 +635,8 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
 
     /**
      * The history of completed sessions as a CSV file for Excel or Google Sheets, one row per logged set
-     * (see `SPREADSHEET_COLUMNS`), oldest session first. Names are as recorded in each session, so later
-     * renames or deletions don't change past rows. Skipped exercises have no rows and the running session
+     * (see `SPREADSHEET_COLUMNS`), oldest session first. Exercise names are as recorded in each session, so
+     * later renames or deletions don't change past rows; routine renames do (see `renameRoutine`). Skipped exercises have no rows and the running session
      * isn't included. Null when there are no sets to export yet.
      */
     exportSpreadsheet(): SpreadsheetExport | null {
