@@ -3,6 +3,7 @@ import { type Core, type EndSessionResult, createCore } from "./core";
 import { createHttpBackupServer } from "./storage/httpBackupServer";
 import { createIndexedDbStore } from "./storage/indexedDbStore";
 import { AutoBackup } from "./ui/autoBackup";
+import { AutoTrainer } from "./ui/autoTrainer";
 import { type Area, NavigateContext } from "./ui/BottomNav";
 import { CoreContext, useCore } from "./ui/CoreContext";
 import { ExercisePage } from "./ui/ExercisePage";
@@ -21,7 +22,9 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    createCore(createIndexedDbStore(), { server: createHttpBackupServer() })
+    // The same server holds the backups and the trainer.
+    const httpServer = createHttpBackupServer();
+    createCore(createIndexedDbStore(), { server: httpServer, trainer: httpServer })
       .then(setCore)
       .catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }, []);
@@ -38,7 +41,9 @@ export function App() {
   return (
     <CoreContext.Provider value={core}>
       <AutoBackup core={core}>
-        <Screens />
+        <AutoTrainer core={core}>
+          <Screens />
+        </AutoTrainer>
       </AutoBackup>
     </CoreContext.Provider>
   );

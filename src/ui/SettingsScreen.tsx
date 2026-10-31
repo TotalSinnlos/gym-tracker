@@ -8,6 +8,7 @@ import { formatDateTime } from "./format";
 import { Icon } from "./icons";
 import { RoutineList, RoutineScreen } from "./RoutineList";
 import { ServerBackupSection } from "./ServerBackupSection";
+import { TrainerSection } from "./TrainerSection";
 
 /** What settings shows: its main page, or one routine or exercise opened full screen (null: a new exercise). */
 type View = { name: "main" } | { name: "routine"; id: string } | { name: "exercise"; id: string | null };
@@ -50,6 +51,10 @@ export function SettingsScreen() {
 
         <section>
           <ServerBackupSection />
+        </section>
+
+        <section>
+          <TrainerSection />
         </section>
 
         <section>

@@ -2531,3 +2531,102 @@ button.li:active {
   margin-top: 20px;
   padding-bottom: 16px;
 }
+
+/* ---------- AI trainer ---------- */
+
+.trainer {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.trainer-h {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.trainer-wait {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.trainer-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.trainer-text p,
+.trainer-text ul {
+  margin: 0;
+}
+
+.trainer-text ul {
+  padding-left: 20px;
+}
+
+.trainer-text li + li {
+  margin-top: 4px;
+}
+
+.trainer .errmsg {
+  align-self: stretch;
+}
+
+/* An on/off switch: a checkbox drawn as a track with a knob. */
+.switch {
+  appearance: none;
+  flex: none;
+  position: relative;
+  width: 52px;
+  height: 32px;
+  margin: 0;
+  border-radius: 16px;
+  background: var(--line-strong);
+  cursor: pointer;
+  transition: background var(--dur-short) var(--ease-standard);
+}
+
+.switch::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow-selected);
+  transition: transform var(--dur-short) var(--ease-standard);
+}
+
+.switch:checked {
+  background: var(--ink);
+}
+
+.switch:checked::before {
+  transform: translateX(20px);
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--amber-line);
+  outline-offset: 2px;
+}
+
+/* A text field over several lines. */
+.in.area {
+  height: auto;
+  min-height: 96px;
+  padding: 12px 16px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  resize: vertical;
+}

@@ -19,9 +19,10 @@ import {
   weightWithoutSession,
 } from "./progression";
 import { entryIdsFor, pendingExcept, settleEntry } from "./queue";
-import { type BackupServer, buildConnection, explainServerError } from "./server";
+import { type BackupServer, ServerError, type TrainerServer, buildConnection, explainServerError, isTemporary } from "./server";
 import { type SpreadsheetExport, spreadsheetCsv } from "./spreadsheet";
 import type { Store } from "./store";
+import { buildTrainerBrief } from "./trainer";
 import {
   type AppData,
   type Exercise,
@@ -30,7 +31,11 @@ import {
   type Routine,
   type Session,
   type ServerBackupStatus,
+  type ServerConnection,
   type SessionEntry,
+  type TrainerDue,
+  type TrainerStatus,
+  type TrainerSummaryStatus,
   isWeighted,
 } from "./types";
 import { CoreError, DEFAULT_INCREMENT, buildExercise, buildSet, requireName, requireWeight } from "./validation";
@@ -48,6 +53,8 @@ export interface CoreOptions {
   now?: () => Date;
   /** The user's own backup server. Without it, the server backup commands refuse to run. */
   server?: BackupServer;
+  /** The trainer on the user's server. Without it, the trainer commands refuse to run. */
+  trainer?: TrainerServer;
 }
 
 /** The saved session with its summary, or `session: null` when nothing was logged and it was discarded. */
@@ -57,6 +64,7 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
   const newId = options.newId ?? (() => crypto.randomUUID());
   const now = options.now ?? (() => new Date());
   const server = options.server;
+  const trainerServer = options.trainer;
   let data: AppData = normalize(await store.load());
   const listeners = new Set<() => void>();
   /** Counts changes the server should get since the app started. */
@@ -145,7 +153,8 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       return weight === undefined ? exercise : { ...exercise, weight };
     });
     const summary = summarizeProgression(ended, data.exercises);
-    await commit({ ...data, exercises, activeSession: null, sessions: [...data.sessions, ended] });
+    const trainerDue = trainerEnabled() ? [...data.trainerDue, { sessionId: ended.id }] : data.trainerDue;
+    await commit({ ...data, exercises, activeSession: null, sessions: [...data.sessions, ended], trainerDue });
     return { session: ended, summary };
   }
 
@@ -536,7 +545,12 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
         const weight = weightWithoutSession(data.sessions, deleted, exercise);
         return weight === undefined ? exercise : { ...exercise, weight };
       });
-      await commit({ ...data, exercises, sessions: data.sessions.filter((s) => s !== deleted) });
+      await commit({
+        ...data,
+        exercises,
+        sessions: data.sessions.filter((s) => s !== deleted),
+        trainerDue: data.trainerDue.filter((d) => d.sessionId !== id),
+      });
     },
 
     // --- Progression ---
@@ -682,9 +696,10 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       await commit(withServerBackupDue({ ...data, serverBackup }));
     },
 
-    /** Forgets the backup server. The backups on it stay there. */
+    /** Forgets the backup server. The backups on it stay there. The trainer goes off with it. */
     async disconnectServer() {
-      await commit({ ...data, serverBackup: null });
+      const trainer = data.settings.trainer && { ...data.settings.trainer, enabled: false };
+      await commit({ ...data, serverBackup: null, settings: { ...data.settings, trainer }, trainerDue: [] });
     },
 
     /**
@@ -733,6 +748,84 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       return { text, info: checkBackupText(text) };
     },
 
+    // --- AI trainer ---
+
+    /** Whether the trainer can be and is turned on, and the user's goals and notes. */
+    trainer(): TrainerStatus {
+      return { available: data.serverBackup !== null, enabled: trainerEnabled(), goals: data.settings.trainer?.goals ?? "" };
+    },
+
+    /**
+     * Turns the trainer on or off. On needs server backup, since the trainer goes through the same server.
+     * Off keeps the summaries already written and cancels those still due, so nothing is sent afterwards.
+     */
+    async setTrainerEnabled(enabled: boolean) {
+      if (enabled && !data.serverBackup) throw new CoreError("Set up server backup first: the trainer goes through your server");
+      const trainer = { goals: "", ...data.settings.trainer, enabled };
+      await commit({ ...data, settings: { ...data.settings, trainer }, trainerDue: enabled ? data.trainerDue : [] });
+    },
+
+    /** What the user tells the trainer about themselves. May be empty. */
+    async setTrainerGoals(goals: string) {
+      const trainer = { enabled: false, ...data.settings.trainer, goals: goals.trim() };
+      await commit({ ...data, settings: { ...data.settings, trainer } });
+    },
+
+    /**
+     * The trainer brief for a completed session (see `buildTrainerBrief`): only what had happened up to it,
+     * plus the current goals. `leaveOut` drops that many of the oldest earlier sessions.
+     */
+    trainerBrief: (sessionId: string, leaveOut = 0) => buildTrainerBrief(data, findSession(sessionId), leaveOut).text,
+
+    /** Where the session's summary stands: written, still due (with the last failure), or neither. */
+    trainerSummaryStatus(sessionId: string): TrainerSummaryStatus {
+      const session = findSession(sessionId);
+      if (session.trainerSummary) return { state: "written", summary: session.trainerSummary };
+      const due = data.trainerDue.find((d) => d.sessionId === sessionId);
+      if (due) return { state: "due", lastError: due.lastError ?? null, temporary: due.temporary ?? false };
+      return { state: "none" };
+    },
+
+    /** The sessions whose summaries are still to be written, oldest first, with their last failure. */
+    trainerDue: (): TrainerDue[] => data.trainerDue,
+
+    /**
+     * Asks the trainer for the session's summary and stores it on the session, replacing an older one
+     * ("Write again"). A brief the server calls too large is sent again with the oldest sessions left
+     * out. A failure is remembered on a due summary (see `trainerSummaryStatus`) as well as thrown.
+     */
+    async writeTrainerSummary(sessionId: string) {
+      if (!trainerEnabled()) throw new CoreError("Turn on the trainer in settings first");
+      const connection = requireConnection();
+      if (!trainerServer) throw new CoreError("The trainer isn't available here");
+      findSession(sessionId);
+      let text: string;
+      try {
+        text = await summarizeFittingBrief(trainerServer, connection, sessionId);
+      } catch (error) {
+        const temporary = error instanceof ServerError && isTemporary(error.problem);
+        try {
+          explainServerError(error);
+        } catch (explained) {
+          if (explained instanceof CoreError && data.trainerDue.some((d) => d.sessionId === sessionId)) {
+            const trainerDue = data.trainerDue.map((d) =>
+              d.sessionId === sessionId ? { ...d, lastError: explained.message, temporary } : d,
+            );
+            await commit({ ...data, trainerDue });
+          }
+          throw explained;
+        }
+      }
+      // Read `data` again: the session may have been deleted while the AI was writing.
+      if (!data.sessions.some((s) => s.id === sessionId)) return;
+      const trainerSummary = { text, writtenAt: now().toISOString() };
+      await commit({
+        ...data,
+        sessions: data.sessions.map((s) => (s.id === sessionId ? { ...s, trainerSummary } : s)),
+        trainerDue: data.trainerDue.filter((d) => d.sessionId !== sessionId),
+      });
+    },
+
     // --- Export ---
 
     /**
@@ -754,6 +847,26 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       exercises: backup.exercises.length,
       sessions: backup.sessions.length,
     };
+  }
+
+  function trainerEnabled() {
+    return data.serverBackup !== null && data.settings.trainer?.enabled === true;
+  }
+
+  /** Sends the session's brief, leaving out more of the oldest sessions each time the server says it's too large. */
+  async function summarizeFittingBrief(trainer: TrainerServer, connection: ServerConnection, sessionId: string) {
+    let leaveOut = 0;
+    for (;;) {
+      const brief = buildTrainerBrief(data, findSession(sessionId), leaveOut);
+      try {
+        return await trainer.summarize(connection, brief.text);
+      } catch (error) {
+        const canShorten = leaveOut < brief.earlierSessions;
+        if (!(error instanceof ServerError && error.problem === "tooLarge" && canShorten)) throw error;
+        // Leave out a quarter of the sessions still listed (at least one), so a long history fits in a few tries.
+        leaveOut = Math.min(brief.earlierSessions, leaveOut + Math.max(1, Math.ceil((brief.earlierSessions - leaveOut) / 4)));
+      }
+    }
   }
 
   function requireServer(): BackupServer {

@@ -240,7 +240,7 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 - The phone never talks to the AI service directly and never holds an AI key. The app sends a **trainer brief** to the home server (`POST /trainer`); the server adds the AI key from its environment, asks the AI and returns the summary text. The key never goes into the repository or onto the phone.
 - The core builds the **trainer brief**, as plain data so tests can check it without an AI:
   - the session being summarised (sets, weights, done/incomplete/skipped, increases earned, below-range exercises);
-  - all sessions before it, written as compact lines, including those of archived exercises, which are marked as archived with the date they were archived;
+  - all sessions before it, written as compact lines, including those of archived exercises, which are marked as archived with the date they were last done (the app doesn't record when an exercise was archived);
   - facts the core works out per exercise, so the AI interprets numbers instead of counting them: weeks and sessions since the last increase, how often it was skipped recently, and the best reps at the current weight;
   - the exercises, routines and progression rule (rep range and when the weight goes up);
   - all earlier summaries with their dates;
@@ -264,7 +264,7 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 - **Exercise page**: a weight-over-time graph (weighted exercises only), a reps-per-session graph (incomplete sessions shown as hollow points) and the exercise's settings.
 - **History**: a list of past sessions. Each opens a detail view where sets can be edited and the session deleted.
 - **Settings**: manage exercises (including archived ones), manage routines, back up, restore and export CSV. Once server backup is set up: the trainer switch, with a note on what gets sent, and the "Goals and notes" box.
-- **History**: a list of past sessions. Each opens a detail view where sets can be edited and the session deleted. Exercises that earned a weight increase in that session are highlighted. With the trainer on, the detail view shows the session's summary and a "Write again" (or "Write summary") button.
+- **History**: a list of past sessions. Each opens a detail view where sets can be edited and the session deleted. Exercises that earned a weight increase in that session are highlighted. The detail view shows the session's summary if it has one; with the trainer on, also a "Write again" (or "Write summary") button.
 - The visual design will be done separately in Claude Design. A design brief describing these screens will be written when the build reaches that point, and the result will be built into the app.
 
 ## Testing Decisions

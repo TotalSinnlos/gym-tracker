@@ -9,8 +9,14 @@ import { CoreError } from "./validation";
  * - blocked: Chrome's local network permission was refused.
  * - unauthorized: the server didn't accept the token.
  * - failed: the server answered with an error.
+ *
+ * Only from the trainer:
+ * - tooLarge: the trainer brief is too long for the AI.
+ * - busy: the AI is overloaded, out of free requests or too slow.
+ * - notSetUp: the server has no AI key (or is a version without the trainer).
+ * - aiFailed: the AI refused, e.g. because of a wrong key on the server.
  */
-export type ServerProblem = "unreachable" | "blocked" | "unauthorized" | "failed";
+export type ServerProblem = "unreachable" | "blocked" | "unauthorized" | "failed" | "tooLarge" | "busy" | "notSetUp" | "aiFailed";
 
 /** Thrown by a `BackupServer` when a request doesn't work out. */
 export class ServerError extends Error {
@@ -31,6 +37,15 @@ export interface BackupServer {
   /** The newest backup, or null if the server has none yet. */
   latest(connection: ServerConnection): Promise<string | null>;
 }
+
+/** Asks the trainer on the user's server (`POST /trainer`) for a session summary. */
+export interface TrainerServer {
+  /** The summary the AI wrote for the brief. */
+  summarize(connection: ServerConnection, brief: string): Promise<string>;
+}
+
+/** Problems that usually pass by themselves, so a due summary just waits for the next try. */
+export const isTemporary = (problem: ServerProblem) => problem === "unreachable" || problem === "busy";
 
 /** The server's tokens are at least this long (see server/main.ts). */
 const MIN_TOKEN_LENGTH = 20;
@@ -67,5 +82,13 @@ export function explainServerError(error: unknown): never {
       throw new CoreError("Your server didn't accept the token. Check you copied all of it");
     case "failed":
       throw new CoreError(`Your server ran into a problem (error ${error.status ?? "unknown"}). Try again later`);
+    case "tooLarge":
+      throw new CoreError("Your history is too long for the AI, even with older sessions left out");
+    case "busy":
+      throw new CoreError("The AI is busy or out of free requests right now. Try again later");
+    case "notSetUp":
+      throw new CoreError("The trainer isn't set up on your server yet: it has no AI key");
+    case "aiFailed":
+      throw new CoreError("The AI couldn't write a summary. Check the AI settings on your server");
   }
 }

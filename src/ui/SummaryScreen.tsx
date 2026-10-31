@@ -7,6 +7,7 @@ import { useCore } from "./CoreContext";
 import { formatDayShort, formatEntryWeight, formatKg, formatNumber, formatReps, STATE_LABELS } from "./format";
 import { Icon } from "./icons";
 import { StateMark } from "./StateMark";
+import { TrainerCard } from "./TrainerCard";
 import { useAction } from "./useAction";
 
 export function SummaryScreen({ result, onDone }: { result: EndSessionResult; onDone: () => void }) {
@@ -66,6 +67,7 @@ export function SummaryScreen({ result, onDone }: { result: EndSessionResult; on
             <SummaryRow key={entry.id} entry={entry} />
           ))}
         </div>
+        <TrainerCard sessionId={session.id} />
         {/* With server backup set up, it happens by itself; otherwise offer the backup file. */}
         {core.serverBackup() ? <ServerBackupCard /> : <BackupSection />}
       </div>

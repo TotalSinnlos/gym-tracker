@@ -33,6 +33,22 @@ export interface Settings {
   setupComplete: boolean;
   /** ISO time the last backup file was made. Absent until the first backup. */
   lastBackupAt?: string;
+  /** The AI trainer. Absent until it was first turned on. */
+  trainer?: TrainerSettings;
+}
+
+export interface TrainerSettings {
+  /** Whether a summary is written after each session. Only possible with server backup set up. */
+  enabled: boolean;
+  /** What the user tells the trainer about themselves (goals, injuries...). May be empty. */
+  goals: string;
+}
+
+/** The AI trainer's summary of a session. */
+export interface TrainerSummary {
+  text: string;
+  /** ISO time it was written. */
+  writtenAt: string;
 }
 
 export interface SetRecord {
@@ -76,6 +92,8 @@ export interface Session {
   currentEntryId: string | null;
   /** Weights set in settings for an exercise after it was already done in this session; they win at the end. */
   weightOverrides?: Record<string, number>;
+  /** The AI trainer's summary, once written. */
+  trainerSummary?: TrainerSummary;
 }
 
 export interface AppData {
@@ -88,7 +106,31 @@ export interface AppData {
   sessions: Session[];
   /** The user's own backup server, or null when not set up. Never part of a backup file. */
   serverBackup: ServerBackup | null;
+  /** Sessions whose trainer summary is still to be written, oldest first. Never part of a backup file. */
+  trainerDue: TrainerDue[];
 }
+
+export interface TrainerDue {
+  sessionId: string;
+  /** Why the last attempt failed, until one succeeds. */
+  lastError?: string;
+  /** Whether that failure is likely to pass by itself (offline, the AI busy), so it's worth waiting. */
+  temporary?: boolean;
+}
+
+/** What `trainer()` tells the screens. */
+export interface TrainerStatus {
+  /** Whether the trainer can be turned on: server backup is set up. */
+  available: boolean;
+  enabled: boolean;
+  goals: string;
+}
+
+/** Where a session's trainer summary stands (see `trainerSummaryStatus`). */
+export type TrainerSummaryStatus =
+  | { state: "written"; summary: TrainerSummary }
+  | { state: "due"; lastError: string | null; temporary: boolean }
+  | { state: "none" };
 
 export interface ServerConnection {
   /** e.g. "https://name.tailnet.ts.net", without a trailing slash. */

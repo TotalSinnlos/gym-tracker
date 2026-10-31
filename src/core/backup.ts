@@ -35,7 +35,7 @@ export interface BackupInfo {
  * address and token stay out: the file may end up anywhere, such as Google Drive.
  */
 export function writeBackup(data: AppData, createdAt: string): Backup {
-  const { serverBackup: _, ...rest } = data;
+  const { serverBackup: _, trainerDue: __, ...rest } = data;
   const backup = { ...rest, settings: { ...data.settings, lastBackupAt: createdAt } };
   return { text: JSON.stringify(backup, null, 2), createdAt };
 }
@@ -68,7 +68,7 @@ export function readBackup(text: string): AppData {
     invalidBackup("its sessions are damaged");
   }
   checkData(data);
-  return { ...data, serverBackup: null };
+  return { ...data, serverBackup: null, trainerDue: [] };
 }
 
 function invalidBackup(problem: string): never {
@@ -95,7 +95,13 @@ function checkData(data: AppData) {
     }
   }
   const settings: unknown = data.settings;
-  if (!isObject(settings) || typeof settings.setupComplete !== "boolean" || !isOptional(settings.lastBackupAt, isTime)) {
+  const isTrainer = (t: unknown) => isObject(t) && typeof t.enabled === "boolean" && typeof t.goals === "string";
+  if (
+    !isObject(settings) ||
+    typeof settings.setupComplete !== "boolean" ||
+    !isOptional(settings.lastBackupAt, isTime) ||
+    !isOptional(settings.trainer, isTrainer)
+  ) {
     invalidBackup("its settings are damaged");
   }
   if (data.activeSession !== null && !isSession(data.activeSession, true)) invalidBackup("the running session is damaged");
@@ -130,7 +136,8 @@ function isSession(value: unknown, active: boolean): boolean {
     new Set(entryIds).size === entryIds.length &&
     isEntryId(value.currentEntryId) &&
     isEntryId(value.returnToEntryId) &&
-    isOptional(value.weightOverrides, (o) => isObject(o) && Object.values(o).every(isKg))
+    isOptional(value.weightOverrides, (o) => isObject(o) && Object.values(o).every(isKg)) &&
+    isOptional(value.trainerSummary, (t) => isObject(t) && typeof t.text === "string" && isTime(t.writtenAt))
   );
 }
 

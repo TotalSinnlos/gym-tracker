@@ -68,3 +68,37 @@ describe("the HTTP backup server", () => {
     expect(await problemOf(createHttpBackupServer().latest(connection))).toEqual({ problem: "blocked" });
   });
 });
+
+describe("the HTTP trainer", () => {
+  it("sends the brief with POST and the token, and returns the summary", async () => {
+    const requests = answer(() => new Response(JSON.stringify({ summary: "A good session.\n" }), { status: 200 }));
+    expect(await createHttpBackupServer().summarize(connection, "This session: ...")).toBe("A good session.");
+
+    expect(requests[0].url).toBe("https://home.example.ts.net/trainer");
+    expect(requests[0].init.method).toBe("POST");
+    expect(JSON.parse(requests[0].init.body as string)).toEqual({ brief: "This session: ..." });
+    expect(requests[0].init.headers).toMatchObject({ Authorization: "Bearer a-token-that-is-long-enough" });
+  });
+
+  it("tells the core what went wrong", async () => {
+    const cases: [number, string][] = [
+      [413, "tooLarge"],
+      [503, "busy"],
+      [501, "notSetUp"],
+      [404, "notSetUp"],
+      [502, "aiFailed"],
+      [401, "unauthorized"],
+    ];
+    for (const [status, problem] of cases) {
+      answer(() => new Response("{}", { status }));
+      expect(await problemOf(createHttpBackupServer().summarize(connection, "brief"))).toMatchObject({ problem });
+    }
+    answer(() => new Response("{}", { status: 500 }));
+    expect(await problemOf(createHttpBackupServer().summarize(connection, "brief"))).toEqual({ problem: "failed", status: 500 });
+  });
+
+  it("treats an answer without a summary as the AI failing", async () => {
+    answer(() => new Response('{"summary":"  "}', { status: 200 }));
+    expect(await problemOf(createHttpBackupServer().summarize(connection, "brief"))).toMatchObject({ problem: "aiFailed" });
+  });
+});

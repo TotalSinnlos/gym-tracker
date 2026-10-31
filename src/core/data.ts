@@ -11,6 +11,7 @@ export const emptyData = (): AppData => ({
   activeSession: null,
   sessions: [],
   serverBackup: null,
+  trainerDue: [],
 });
 
 /** Fills in fields added after the data was first saved. */

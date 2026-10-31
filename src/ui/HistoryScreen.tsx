@@ -5,6 +5,7 @@ import { useCore } from "./CoreContext";
 import { STATE_LABELS, formatDate, formatKg, formatSet } from "./format";
 import { Icon } from "./icons";
 import { SetForm } from "./SetForm";
+import { TrainerCard } from "./TrainerCard";
 import { useAction } from "./useAction";
 
 const doneCount = (session: Session) => session.entries.filter((e) => e.state === "done").length;
@@ -153,6 +154,8 @@ function SessionDetail({ session, onBack }: { session: Session; onBack: () => vo
             })}
           </div>
         ))}
+
+        <TrainerCard sessionId={session.id} inHistory />
 
         {error && <p className="errmsg">{error}</p>}
       </div>
