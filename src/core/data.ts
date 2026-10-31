@@ -10,6 +10,7 @@ export const emptyData = (): AppData => ({
   settings: { setupComplete: false },
   activeSession: null,
   sessions: [],
+  serverBackup: null,
 });
 
 /** Fills in fields added after the data was first saved. */

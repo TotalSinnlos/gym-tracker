@@ -86,6 +86,16 @@ export interface AppData {
   activeSession: Session | null;
   /** Completed sessions, oldest first. */
   sessions: Session[];
+  /** The user's own backup server, or null when not set up. Never part of a backup file. */
+  serverBackup: ServerBackup | null;
+}
+
+export interface ServerBackup {
+  /** e.g. "https://name.tailnet.ts.net", without a trailing slash. */
+  url: string;
+  token: string;
+  /** ISO time the server last accepted a backup. Absent until the first one. */
+  lastBackupAt?: string;
 }
 
 export interface ExerciseInput {

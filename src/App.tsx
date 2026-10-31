@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { type Core, type EndSessionResult, createCore } from "./core";
+import { createHttpBackupServer } from "./storage/httpBackupServer";
 import { createIndexedDbStore } from "./storage/indexedDbStore";
 import { type Area, NavigateContext } from "./ui/BottomNav";
 import { CoreContext, useCore } from "./ui/CoreContext";
@@ -19,7 +20,7 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    createCore(createIndexedDbStore())
+    createCore(createIndexedDbStore(), { server: createHttpBackupServer() })
       .then(setCore)
       .catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }, []);

@@ -19,6 +19,7 @@ import {
   weightWithoutSession,
 } from "./progression";
 import { entryIdsFor, pendingExcept, settleEntry } from "./queue";
+import { type BackupServer, buildConnection, explainServerError } from "./server";
 import { type SpreadsheetExport, spreadsheetCsv } from "./spreadsheet";
 import type { Store } from "./store";
 import {
@@ -41,6 +42,8 @@ export type Core = Awaited<ReturnType<typeof createCore>>;
 export interface CoreOptions {
   newId?: () => string;
   now?: () => Date;
+  /** The user's own backup server. Without it, the server backup commands refuse to run. */
+  server?: BackupServer;
 }
 
 /** The saved session with its summary, or `session: null` when nothing was logged and it was discarded. */
@@ -49,6 +52,7 @@ export type EndSessionResult = { session: Session; summary: ProgressionSummary }
 export async function createCore(store: Store, options: CoreOptions = {}) {
   const newId = options.newId ?? (() => crypto.randomUUID());
   const now = options.now ?? (() => new Date());
+  const server = options.server;
   let data: AppData = normalize(await store.load());
   const listeners = new Set<() => void>();
 
@@ -614,21 +618,60 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     },
 
     /** Checks a backup file without changing anything. Throws a CoreError saying what's wrong if it can't be restored. */
-    checkBackup(text: string): BackupInfo {
-      const backup = readBackup(text);
-      return {
-        createdAt: backup.settings.lastBackupAt ?? null,
-        exercises: backup.exercises.length,
-        sessions: backup.sessions.length,
-      };
-    },
+    checkBackup: (text: string) => checkBackupText(text),
 
     /**
      * Replaces all data, including a running session, with the backup's. An older backup is upgraded
      * the same way as older saved data. A file that can't be restored is rejected and nothing changes.
      */
     async restoreBackup(text: string) {
-      await commit(readBackup(text));
+      await commit({ ...readBackup(text), serverBackup: data.serverBackup });
+    },
+
+    // --- Server backup ---
+
+    /** The backup server's address and when it last accepted a backup, or null when not set up. */
+    serverBackup(): { url: string; lastBackupAt: string | null } | null {
+      const saved = data.serverBackup;
+      return saved && { url: saved.url, lastBackupAt: saved.lastBackupAt ?? null };
+    },
+
+    /**
+     * Checks the address and token by asking the server for its newest backup, and saves them only if
+     * that works. An empty token keeps the current one, so the address can be changed on its own.
+     * Changing the address starts "last backed up to server" afresh.
+     */
+    async connectServer(address: string, token: string) {
+      const current = data.serverBackup;
+      const connection = buildConnection(address, token.trim() === "" && current ? current.token : token);
+      await requireServer().latest(connection).catch(explainServerError);
+      const sameServer = current?.url === connection.url;
+      await commit({ ...data, serverBackup: { ...connection, lastBackupAt: sameServer ? current.lastBackupAt : undefined } });
+    },
+
+    /** Forgets the backup server. The backups on it stay there. */
+    async disconnectServer() {
+      await commit({ ...data, serverBackup: null });
+    },
+
+    /** Sends a backup (the same as `createBackup`'s) to the server, and records it as the last backup. */
+    async backUpToServer() {
+      const connection = requireConnection();
+      const backup = writeBackup(data, now().toISOString());
+      await requireServer().upload(connection, backup.text).catch(explainServerError);
+      // Read `data` again: it may have changed during the upload.
+      await commit({
+        ...data,
+        settings: { ...data.settings, lastBackupAt: backup.createdAt },
+        serverBackup: data.serverBackup && { ...data.serverBackup, lastBackupAt: backup.createdAt },
+      });
+    },
+
+    /** The server's newest backup, checked like a file (see `checkBackup`). Restore it with `restoreBackup`. */
+    async fetchServerBackup(): Promise<{ text: string; info: BackupInfo }> {
+      const text = await requireServer().latest(requireConnection()).catch(explainServerError);
+      if (text === null) throw new CoreError("There are no backups on your server yet");
+      return { text, info: checkBackupText(text) };
     },
 
     // --- Export ---
@@ -644,6 +687,25 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       return csv && { ...csv, createdAt: now().toISOString() };
     },
   };
+
+  function checkBackupText(text: string): BackupInfo {
+    const backup = readBackup(text);
+    return {
+      createdAt: backup.settings.lastBackupAt ?? null,
+      exercises: backup.exercises.length,
+      sessions: backup.sessions.length,
+    };
+  }
+
+  function requireServer(): BackupServer {
+    if (!server) throw new CoreError("Server backup isn't available here");
+    return server;
+  }
+
+  function requireConnection() {
+    if (!data.serverBackup) throw new CoreError("Set up server backup first");
+    return data.serverBackup;
+  }
 
   /** An exercise that can be put into a routine: one that exists and isn't archived. */
   function findActiveExercise(id: string): Exercise {

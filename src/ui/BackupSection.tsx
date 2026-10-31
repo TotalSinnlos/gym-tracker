@@ -3,6 +3,7 @@ import type { BackupInfo } from "../core";
 import { useCore } from "./CoreContext";
 import { fileStamp, formatDateTime } from "./format";
 import { Icon } from "./icons";
+import { RestoreDialog } from "./RestoreDialog";
 import { shareOrDownload } from "./share";
 import { Snack } from "./Snack";
 import { useAction } from "./useAction";
@@ -103,36 +104,7 @@ export function BackupSection({ allowRestore = false }: { allowRestore?: boolean
           {error}
         </p>
       )}
-      {picked && (
-        <>
-          <div className="scrim" onClick={() => setPicked(null)} />
-          <div className="dlg" role="alertdialog" aria-labelledby="restore-title">
-            <div className="dlg-t" id="restore-title">
-              Replace all your data with this backup?
-            </div>
-            {picked.info.createdAt && <div className="body mut">From {formatDateTime(picked.info.createdAt)}</div>}
-            <div className="g2 stats">
-              <div className="stat">
-                <b>{picked.info.exercises}</b>
-                <span>exercises</span>
-              </div>
-              <div className="stat">
-                <b>{picked.info.sessions}</b>
-                <span>sessions</span>
-              </div>
-            </div>
-            <div className="dlg-b">
-              Everything on this phone is replaced. This can't be undone.
-            </div>
-            <button className="btn lg out" onClick={() => setPicked(null)}>
-              Cancel
-            </button>
-            <button className="btn lg dng" onClick={restore}>
-              Replace my data
-            </button>
-          </div>
-        </>
-      )}
+      {picked && <RestoreDialog info={picked.info} onCancel={() => setPicked(null)} onRestore={restore} />}
       {message && <Snack message={message} onClose={closeMessage} />}
     </>
   );

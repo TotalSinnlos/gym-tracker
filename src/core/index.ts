@@ -7,5 +7,6 @@ export * from "./core";
 export type { Backup, BackupInfo } from "./backup";
 export { TREND_SESSIONS, type ChartPoint, type ExerciseHistory, type OverviewRow, type RepsPoint } from "./graphs";
 export type { LastResult, ProgressionSummary } from "./progression";
+export { type BackupServer, type ServerConnection, type ServerProblem, ServerError } from "./server";
 export { SPREADSHEET_COLUMNS, type SpreadsheetExport, localDate } from "./spreadsheet";
 export { CoreError, DEFAULT_INCREMENT, DEFAULT_REP_MAX, DEFAULT_REP_MIN, DEFAULT_SETS } from "./validation";

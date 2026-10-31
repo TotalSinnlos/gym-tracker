@@ -30,13 +30,20 @@ export interface BackupInfo {
   sessions: number;
 }
 
-/** All data as a backup file, stamped with `createdAt` as the last backup time. */
+/**
+ * All data as a backup file, stamped with `createdAt` as the last backup time. The backup server's
+ * address and token stay out: the file may end up anywhere, such as Google Drive.
+ */
 export function writeBackup(data: AppData, createdAt: string): Backup {
-  const backup: AppData = { ...data, settings: { ...data.settings, lastBackupAt: createdAt } };
+  const { serverBackup: _, ...rest } = data;
+  const backup = { ...rest, settings: { ...data.settings, lastBackupAt: createdAt } };
   return { text: JSON.stringify(backup, null, 2), createdAt };
 }
 
-/** Parses and checks a backup file, upgrading an older one. Throws a CoreError if it can't be restored. */
+/**
+ * Parses and checks a backup file, upgrading an older one. Throws a CoreError if it can't be restored.
+ * The result has no backup server: restoring keeps the phone's own.
+ */
 export function readBackup(text: string): AppData {
   let raw: unknown;
   try {
@@ -61,7 +68,7 @@ export function readBackup(text: string): AppData {
     invalidBackup("its sessions are damaged");
   }
   checkData(data);
-  return data;
+  return { ...data, serverBackup: null };
 }
 
 function invalidBackup(problem: string): never {

@@ -44,7 +44,9 @@ describe("backing up", () => {
     const backup = core.createBackup();
     expect(backup.createdAt).toBe("2026-10-24T18:00:00.000Z");
     const data = JSON.parse(backup.text);
-    expect(data).toEqual({ ...core.getData(), settings: { setupComplete: true, lastBackupAt: backup.createdAt } });
+    // Everything except the backup server, which stays on the phone (see server.test.ts).
+    const { serverBackup: _, ...everything } = core.getData();
+    expect(data).toEqual({ ...everything, settings: { setupComplete: true, lastBackupAt: backup.createdAt } });
     expect(data.version).toBe(1);
   });
 

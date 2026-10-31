@@ -6,6 +6,7 @@ import { ExerciseEditor, ExerciseList } from "./ExerciseList";
 import { ExportSection } from "./ExportSection";
 import { Icon } from "./icons";
 import { RoutineList, RoutineScreen } from "./RoutineList";
+import { ServerBackupSection } from "./ServerBackupSection";
 
 /** What settings shows: its main page, or one routine or exercise opened full screen (null: a new exercise). */
 type View = { name: "main" } | { name: "routine"; id: string } | { name: "exercise"; id: string | null };
@@ -44,6 +45,10 @@ export function SettingsScreen() {
 
         <section>
           <BackupSection allowRestore />
+        </section>
+
+        <section>
+          <ServerBackupSection />
         </section>
 
         <section>
