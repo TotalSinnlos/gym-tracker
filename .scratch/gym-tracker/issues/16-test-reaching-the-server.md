@@ -4,10 +4,22 @@
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Tailscale MagicDNS and HTTPS certificates are enabled, and `tailscale serve` gives the server an https address
-- [ ] The test page on GitHub Pages successfully calls the test service from Chrome on the user's phone over mobile data (Wi-Fi off)
-- [ ] Any permission prompt or extra header that was needed is written down in this ticket's comments
-- [ ] Decision recorded: go ahead with tickets 17–20, or a fallback is chosen
-- [ ] The test service and test page are removed again
+- [x] Tailscale MagicDNS and HTTPS certificates are enabled, and `tailscale serve` gives the server an https address
+- [x] The test page on GitHub Pages successfully calls the test service from Chrome on the user's phone over mobile data (Wi-Fi off)
+- [x] Any permission prompt or extra header that was needed is written down in this ticket's comments
+- [x] Decision recorded: go ahead with tickets 17–20, or a fallback is chosen
+- [x] The test service and test page are removed again
+
+## Comments
+
+**2026-10-31, test result:** It works. From Chrome on the user's Android phone (Incognito tab, Wi-Fi off, mobile data, Tailscale on), the test page on `https://totalsinnlos.github.io` reached the service through its `tailscale serve` https address:
+
+- A plain GET and a PUT with `Authorization` and `Content-Type` headers (so with a CORS preflight) both returned 200.
+- Chrome did not send `Access-Control-Request-Private-Network` and showed no permission prompt, so Private/Local Network Access didn't get in the way. Ticket 17 still answers it with `Access-Control-Allow-Private-Network: true`, as it costs nothing if a later Chrome starts asking.
+- The first request took about 3 s (first secure connection), the next one under 0.1 s.
+
+**Decision:** go ahead with tickets 17–20 as planned.
+
+**Left in place on purpose:** the `tailscale serve` setting (https on port 443, passing to `127.0.0.1:8095`) stays, because ticket 18 uses the same port. Until then it answers with an error, which is harmless. To remove it: `sudo tailscale serve --https=443 off`.
