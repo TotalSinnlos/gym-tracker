@@ -1,0 +1,14 @@
+
+  # The gym tracker's backup service. Added to the end of the home server's docker-compose.yml,
+  # under services:, so it's indented to match. The token comes from GYM_BACKUP_TOKEN in .env.
+  gym-backup:
+    build: https://github.com/totalsinnlos/gym-tracker.git#main:server
+    container_name: gym-backup
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8095:8095"
+    environment:
+      - TZ=Europe/Zurich
+      - BACKUP_TOKEN=${GYM_BACKUP_TOKEN}
+    volumes:
+      - ./config/gym-backup:/data

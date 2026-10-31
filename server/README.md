@@ -21,3 +21,4 @@ Each upload is saved as `backup-<time>.json` in the data folder, and only the ne
 - Tests: `npm test` in the project folder.
 - Locally: `BACKUP_TOKEN=... node server/main.ts`
 - Docker: `docker build -t gym-backup server`
+- Home server: `compose-service.yml` is the block added to the end of the server's `docker-compose.yml`.
