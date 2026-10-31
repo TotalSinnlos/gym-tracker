@@ -4,11 +4,15 @@
 
 **Blocked by:** 16
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Uploading a backup and then fetching the latest returns the same content
-- [ ] Only the newest N backups are kept
-- [ ] Requests without the right token are rejected, and nothing is stored
-- [ ] Uploads over the size limit and uploads that aren't a valid backup are rejected
-- [ ] CORS preflights from the app's origin succeed; other origins get no CORS headers
-- [ ] Tests run with `npm test`, and the Docker image builds
+- [x] Uploading a backup and then fetching the latest returns the same content
+- [x] Only the newest N backups are kept
+- [x] Requests without the right token are rejected, and nothing is stored
+- [x] Uploads over the size limit and uploads that aren't a valid backup are rejected
+- [x] CORS preflights from the app's origin succeed; other origins get no CORS headers
+- [x] Tests run with `npm test`, and the Docker image builds
+
+## Comments
+
+**2026-10-31, done:** The service is in `server/` (`app.ts` for requests, `backupStore.ts` for files, `main.ts` to start, settings in `server/README.md`). Node 24 runs the `.ts` files directly, so the image has no packages. `npm test` runs its 10 tests, `npm run typecheck` checks it, and CI builds the Docker image on every push. Tried for real on the PC: upload, download, wrong token and a too-short token all behave.
