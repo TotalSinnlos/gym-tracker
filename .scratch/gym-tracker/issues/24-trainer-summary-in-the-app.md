@@ -24,3 +24,5 @@
 ## Comments
 
 **2026-10-31, notes from ticket 22:** A summary takes 10-40 seconds (the model thinks first), and the server waits up to 90 seconds for the AI, so the app's request needs a longer timeout than that, and the "Writing your summary…" state will really be seen. The summary is plain text with "- " bullet points and line breaks: show it with its line breaks kept. `POST /trainer` answers `{ "summary" }`, or a `reason`: `too-large` (send again with fewer old session lines), `busy` (try again later), `not-set-up` and `failed` (problems on the server: say so rather than retry forever), `invalid` (a bug in the app). Gemini's free tier often answers "busy" on its newest models, so a due summary waiting a while is normal.
+
+**2026-10-31, note from ticket 23:** On the real server, Gemini once left a request hanging until the server's 90-second timeout instead of answering "busy". So "Writing your summary…" can last the full 90 seconds before the app hears `busy`, and the app's own timeout has to be longer than that.
