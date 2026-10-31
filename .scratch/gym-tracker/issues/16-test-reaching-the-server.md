@@ -17,7 +17,8 @@
 **2026-10-31, test result:** It works. From Chrome on the user's Android phone (Incognito tab, Wi-Fi off, mobile data, Tailscale on), the test page on `https://totalsinnlos.github.io` reached the service through its `tailscale serve` https address:
 
 - A plain GET and a PUT with `Authorization` and `Content-Type` headers (so with a CORS preflight) both returned 200.
-- Chrome did not send `Access-Control-Request-Private-Network` and showed no permission prompt, so Private/Local Network Access didn't get in the way. Ticket 17 still answers it with `Access-Control-Allow-Private-Network: true`, as it costs nothing if a later Chrome starts asking.
+- Chrome showed a permission prompt asking whether the page may access devices on the local network (Local Network Access), and the user allowed it. It did not send the older `Access-Control-Request-Private-Network` preflight header. Ticket 17 still answers that header with `Access-Control-Allow-Private-Network: true`, as it costs nothing.
+- Consequence for tickets 19 and 20: the app has to get this permission once, on purpose, during setup, and cope with it being refused. Not yet tested: whether the prompt also shows in the installed app (standalone window) rather than a Chrome tab.
 - The first request took about 3 s (first secure connection), the next one under 0.1 s.
 
 **Decision:** go ahead with tickets 17–20 as planned.
