@@ -14,3 +14,4 @@
 - [ ] Chrome's local network permission prompt appears on "Test connection" in the installed app, and a refused permission gets a clear explanation of how to fix it
 - [ ] Core tests cover the settings and the last-backup time
 - [ ] Tested on the user's phone against the real server
+- [ ] Carried over from ticket 18: the first real backup from the phone shows up in the server's next nightly offsite snapshot, and the service was running again after the server's next reboot
