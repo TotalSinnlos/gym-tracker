@@ -12,6 +12,8 @@ The user is new to coding: explain choices in plain language.
 
 Pushing to `main` runs the tests and deploys to GitHub Pages (`https://totalsinnlos.github.io/gym-tracker/`) via `.github/workflows/deploy.yml`.
 
+Versions: the bottom of settings shows the commit the app was built from (date and short id). Finished milestones get an annotated git tag with a short plain-English description (`git tag -a <name> -m "..."`, then `git push origin <name>`); `git tag -n` lists them.
+
 ## Agent skills
 
 ### Issue tracker

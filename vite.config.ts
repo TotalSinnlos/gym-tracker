@@ -1,3 +1,4 @@
+import { execSync } from "node:child_process";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
@@ -5,8 +6,21 @@ import { VitePWA } from "vite-plugin-pwa";
 // Served from https://<user>.github.io/gym-tracker/
 const base = "/gym-tracker/";
 
+/** The commit being built, shown at the bottom of settings so it's clear which version a phone runs. */
+function currentCommit() {
+  try {
+    const [id, date] = execSync("git log -1 --format=%h%n%cI", { encoding: "utf8" }).trim().split("\n");
+    return { id, date };
+  } catch {
+    return { id: "unknown", date: null };
+  }
+}
+
 export default defineConfig({
   base,
+  define: {
+    __APP_VERSION__: JSON.stringify(currentCommit()),
+  },
   plugins: [
     react(),
     VitePWA({

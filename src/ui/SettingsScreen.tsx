@@ -4,6 +4,7 @@ import { MainArea } from "./BottomNav";
 import { ArchivedExercises } from "./ExerciseActions";
 import { ExerciseEditor, ExerciseList } from "./ExerciseList";
 import { ExportSection } from "./ExportSection";
+import { formatDateTime } from "./format";
 import { Icon } from "./icons";
 import { RoutineList, RoutineScreen } from "./RoutineList";
 import { ServerBackupSection } from "./ServerBackupSection";
@@ -54,6 +55,11 @@ export function SettingsScreen() {
         <section>
           <ExportSection />
         </section>
+
+        <p className="hint">
+          Version {__APP_VERSION__.date ? `${formatDateTime(__APP_VERSION__.date)} · ` : ""}
+          {__APP_VERSION__.id}
+        </p>
       </div>
     </MainArea>
   );
