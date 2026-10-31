@@ -59,10 +59,19 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
   const server = options.server;
   let data: AppData = normalize(await store.load());
   const listeners = new Set<() => void>();
-  /** Counts changes the server should get, to tell whether one came in during an upload. */
+  /** Counts changes the server should get since the app started. */
   let serverChanges = 0;
+  /** `serverChanges` when the last server backup attempt started (see `hasUntriedServerChanges`). */
+  let triedServerChanges = 0;
 
+  /**
+   * Saves `next`. When exercises, routines or past sessions changed (a session saved, history
+   * corrected, a backup restored...), the backup server is marked as missing changes. A running
+   * session doesn't count, so logging sets doesn't start uploads mid-workout.
+   */
   async function commit(next: AppData) {
+    const changed = next.exercises !== data.exercises || next.routines !== data.routines || next.sessions !== data.sessions;
+    if (changed) next = withServerBackupDue(next);
     await store.save(next);
     data = next;
     listeners.forEach((listener) => listener());
@@ -136,7 +145,7 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       return weight === undefined ? exercise : { ...exercise, weight };
     });
     const summary = summarizeProgression(ended, data.exercises);
-    await commit(withServerBackupDue({ ...data, exercises, activeSession: null, sessions: [...data.sessions, ended] }));
+    await commit({ ...data, exercises, activeSession: null, sessions: [...data.sessions, ended] });
     return { session: ended, summary };
   }
 
@@ -507,13 +516,11 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       };
       const exercise = data.exercises.find((e) => e.id === entry.exerciseId);
       const weight = exercise && countsForWeight(data.sessions, session, entry) ? recalculatedWeight(updated, exercise) : undefined;
-      await commit(
-        withServerBackupDue({
-          ...data,
-          exercises: data.exercises.map((e) => (e === exercise && weight !== undefined ? { ...e, weight } : e)),
-          sessions: data.sessions.map((s) => (s.id === sessionId ? updated : s)),
-        }),
-      );
+      await commit({
+        ...data,
+        exercises: data.exercises.map((e) => (e === exercise && weight !== undefined ? { ...e, weight } : e)),
+        sessions: data.sessions.map((s) => (s.id === sessionId ? updated : s)),
+      });
     },
 
     /**
@@ -529,7 +536,7 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
         const weight = weightWithoutSession(data.sessions, deleted, exercise);
         return weight === undefined ? exercise : { ...exercise, weight };
       });
-      await commit(withServerBackupDue({ ...data, exercises, sessions: data.sessions.filter((s) => s !== deleted) }));
+      await commit({ ...data, exercises, sessions: data.sessions.filter((s) => s !== deleted) });
     },
 
     // --- Progression ---
@@ -606,13 +613,11 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
         ...session,
         entries: session.entries.map((e) => (e === entry ? { ...e, lowered: true } : e)),
       };
-      await commit(
-        withServerBackupDue({
-          ...data,
-          exercises: data.exercises.map((e) => (e.id === exercise.id ? { ...e, weight } : e)),
-          sessions: data.sessions.map((s) => (s.id === sessionId ? updated : s)),
-        }),
-      );
+      await commit({
+        ...data,
+        exercises: data.exercises.map((e) => (e.id === exercise.id ? { ...e, weight } : e)),
+        sessions: data.sessions.map((s) => (s.id === sessionId ? updated : s)),
+      });
     },
 
     /** Whether "Lower to X kg next time?" was chosen for this entry. */
@@ -636,11 +641,12 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     },
 
     /** Checks a backup file without changing anything. Throws a CoreError saying what's wrong if it can't be restored. */
-    checkBackup: (text: string) => checkBackupText(text),
+    checkBackup: checkBackupText,
 
     /**
      * Replaces all data, including a running session, with the backup's. An older backup is upgraded
      * the same way as older saved data. A file that can't be restored is rejected and nothing changes.
+     * The phone's backup server is kept, and then needs a backup of the restored data.
      */
     async restoreBackup(text: string) {
       await commit({ ...readBackup(text), serverBackup: data.serverBackup });
@@ -689,6 +695,7 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       const connection = requireConnection();
       const server = requireServer();
       const changesBefore = serverChanges;
+      triedServerChanges = serverChanges;
       const backup = writeBackup(data, now().toISOString());
       try {
         await server.upload(connection, backup.text).catch(explainServerError);
@@ -704,13 +711,20 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
         ...data,
         settings: { ...data.settings, lastBackupAt: backup.createdAt },
         serverBackup: saved && {
-          url: saved.url,
-          token: saved.token,
+          ...saved,
           lastBackupAt: backup.createdAt,
           dueSince: serverChanges === changesBefore ? undefined : saved.dueSince,
+          lastError: undefined,
         },
       });
     },
+
+    /**
+     * Whether the server is missing a change that no backup attempt has tried to send yet: the moment
+     * to try straight away. After a failure this stays false until the next change, so retries come
+     * from elsewhere (opening the app, coming back online) instead of looping.
+     */
+    hasUntriedServerChanges: () => data.serverBackup?.dueSince !== undefined && serverChanges !== triedServerChanges,
 
     /** The server's newest backup, checked like a file (see `checkBackup`). Restore it with `restoreBackup`. */
     async fetchServerBackup(): Promise<{ text: string; info: BackupInfo }> {

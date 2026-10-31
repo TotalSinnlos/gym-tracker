@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import type { EndSessionResult, ProgressionSummary, SessionEntry } from "../core";
 import { Badge } from "./Badge";
 import { BackupSection } from "./BackupSection";
-import { ServerBackupCard } from "./ServerBackupSection";
+import { ServerBackupCard } from "./ServerBackupCard";
 import { useCore } from "./CoreContext";
 import { formatDayShort, formatEntryWeight, formatKg, formatNumber, formatReps, STATE_LABELS } from "./format";
 import { Icon } from "./icons";

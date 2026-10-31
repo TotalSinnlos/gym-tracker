@@ -192,7 +192,9 @@ describe("restoring from the server", () => {
 
     await core.restoreBackup((await core.fetchServerBackup()).text);
     expect(core.listExercises().map((e) => e.name)).toEqual(["Leg press"]);
-    expect(core.getData()).toEqual(before);
+    const { serverBackup: _, ...restored } = core.getData();
+    const { serverBackup: __, ...expected } = before;
+    expect(restored).toEqual(expected);
     expect(core.serverBackup()?.url).toBe(ADDRESS);
   });
 
@@ -343,5 +345,80 @@ describe("knowing when the server needs a backup", () => {
     await core.logSet(press.id, { reps: 10 });
     await core.endSession();
     expect(core.serverBackup()).toBeNull();
+  });
+});
+
+describe("more changes the server needs", () => {
+  it("needs a backup after a backup file is restored", async () => {
+    const { core } = await setupConnected();
+    const file = core.createBackup();
+    await core.backUpToServer();
+
+    await core.restoreBackup(file.text);
+    expect(core.serverBackup()?.due).toBe(true);
+  });
+
+  it("needs a backup after exercises or routines change", async () => {
+    const { core } = await setupConnected();
+    const press = core.listExercises()[0];
+    await core.backUpToServer();
+    await core.updateExercise(press.id, { weight: 65 });
+    expect(core.serverBackup()?.due).toBe(true);
+
+    await core.backUpToServer();
+    await core.createRoutine("Legs", [press.id]);
+    expect(core.serverBackup()?.due).toBe(true);
+  });
+});
+
+describe("when to try a backup straight away", () => {
+  it("tries a new change, but doesn't retry a failure on its own", async () => {
+    const { core, fake } = await setupConnected();
+    expect(core.hasUntriedServerChanges()).toBe(true);
+
+    fake.failWith = "unreachable";
+    await expect(core.backUpToServer()).rejects.toThrow(CoreError);
+    expect(core.serverBackup()?.due).toBe(true);
+    expect(core.hasUntriedServerChanges()).toBe(false);
+  });
+
+  it("tries again once something new changes, even while a failed one is waiting", async () => {
+    const { core, fake } = await setupConnected();
+    fake.failWith = "unreachable";
+    await expect(core.backUpToServer()).rejects.toThrow(CoreError);
+
+    const press = core.listExercises()[0];
+    const routine = await core.createRoutine("Legs", [press.id]);
+    expect(core.hasUntriedServerChanges()).toBe(true);
+    await expect(core.backUpToServer()).rejects.toThrow(CoreError);
+
+    await core.startSession(routine.id);
+    await core.logSet(press.id, { reps: 10 });
+    expect(core.hasUntriedServerChanges()).toBe(false);
+    await core.endSession();
+    expect(core.hasUntriedServerChanges()).toBe(true);
+  });
+
+  it("tries again after a backup when something changed during it", async () => {
+    const { core, fake } = await setupConnected();
+    const press = core.listExercises()[0];
+    let finishUpload = () => {};
+    const upload = fake.server.upload;
+    fake.server.upload = async (connection, text) => {
+      await new Promise<void>((resolve) => (finishUpload = resolve));
+      return upload(connection, text);
+    };
+    const backingUp = core.backUpToServer();
+    await core.updateExercise(press.id, { weight: 65 });
+    finishUpload();
+    await backingUp;
+
+    expect(core.hasUntriedServerChanges()).toBe(true);
+  });
+
+  it("has nothing to try once the server is up to date", async () => {
+    const { core } = await setupConnected();
+    await core.backUpToServer();
+    expect(core.hasUntriedServerChanges()).toBe(false);
   });
 });

@@ -27,4 +27,4 @@ Checked:
 
 About the local network permission: in the installed app, Chrome did **not** ask (in ticket 16's Incognito tab it did). The form's note says Chrome *may* ask, which stays true. A refused permission (the "blocked" message) is covered by tests only; it wasn't tried on the phone, as refusing it would mean digging it back out of Chrome's settings.
 
-**Still open, moved to ticket 20:** the Kopia snapshot check and the after-reboot check.
+**Still open, moved to ticket 20:** the offsite snapshot check and the after-reboot check.

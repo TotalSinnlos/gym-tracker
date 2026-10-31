@@ -90,10 +90,13 @@ export interface AppData {
   serverBackup: ServerBackup | null;
 }
 
-export interface ServerBackup {
+export interface ServerConnection {
   /** e.g. "https://name.tailnet.ts.net", without a trailing slash. */
   url: string;
   token: string;
+}
+
+export interface ServerBackup extends ServerConnection {
   /** ISO time the server last accepted a backup. Absent until the first one. */
   lastBackupAt?: string;
   /** ISO time of the earliest change the server doesn't have yet. Absent when it's up to date. */

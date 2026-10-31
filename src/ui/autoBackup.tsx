@@ -10,7 +10,7 @@ const RETRY_MS = 5 * 60 * 1000;
 interface AutoBackupState {
   /** Whether a server backup is being uploaded right now. */
   running: boolean;
-  /** Tries a waiting backup now, e.g. when a session has just been saved or on "Try again". */
+  /** Tries a waiting backup now ("Try again"). */
   tryNow: () => void;
 }
 
@@ -28,30 +28,25 @@ export function AutoBackup({ core, children }: { core: Core; children: ReactNode
       if (busy.current || !core.serverBackup()?.due || document.visibilityState !== "visible") return;
       busy.current = true;
       setRunning(true);
-      let succeeded = false;
       try {
         await core.backUpToServer();
-        succeeded = true;
       } catch {
-        // The core remembers the error; the next attempt comes with the next trigger below.
+        // The core remembers the error, and settings and the summary show it.
       } finally {
         busy.current = false;
         setRunning(false);
       }
-      // Still due after a success: something changed during the upload, so send that too.
-      if (succeeded && core.serverBackup()?.due) attempt();
+      // Something changed during the upload: send that too.
+      if (core.hasUntriedServerChanges()) attempt();
     }
     attemptRef.current = attempt;
 
-    // A backup becoming due (e.g. history corrected) starts one. Only the change from "not due" to "due"
-    // counts, so a failed attempt, which also changes the data, doesn't loop.
-    let wasDue = core.serverBackup()?.due ?? false;
+    // A new change (a session saved, history corrected, a backup restored) is sent straight away.
     const unsubscribe = core.subscribe(() => {
-      const due = core.serverBackup()?.due ?? false;
-      if (due && !wasDue) attempt();
-      wasDue = due;
+      if (core.hasUntriedServerChanges()) attempt();
     });
-    // Coming back to the app, or back online, is a good moment to try again: Tailscale may be on now.
+    // Otherwise a waiting backup is tried again on coming back to the app or back online (Tailscale
+    // may be on now), and every few minutes while the app is open.
     const onVisible = () => attempt();
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("online", onVisible);

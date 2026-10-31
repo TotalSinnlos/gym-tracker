@@ -14,7 +14,7 @@
 
 ## Comments
 
-**2026-10-31, from ticket 17:** The image doesn't have to be published anywhere: Docker Compose can build it straight from the public repository with `build: https://github.com/totalsinnlos/gym-tracker.git#main:server`, so the server needs no copy of the code. Updating means rebuilding that one service. `tailscale serve` is already set up from ticket 16 and passes https to `127.0.0.1:8095`, so the container's port should be published as `127.0.0.1:8095:8095`. The container runs as Node's built-in `node` user (uid 1000), the same id as the server's user, so the mounted data folder can be owned by the server's normal user.
+**2026-10-31, from ticket 17:** The image doesn't have to be published anywhere: Docker Compose can build it straight from the public repository with `build: https://github.com/totalsinnlos/gym-tracker.git#main:server`, so the server needs no copy of the code. Updating means rebuilding that one service. `tailscale serve` is already set up from ticket 16 and passes https to `127.0.0.1:8095`, so the container's port should be published as `127.0.0.1:8095:8095`. The container runs as Node's built-in `node` user, which has the same user id as the server's normal user, so the mounted data folder can be owned by the server's normal user.
 
 **2026-10-31, done:** Set up on the server, step by step over SSH:
 

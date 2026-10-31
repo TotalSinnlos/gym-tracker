@@ -1,12 +1,8 @@
 // The user's own backup server: what the core needs from it, checking what the user enters, and
 // turning what went wrong into a message the screens show as it is.
 
+import type { ServerConnection } from "./types";
 import { CoreError } from "./validation";
-
-export interface ServerConnection {
-  url: string;
-  token: string;
-}
 
 /**
  * - unreachable: no answer (offline, Tailscale off, server down, wrong address).

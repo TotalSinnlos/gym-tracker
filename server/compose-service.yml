@@ -8,7 +8,6 @@
     ports:
       - "127.0.0.1:8095:8095"
     environment:
-      - TZ=Europe/Zurich
       - BACKUP_TOKEN=${GYM_BACKUP_TOKEN}
     volumes:
       - ./config/gym-backup:/data
