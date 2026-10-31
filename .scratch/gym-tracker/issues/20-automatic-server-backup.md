@@ -12,3 +12,4 @@
 - [ ] The summary shows whether the server backup worked
 - [ ] Core tests cover when a backup is due and the retry rules
 - [ ] Tested on the user's phone: a session ended with Tailscale off is backed up once it's back on
+- [ ] Carried over from ticket 18: a real backup shows up in the server's nightly offsite snapshot, and the service was running again after the server's next reboot
