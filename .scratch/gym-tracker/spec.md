@@ -127,12 +127,24 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 80. As a lifter, I want to restore from the latest backup on my server, so that I can recover my data without hunting for a file.
 81. As a lifter, I want to see when the last server backup worked, so that I notice if it has stopped working.
 
+### AI trainer
+
+82. As a lifter, I want an AI-written summary after each session that looks at my history, so that I get a trainer's view of how I did, not just the numbers.
+83. As a lifter, I want the trainer to point out what's going well and what has stalled (for example an exercise whose weight hasn't gone up in weeks, or one I keep skipping), so that I notice it early.
+84. As a lifter, I want the trainer to suggest how to switch up my routine when it makes sense, with the reason, so that I can decide whether to change it myself.
+85. As a lifter, I want a session ended without a connection to get its summary once I'm back online, so that training at the gym without signal doesn't matter.
+86. As a lifter, I want to read a past session's trainer summary again in History, so that I can look back at earlier advice.
+87. As a lifter, I want to turn the trainer on and off in settings, so that my data is only sent to the AI when I want it to be.
+88. As a lifter, I want to tell the trainer my goals and anything it should know (for example an injury), and change that at any time, so that its advice fits me.
+89. As a lifter, I want to have a session's summary written again after correcting it, or written for a session that has none, so that a typo or a missing summary doesn't leave me without useful advice.
+90. As a lifter, I want the trainer to take its earlier advice into account, so that it follows up instead of repeating itself.
+
 ## Implementation Decisions
 
 ### Platform
 
 - The app is an installable Progressive Web App (PWA): a web manifest plus a service worker that caches all app files, so the app installs to the home screen and runs fully offline.
-- All data is stored on the device in the browser's IndexedDB. There is no backend and no login. Data only leaves the phone through user-triggered backup and export, or through the optional server backup once the user has set it up.
+- All data is stored on the device in the browser's IndexedDB. There is no backend and no login. Data only leaves the phone through user-triggered backup and export, through the optional server backup once the user has set it up, or through the optional AI trainer once the user has turned it on.
 - On first launch, the app calls the browser's persistent-storage request so Chrome doesn't evict its data when storage runs low.
 - Every user installs from the same link and gets their own data on their own device.
 - The app is hosted on GitHub Pages from a public GitHub repository named `gym-tracker`, at `https://<github-username>.github.io/gym-tracker/`. The repository holds only code and docs, never workout data.
@@ -221,18 +233,38 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 - The app records the time of the last backup and shows it in settings and on the end-of-session screen.
 - Server backup is optional and off by default. The user enters a server address and token in settings; both are stored only on the phone, never in the code. Once set up, the app uploads the same backup after every session and retries failed uploads later, and the user can restore from the server's latest backup. Without it set up, the app behaves exactly as without the feature.
 - The server side is a small service kept in this repository under `server/`, run by the user on their home server and reached over Tailscale with HTTPS. Details of the user's server stay out of the repository.
+
+### AI trainer
+
+- The trainer is optional and off by default. It can only be turned on once server backup is set up, since it goes through the same home server with the same address and token.
+- The phone never talks to the AI service directly and never holds an AI key. The app sends a **trainer brief** to the home server (`POST /trainer`); the server adds the AI key from its environment, asks the AI and returns the summary text. The key never goes into the repository or onto the phone.
+- The core builds the **trainer brief**, as plain data so tests can check it without an AI:
+  - the session being summarised (sets, weights, done/incomplete/skipped, increases earned, below-range exercises);
+  - all sessions before it, written as compact lines, including those of archived exercises, which are marked as archived with the date they were archived;
+  - facts the core works out per exercise, so the AI interprets numbers instead of counting them: weeks and sessions since the last increase, how often it was skipped recently, and the best reps at the current weight;
+  - the exercises, routines and progression rule (rep range and when the weight goes up);
+  - all earlier summaries with their dates;
+  - the user's "Goals and notes" text from settings, which can be changed at any time and may be empty.
+- A brief only ever covers what had happened up to the session it summarises, so a rewritten summary of an old session reads as if written back then. The goals text is the exception: it's always the current one, since the app doesn't keep old versions of it.
+- If the server reports a brief as too large, the core leaves out the oldest sessions' lines (keeping the per-exercise facts) until it fits.
+- The server keeps the instructions to the AI and talks to the AI through one small, swappable piece. The instructions ask for English, a neutral matter-of-fact tone with no persona or character, and a fixed short layout of about 100–150 words: one line on how the session went, "Going well", "Keep an eye on", and a "Suggestion" part only when a change is really worth making. They tell the AI to use only the numbers it's given and to weigh recent earlier summaries most.
+- The first AI is Google Gemini on its free tier; which model is decided in ticket 21. Switching to another AI (for example Claude) only changes the swappable piece and the server's settings.
+- The trainer gives advice only. Its suggestions are text; the app never changes exercises, routines or weights because of them.
+- A summary is stored on its session, so it shows in History and is part of backups; deleting a session deletes its summary. Like the server backup, the core marks a summary as due when a session ends with the trainer on, and the app retries when it next opens, comes to the foreground or comes back online. A failure never blocks ending a session. A summary that arrives late simply appears on its session in History, with no notice elsewhere.
+- Editing a session doesn't rewrite its summary by itself. Each past session in History has a "Write again" button ("Write summary" if it has none), which works one session at a time and replaces the old summary. Turning the trainer on never writes summaries for older sessions by itself.
+- Turning the trainer off, or disconnecting the server, keeps existing summaries and cancels any that are still due, so nothing is sent afterwards.
 - The CSV export has one row per set, with columns: date, routine, exercise, exercise type, set number, weight in kg (empty for bodyweight), reps. Skipped entries produce no rows.
 
 ### Screens
 
 - **Home**: start a session (pick a routine), or resume an active one. Links to the overview, history and settings.
 - **Session screen**: the current exercise, its weight (editable, hidden for bodyweight), last time's results, a compact progress chart, set inputs right under the weight (so the phone's keyboard covers neither), previous and next arrows and swiping to flip between exercises, the "Up next" list (left out on the last exercise) and "End session".
-- **End-of-session summary**: exercises done, incomplete and skipped, upcoming weight increases, bodyweight exercises that beat the rep range, below-range exercises (with a "lower weight" button for weighted ones), and the "Back up" button.
+- **End-of-session summary**: exercises done, incomplete and skipped, upcoming weight increases, bodyweight exercises that beat the rep range, below-range exercises (with a "lower weight" button for weighted ones), and the "Back up" button. With the trainer on, a trainer card shows the AI summary, "Writing your summary…" while waiting, or "Your summary will arrive once you're online" after a failure.
 - **Overview**: all active exercises with their current weight (or "bodyweight"), the date of the last increase and a small trend line.
 - **Exercise page**: a weight-over-time graph (weighted exercises only), a reps-per-session graph (incomplete sessions shown as hollow points) and the exercise's settings.
 - **History**: a list of past sessions. Each opens a detail view where sets can be edited and the session deleted.
-- **Settings**: manage exercises (including archived ones), manage routines, back up, restore and export CSV.
-- **History**: a list of past sessions. Each opens a detail view where sets can be edited and the session deleted. Exercises that earned a weight increase in that session are highlighted.
+- **Settings**: manage exercises (including archived ones), manage routines, back up, restore and export CSV. Once server backup is set up: the trainer switch, with a note on what gets sent, and the "Goals and notes" box.
+- **History**: a list of past sessions. Each opens a detail view where sets can be edited and the session deleted. Exercises that earned a weight increase in that session are highlighted. With the trainer on, the detail view shows the session's summary and a "Write again" (or "Write summary") button.
 - The visual design will be done separately in Claude Design. A design brief describing these screens will be written when the build reaches that point, and the result will be built into the app.
 
 ## Testing Decisions
@@ -248,7 +280,9 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
   - routines and archiving: several routines sharing an exercise's history, deleting routines (not the running session's or the last one), archiving taking an exercise out of routines while keeping its history, and unarchiving;
   - resuming: a session interrupted after any command continues exactly where it left off when the core is reloaded from the same store, and a session older than 6 hours is reported as stale;
   - backup and restore: the data after a backup followed by a restore is identical to the data before, and a malformed or wrong-version file is rejected without touching existing data;
-  - CSV export: the correct columns, one row per set, an empty weight for bodyweight, and no rows for skipped entries.
+  - CSV export: the correct columns, one row per set, an empty weight for bodyweight, and no rows for skipped entries;
+  - AI trainer: what the trainer brief contains (including the worked-out facts per exercise, archived exercises, earlier summaries and the goals text), a brief for an older session leaving out everything after it, trimming the oldest lines when too large, a summary becoming due when a session ends with the trainer on (and not when it's off), a stored summary clearing it, a failure keeping it due, turning the trainer off cancelling due summaries, writing again replacing a summary, and summaries surviving backup and restore and being deleted with their session.
+- The quality of the trainer's advice is judged by the user on real sessions, not by tests.
 - Screens, charts, installing to the home screen, sharing to Drive, offline behaviour and update timing are checked by hand on the phone.
 - There's no prior art: the repo is empty, so this spec sets up the test conventions.
 
