@@ -4,12 +4,23 @@
 
 **Blocked by:** 19
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Ending a session uploads a backup automatically
-- [ ] A failed upload is retried later, and only the latest data is uploaded (no queue of old backups)
-- [ ] Ending a session works the same with the server unreachable
-- [ ] The summary shows whether the server backup worked
-- [ ] Core tests cover when a backup is due and the retry rules
-- [ ] Tested on the user's phone: a session ended with Tailscale off is backed up once it's back on
+- [x] Ending a session uploads a backup automatically
+- [x] A failed upload is retried later, and only the latest data is uploaded (no queue of old backups)
+- [x] Ending a session works the same with the server unreachable
+- [x] The summary shows whether the server backup worked
+- [x] Core tests cover when a backup is due and the retry rules
+- [x] Tested on the user's phone: a session ended with Tailscale off is backed up once it's back on
 - [ ] Carried over from ticket 18: a real backup shows up in the server's nightly offsite snapshot, and the service was running again after the server's next reboot
+
+## Comments
+
+**2026-10-31, done:** The core marks a server backup as due (`ServerBackup.dueSince`) when a session is saved, history is corrected or deleted, a lowered weight is chosen, or the server is connected. A success clears it unless something changed during the upload; a failure is kept in `lastError`. `serverBackup()` reports `due`, `overdue` (over 24 hours) and `lastError`. `src/ui/autoBackup.tsx` uploads when a backup becomes due, when the summary opens, when the app opens, comes to the foreground or back online, and every 5 minutes while open. With server backup set up, the summary shows a server backup card (with "Try again" after a failure) instead of the backup-file card. Settings shows a warning for a failed or overdue backup. Since the backup is one full copy of the data, retrying always sends the latest data, never a queue.
+
+Checked:
+- 9 new core tests (203 in total), including a session saved during an upload.
+- In the built app on the PC, against an address that can't answer: the settings warning, the summary card, one new attempt when a session is saved even with an earlier failure waiting, and one more on "Try again". The dev server runs everything twice (React's strict mode) and showed a stale state there; the built app doesn't.
+- On the user's phone: a test session ended with Tailscale off, then Tailscale back on and the app reopened; the server got the backup with the test session (12:36), then another one after the test session was deleted from history (12:37, the same size as before the test).
+
+**Still open, carried over from ticket 18:** the nightly offsite snapshot containing the backups (first chance: the run at 04:15 on 1 Nov), and the service running again after the server's next reboot. Both are for the user to check, outside the app.
