@@ -1,8 +1,10 @@
-// The backup service's web requests: PUT /backup stores a backup, GET /backup/latest returns the newest.
+// The service's web requests: PUT /backup stores a backup, GET /backup/latest returns the newest,
+// POST /trainer asks the AI for a session summary (see trainer.ts).
 
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { BackupStore } from "./backupStore.ts";
+import { handleTrainer, type TrainerConfig } from "./trainer.ts";
 
 export interface AppConfig {
   /** The secret the app sends as "Authorization: Bearer <token>". */
@@ -11,6 +13,8 @@ export interface AppConfig {
   allowedOrigin: string;
   /** Uploads larger than this are refused. */
   maxBytes: number;
+  /** The AI trainer, or undefined while no AI key is set up. */
+  trainer?: TrainerConfig;
 }
 
 export function createHandler(config: AppConfig, store: BackupStore) {
@@ -23,7 +27,9 @@ export function createHandler(config: AppConfig, store: BackupStore) {
         // The browser asks first whether the app may send a token; the CORS headers above answer it.
         return send(response, 204);
       }
-      if (path !== "/backup" && path !== "/backup/latest") return send(response, 404, { error: "Not found." });
+      if (path !== "/backup" && path !== "/backup/latest" && path !== "/trainer") {
+        return send(response, 404, { error: "Not found." });
+      }
       if (!hasToken(request, config.token)) return send(response, 401, { error: "Wrong or missing token." });
 
       if (path === "/backup" && request.method === "PUT") {
@@ -39,6 +45,9 @@ export function createHandler(config: AppConfig, store: BackupStore) {
         response.writeHead(200, { "Content-Type": "application/json" });
         return response.end(text);
       }
+      if (path === "/trainer" && request.method === "POST") {
+        return await handleTrainer(() => readBody(request, config.maxBytes), config.trainer, response);
+      }
       return send(response, 405, { error: "Method not allowed." });
     } catch (error) {
       console.error(error);
@@ -49,7 +58,7 @@ export function createHandler(config: AppConfig, store: BackupStore) {
 
 function allowOrigin(response: ServerResponse, origin: string) {
   response.setHeader("Access-Control-Allow-Origin", origin);
-  response.setHeader("Access-Control-Allow-Methods", "GET, PUT, OPTIONS");
+  response.setHeader("Access-Control-Allow-Methods", "GET, PUT, POST, OPTIONS");
   response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
   // Chrome's older private-network check; harmless where Chrome asks the user instead.
   response.setHeader("Access-Control-Allow-Private-Network", "true");

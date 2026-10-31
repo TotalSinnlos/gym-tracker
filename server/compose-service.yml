@@ -1,6 +1,7 @@
 
   # The gym tracker's backup service. Added to the end of the home server's docker-compose.yml,
-  # under services:, so it's indented to match. The token comes from GYM_BACKUP_TOKEN in .env.
+  # under services:, so it's indented to match. The token comes from GYM_BACKUP_TOKEN in .env,
+  # the AI key from GYM_AI_API_KEY (leave it out and the trainer stays off).
   gym-backup:
     build: https://github.com/totalsinnlos/gym-tracker.git#main:server
     container_name: gym-backup
@@ -9,5 +10,6 @@
       - "127.0.0.1:8095:8095"
     environment:
       - BACKUP_TOKEN=${GYM_BACKUP_TOKEN}
+      - AI_API_KEY=${GYM_AI_API_KEY:-}
     volumes:
       - ./config/gym-backup:/data
