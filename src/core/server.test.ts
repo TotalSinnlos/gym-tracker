@@ -66,7 +66,7 @@ describe("setting up server backup", () => {
     await core.connectServer(ADDRESS, TOKEN);
 
     expect(fake.seen).toEqual([{ url: ADDRESS, token: TOKEN }]);
-    expect(core.serverBackup()).toEqual({ url: ADDRESS, lastBackupAt: null });
+    expect(core.serverBackup()).toEqual({ url: ADDRESS, lastBackupAt: null, due: true, overdue: false, lastError: null });
   });
 
   it("tidies the address and token", async () => {
@@ -133,7 +133,7 @@ describe("setting up server backup", () => {
   it("keeps the connection on this phone after a restart", async () => {
     const { store, fake } = await setupConnected();
     const restarted = await createCore(store, { server: fake.server });
-    expect(restarted.serverBackup()).toEqual({ url: ADDRESS, lastBackupAt: null });
+    expect(restarted.serverBackup()).toMatchObject({ url: ADDRESS, lastBackupAt: null, due: true });
   });
 
   it("needs a server to talk to", async () => {
@@ -217,5 +217,131 @@ describe("restoring from the server", () => {
 
     await core.restoreBackup(file.text);
     expect(core.serverBackup()?.url).toBe("https://other.example.ts.net");
+  });
+});
+
+describe("knowing when the server needs a backup", () => {
+  /** Connected and backed up, with a routine ready to start. */
+  async function setupUpToDate() {
+    const context = await setupConnected();
+    const { core } = context;
+    const press = core.listExercises()[0];
+    const routine = await core.createRoutine("Legs", [press.id]);
+    await core.backUpToServer();
+    return { ...context, press, routine };
+  }
+
+  it("needs one straight after connecting, and not after a backup", async () => {
+    const { core } = await setupConnected();
+    expect(core.serverBackup()?.due).toBe(true);
+    await core.backUpToServer();
+    expect(core.serverBackup()?.due).toBe(false);
+  });
+
+  it("needs one once a session is saved", async () => {
+    const { core, press, routine } = await setupUpToDate();
+    await core.startSession(routine.id);
+    await core.logSet(press.id, { reps: 10 });
+    expect(core.serverBackup()?.due).toBe(false);
+
+    await core.endSession();
+    expect(core.serverBackup()?.due).toBe(true);
+  });
+
+  it("doesn't need one for a session that was discarded with nothing logged", async () => {
+    const { core, routine } = await setupUpToDate();
+    await core.startSession(routine.id);
+    await core.endSession();
+    expect(core.serverBackup()?.due).toBe(false);
+  });
+
+  it("needs one after history is corrected or deleted", async () => {
+    const { core, press, routine } = await setupUpToDate();
+    await core.startSession(routine.id);
+    await core.logSet(press.id, { reps: 10 });
+    const ended = await core.endSession();
+    const sessionId = ended.session!.id;
+    await core.backUpToServer();
+
+    await core.editPastSet(sessionId, press.id, 0, { reps: 11 });
+    expect(core.serverBackup()?.due).toBe(true);
+    await core.backUpToServer();
+
+    await core.deleteSession(sessionId);
+    expect(core.serverBackup()?.due).toBe(true);
+  });
+
+  it("stays due if a session is saved while the backup is on its way", async () => {
+    const { core, fake, press, routine } = await setupUpToDate();
+    await core.startSession(routine.id);
+    await core.logSet(press.id, { reps: 10 });
+    await core.endSession();
+
+    // The upload waits until the next session has ended too.
+    let finishUpload = () => {};
+    const upload = fake.server.upload;
+    fake.server.upload = async (connection, text) => {
+      await new Promise<void>((resolve) => (finishUpload = resolve));
+      return upload(connection, text);
+    };
+    const backingUp = core.backUpToServer();
+    await core.startSession(routine.id);
+    await core.logSet(press.id, { reps: 11 });
+    await core.endSession();
+    finishUpload();
+    await backingUp;
+
+    expect(core.serverBackup()?.due).toBe(true);
+  });
+
+  it("remembers why a backup failed until one succeeds, and stays due", async () => {
+    const { core, fake, press, routine } = await setupUpToDate();
+    await core.startSession(routine.id);
+    await core.logSet(press.id, { reps: 10 });
+    await core.endSession();
+
+    fake.failWith = "unreachable";
+    await expect(core.backUpToServer()).rejects.toThrow(CoreError);
+    expect(core.serverBackup()).toMatchObject({
+      due: true,
+      lastError: "Couldn't reach your server. Check you're online and Tailscale is on",
+    });
+
+    fake.failWith = null;
+    await core.backUpToServer();
+    expect(core.serverBackup()).toMatchObject({ due: false, lastError: null });
+  });
+
+  it("is overdue once a backup has waited more than a day", async () => {
+    const { core, press, routine, setTime } = await setupUpToDate();
+    setTime("2026-11-01T10:00:00Z");
+    await core.startSession(routine.id);
+    await core.logSet(press.id, { reps: 10 });
+    await core.endSession();
+
+    setTime("2026-11-02T10:00:00Z");
+    expect(core.serverBackup()?.overdue).toBe(false);
+    setTime("2026-11-02T10:01:00Z");
+    expect(core.serverBackup()?.overdue).toBe(true);
+  });
+
+  it("remembers a waiting backup after a restart", async () => {
+    const { core, store, fake, press, routine } = await setupUpToDate();
+    await core.startSession(routine.id);
+    await core.logSet(press.id, { reps: 10 });
+    await core.endSession();
+
+    const restarted = await createCore(store, { server: fake.server });
+    expect(restarted.serverBackup()?.due).toBe(true);
+  });
+
+  it("doesn't track anything without a server set up", async () => {
+    const { core } = await setup();
+    const press = await core.createExercise({ name: "Leg press", type: "machine", weight: 60 });
+    const routine = await core.createRoutine("Legs", [press.id]);
+    await core.startSession(routine.id);
+    await core.logSet(press.id, { reps: 10 });
+    await core.endSession();
+    expect(core.serverBackup()).toBeNull();
   });
 });

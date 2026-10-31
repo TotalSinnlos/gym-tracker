@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { type Core, type EndSessionResult, createCore } from "./core";
 import { createHttpBackupServer } from "./storage/httpBackupServer";
 import { createIndexedDbStore } from "./storage/indexedDbStore";
+import { AutoBackup } from "./ui/autoBackup";
 import { type Area, NavigateContext } from "./ui/BottomNav";
 import { CoreContext, useCore } from "./ui/CoreContext";
 import { ExercisePage } from "./ui/ExercisePage";
@@ -36,7 +37,9 @@ export function App() {
 
   return (
     <CoreContext.Provider value={core}>
-      <Screens />
+      <AutoBackup core={core}>
+        <Screens />
+      </AutoBackup>
     </CoreContext.Provider>
   );
 }

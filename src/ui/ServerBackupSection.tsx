@@ -1,5 +1,6 @@
-import { type FormEvent, useCallback, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import type { BackupInfo } from "../core";
+import { useAutoBackup } from "./autoBackup";
 import { useCore } from "./CoreContext";
 import { formatDateTime } from "./format";
 import { Icon } from "./icons";
@@ -17,6 +18,7 @@ export function ServerBackupSection() {
   const [fetched, setFetched] = useState<{ text: string; info: BackupInfo } | null>(null);
   const closeMessage = useCallback(() => setMessage(null), []);
   const server = core.serverBackup();
+  const autoRunning = useAutoBackup().running;
 
   /** Runs a server command, showing it as busy and keeping one action at a time. */
   async function runBusy(kind: NonNullable<typeof busy>, action: () => Promise<unknown>) {
@@ -87,9 +89,11 @@ export function ServerBackupSection() {
           <div className="li backup-row">
             <span className="li-m">
               <span className="li-s">Last backed up to server</span>
-              <span className="li-t">{server.lastBackupAt ? formatDateTime(server.lastBackupAt) : "Not yet"}</span>
+              <span className="li-t">
+                {autoRunning ? "Backing up…" : server.lastBackupAt ? formatDateTime(server.lastBackupAt) : "Not yet"}
+              </span>
             </span>
-            <button className="btn sm out" onClick={backUp} disabled={busy !== null}>
+            <button className="btn sm out" onClick={backUp} disabled={busy !== null || autoRunning}>
               {busy === "backing-up" ? "Backing up…" : "Back up now"}
             </button>
           </div>
@@ -112,7 +116,20 @@ export function ServerBackupSection() {
             <span className="li-m li-t">Remove server backup</span>
           </button>
         </div>
-        <p className="hint">Removing only forgets the server on this phone. The backups on it stay there.</p>
+        {!error && !autoRunning && (server.lastError || server.overdue) && (
+          <div className="banner section-msg" role="status">
+            <Icon name="error" />
+            <span>
+              {server.lastError
+                ? `The last backup to your server failed: ${server.lastError}. The app tries again whenever it's open.`
+                : "Your latest changes have waited over a day to reach your server. Open the app with Tailscale on to send them."}
+            </span>
+          </div>
+        )}
+        <p className="hint">
+          The app backs up to your server by itself after each session. Removing only forgets the server on this phone; the
+          backups on it stay there.
+        </p>
       </>
     );
   }
@@ -130,6 +147,53 @@ export function ServerBackupSection() {
       {fetched && <RestoreDialog info={fetched.info} onCancel={() => setFetched(null)} onRestore={restore} />}
       {message && <Snack message={message} onClose={closeMessage} />}
     </>
+  );
+}
+
+/**
+ * The end-of-session summary's line about the automatic server backup, with "Try again" after a failure.
+ * Null when server backup isn't set up.
+ */
+export function ServerBackupCard() {
+  const core = useCore();
+  const { running, tryNow } = useAutoBackup();
+  const server = core.serverBackup();
+
+  // A session was just saved: send it now, even if an earlier backup was already waiting.
+  useEffect(() => {
+    tryNow();
+  }, []);
+
+  if (!server) return null;
+  let status: string;
+  let detail: string | null = null;
+  if (running) {
+    status = "Backing up…";
+  } else if (!server.due) {
+    status = "Backed up";
+    detail = server.lastBackupAt && formatDateTime(server.lastBackupAt);
+  } else if (server.lastError) {
+    status = "Not backed up yet";
+    detail = "The app will try again later.";
+  } else {
+    status = "Waiting to back up";
+  }
+
+  return (
+    <div className="card backup-row">
+      <span className="li-m">
+        <span className="li-s">Server backup</span>
+        <span className="li-t">{status}</span>
+        {detail && <span className="li-s">{detail}</span>}
+      </span>
+      {server.due && server.lastError && !running ? (
+        <button className="btn sm out" onClick={tryNow}>
+          Try again
+        </button>
+      ) : (
+        !server.due && <Icon name="check" />
+      )}
+    </div>
   );
 }
 

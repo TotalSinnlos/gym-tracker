@@ -29,6 +29,7 @@ import {
   type ExercisePatch,
   type Routine,
   type Session,
+  type ServerBackupStatus,
   type SessionEntry,
   isWeighted,
 } from "./types";
@@ -36,6 +37,9 @@ import { CoreError, DEFAULT_INCREMENT, buildExercise, buildSet, requireName, req
 
 /** A session started longer ago than this was probably forgotten (see `isSessionStale`). */
 export const STALE_SESSION_HOURS = 6;
+
+/** A server backup waiting longer than this is pointed out in settings. */
+export const SERVER_BACKUP_OVERDUE_HOURS = 24;
 
 export type Core = Awaited<ReturnType<typeof createCore>>;
 
@@ -55,11 +59,20 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
   const server = options.server;
   let data: AppData = normalize(await store.load());
   const listeners = new Set<() => void>();
+  /** Counts changes the server should get, to tell whether one came in during an upload. */
+  let serverChanges = 0;
 
   async function commit(next: AppData) {
     await store.save(next);
     data = next;
     listeners.forEach((listener) => listener());
+  }
+
+  /** Marks `next` as needing a server backup, when one is set up. */
+  function withServerBackupDue(next: AppData): AppData {
+    if (!next.serverBackup) return next;
+    serverChanges++;
+    return { ...next, serverBackup: { ...next.serverBackup, dueSince: next.serverBackup.dueSince ?? now().toISOString() } };
   }
 
   function findExercise(id: string): Exercise {
@@ -122,8 +135,9 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       const weight = weightFromSession(ended, exercise);
       return weight === undefined ? exercise : { ...exercise, weight };
     });
-    await commit({ ...data, exercises, activeSession: null, sessions: [...data.sessions, ended] });
-    return { session: ended, summary: summarizeProgression(ended, data.exercises) };
+    const summary = summarizeProgression(ended, data.exercises);
+    await commit(withServerBackupDue({ ...data, exercises, activeSession: null, sessions: [...data.sessions, ended] }));
+    return { session: ended, summary };
   }
 
   function isSessionStale(): boolean {
@@ -493,11 +507,13 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       };
       const exercise = data.exercises.find((e) => e.id === entry.exerciseId);
       const weight = exercise && countsForWeight(data.sessions, session, entry) ? recalculatedWeight(updated, exercise) : undefined;
-      await commit({
-        ...data,
-        exercises: data.exercises.map((e) => (e === exercise && weight !== undefined ? { ...e, weight } : e)),
-        sessions: data.sessions.map((s) => (s.id === sessionId ? updated : s)),
-      });
+      await commit(
+        withServerBackupDue({
+          ...data,
+          exercises: data.exercises.map((e) => (e === exercise && weight !== undefined ? { ...e, weight } : e)),
+          sessions: data.sessions.map((s) => (s.id === sessionId ? updated : s)),
+        }),
+      );
     },
 
     /**
@@ -513,7 +529,7 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
         const weight = weightWithoutSession(data.sessions, deleted, exercise);
         return weight === undefined ? exercise : { ...exercise, weight };
       });
-      await commit({ ...data, exercises, sessions: data.sessions.filter((s) => s !== deleted) });
+      await commit(withServerBackupDue({ ...data, exercises, sessions: data.sessions.filter((s) => s !== deleted) }));
     },
 
     // --- Progression ---
@@ -590,11 +606,13 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
         ...session,
         entries: session.entries.map((e) => (e === entry ? { ...e, lowered: true } : e)),
       };
-      await commit({
-        ...data,
-        exercises: data.exercises.map((e) => (e.id === exercise.id ? { ...e, weight } : e)),
-        sessions: data.sessions.map((s) => (s.id === sessionId ? updated : s)),
-      });
+      await commit(
+        withServerBackupDue({
+          ...data,
+          exercises: data.exercises.map((e) => (e.id === exercise.id ? { ...e, weight } : e)),
+          sessions: data.sessions.map((s) => (s.id === sessionId ? updated : s)),
+        }),
+      );
     },
 
     /** Whether "Lower to X kg next time?" was chosen for this entry. */
@@ -630,23 +648,32 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
 
     // --- Server backup ---
 
-    /** The backup server's address and when it last accepted a backup, or null when not set up. */
-    serverBackup(): { url: string; lastBackupAt: string | null } | null {
+    /** The backup server's address and backup state (see `ServerBackupStatus`), or null when not set up. */
+    serverBackup(): ServerBackupStatus | null {
       const saved = data.serverBackup;
-      return saved && { url: saved.url, lastBackupAt: saved.lastBackupAt ?? null };
+      if (!saved) return null;
+      const waited = saved.dueSince ? now().getTime() - new Date(saved.dueSince).getTime() : 0;
+      return {
+        url: saved.url,
+        lastBackupAt: saved.lastBackupAt ?? null,
+        due: saved.dueSince !== undefined,
+        overdue: waited > SERVER_BACKUP_OVERDUE_HOURS * 60 * 60 * 1000,
+        lastError: saved.lastError ?? null,
+      };
     },
 
     /**
      * Checks the address and token by asking the server for its newest backup, and saves them only if
      * that works. An empty token keeps the current one, so the address can be changed on its own.
-     * Changing the address starts "last backed up to server" afresh.
+     * Changing the address starts "last backed up to server" afresh. A backup is due straight away.
      */
     async connectServer(address: string, token: string) {
       const current = data.serverBackup;
       const connection = buildConnection(address, token.trim() === "" && current ? current.token : token);
       await requireServer().latest(connection).catch(explainServerError);
       const sameServer = current?.url === connection.url;
-      await commit({ ...data, serverBackup: { ...connection, lastBackupAt: sameServer ? current.lastBackupAt : undefined } });
+      const serverBackup = { ...connection, lastBackupAt: sameServer ? current.lastBackupAt : undefined };
+      await commit(withServerBackupDue({ ...data, serverBackup }));
     },
 
     /** Forgets the backup server. The backups on it stay there. */
@@ -654,16 +681,34 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       await commit({ ...data, serverBackup: null });
     },
 
-    /** Sends a backup (the same as `createBackup`'s) to the server, and records it as the last backup. */
+    /**
+     * Sends a backup (the same as `createBackup`'s) to the server, and records it as the last backup.
+     * A failure is remembered (see `ServerBackupStatus.lastError`) as well as thrown.
+     */
     async backUpToServer() {
       const connection = requireConnection();
+      const server = requireServer();
+      const changesBefore = serverChanges;
       const backup = writeBackup(data, now().toISOString());
-      await requireServer().upload(connection, backup.text).catch(explainServerError);
-      // Read `data` again: it may have changed during the upload.
+      try {
+        await server.upload(connection, backup.text).catch(explainServerError);
+      } catch (error) {
+        if (error instanceof CoreError && data.serverBackup) {
+          await commit({ ...data, serverBackup: { ...data.serverBackup, lastError: error.message } });
+        }
+        throw error;
+      }
+      // Read `data` again: it may have changed during the upload, and then the server is still behind.
+      const saved = data.serverBackup;
       await commit({
         ...data,
         settings: { ...data.settings, lastBackupAt: backup.createdAt },
-        serverBackup: data.serverBackup && { ...data.serverBackup, lastBackupAt: backup.createdAt },
+        serverBackup: saved && {
+          url: saved.url,
+          token: saved.token,
+          lastBackupAt: backup.createdAt,
+          dueSince: serverChanges === changesBefore ? undefined : saved.dueSince,
+        },
       });
     },
 

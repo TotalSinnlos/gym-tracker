@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import type { EndSessionResult, ProgressionSummary, SessionEntry } from "../core";
 import { Badge } from "./Badge";
 import { BackupSection } from "./BackupSection";
+import { ServerBackupCard } from "./ServerBackupSection";
 import { useCore } from "./CoreContext";
 import { formatDayShort, formatEntryWeight, formatKg, formatNumber, formatReps, STATE_LABELS } from "./format";
 import { Icon } from "./icons";
@@ -9,6 +10,7 @@ import { StateMark } from "./StateMark";
 import { useAction } from "./useAction";
 
 export function SummaryScreen({ result, onDone }: { result: EndSessionResult; onDone: () => void }) {
+  const core = useCore();
   const doneButton = (
     <div className="dock">
       <button className={result.session ? "btn lg pri" : "btn lg"} onClick={onDone}>
@@ -64,7 +66,8 @@ export function SummaryScreen({ result, onDone }: { result: EndSessionResult; on
             <SummaryRow key={entry.id} entry={entry} />
           ))}
         </div>
-        <BackupSection />
+        {/* With server backup set up, it happens by itself; otherwise offer the backup file. */}
+        {core.serverBackup() ? <ServerBackupCard /> : <BackupSection />}
       </div>
       {doneButton}
     </main>

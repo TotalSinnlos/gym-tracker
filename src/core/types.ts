@@ -96,6 +96,23 @@ export interface ServerBackup {
   token: string;
   /** ISO time the server last accepted a backup. Absent until the first one. */
   lastBackupAt?: string;
+  /** ISO time of the earliest change the server doesn't have yet. Absent when it's up to date. */
+  dueSince?: string;
+  /** Why the last attempt failed, until one succeeds. */
+  lastError?: string;
+}
+
+/** What `serverBackup()` tells the screens. */
+export interface ServerBackupStatus {
+  url: string;
+  /** ISO time the server last accepted a backup, or null if it never has. */
+  lastBackupAt: string | null;
+  /** Whether the server is missing changes. */
+  due: boolean;
+  /** Whether it has been missing them for too long (see SERVER_BACKUP_OVERDUE_HOURS). */
+  overdue: boolean;
+  /** Why the last attempt failed, or null. */
+  lastError: string | null;
 }
 
 export interface ExerciseInput {
