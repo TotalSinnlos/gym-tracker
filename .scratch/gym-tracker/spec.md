@@ -119,12 +119,20 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 75. As a lifter, I want my data kept across app updates, so that improvements never cost me my history.
 76. As a lifter, I want to share the app's link with someone else so they can install it with their own separate data, so that my girlfriend can use it too.
 
+### Server backup
+
+77. As a lifter, I want to connect the app to my own home server with an address and a token, so that my backups go somewhere I control.
+78. As a lifter, I want the app to back up to my server automatically after every session, so that I never have to remember to back up.
+79. As a lifter, I want a failed server backup to be retried later without interrupting me, so that a missing connection at the gym doesn't matter.
+80. As a lifter, I want to restore from the latest backup on my server, so that I can recover my data without hunting for a file.
+81. As a lifter, I want to see when the last server backup worked, so that I notice if it has stopped working.
+
 ## Implementation Decisions
 
 ### Platform
 
 - The app is an installable Progressive Web App (PWA): a web manifest plus a service worker that caches all app files, so the app installs to the home screen and runs fully offline.
-- All data is stored on the device in the browser's IndexedDB. There is no backend, no login and no data leaves the phone except through user-triggered backup and export.
+- All data is stored on the device in the browser's IndexedDB. There is no backend and no login. Data only leaves the phone through user-triggered backup and export, or through the optional server backup once the user has set it up.
 - On first launch, the app calls the browser's persistent-storage request so Chrome doesn't evict its data when storage runs low.
 - Every user installs from the same link and gets their own data on their own device.
 - The app is hosted on GitHub Pages from a public GitHub repository named `gym-tracker`, at `https://<github-username>.github.io/gym-tracker/`. The repository holds only code and docs, never workout data.
@@ -211,6 +219,8 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 - "Back up" uses the browser's Web Share API with a file, which opens Android's share menu so the user can pick Google Drive. Where file sharing isn't available, the app falls back to downloading the file.
 - Restore reads a backup file chosen by the user, checks it, asks for confirmation, then replaces all existing data.
 - The app records the time of the last backup and shows it in settings and on the end-of-session screen.
+- Server backup is optional and off by default. The user enters a server address and token in settings; both are stored only on the phone, never in the code. Once set up, the app uploads the same backup after every session and retries failed uploads later, and the user can restore from the server's latest backup. Without it set up, the app behaves exactly as without the feature.
+- The server side is a small service kept in this repository under `server/`, run by the user on their home server and reached over Tailscale with HTTPS. Details of the user's server stay out of the repository.
 - The CSV export has one row per set, with columns: date, routine, exercise, exercise type, set number, weight in kg (empty for bodyweight), reps. Skipped entries produce no rows.
 
 ### Screens
@@ -247,7 +257,7 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 - Automatic backup to Google Drive through the Drive API (a possible later upgrade if the share-menu backup gets tedious).
 - A rest timer, since the user times rest on a Garmin watch.
 - A total-volume graph (weight × reps × sets).
-- Accounts, logins, servers, syncing between devices, and shared or social features such as seeing another user's progress.
+- Accounts, logins, servers (other than the optional home-server backup), syncing between devices, and shared or social features such as seeing another user's progress.
 - Importing workouts from before the app existed.
 - Units other than kilograms.
 - Cardio and timed exercises (for example running, cycling, planks).
