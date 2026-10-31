@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Server test</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 1rem; max-width: 40rem; }
+  input, button { font-size: 1rem; padding: .5rem; width: 100%; box-sizing: border-box; margin-bottom: .5rem; }
+  pre { white-space: pre-wrap; background: #eee; padding: .5rem; }
+</style>
+</head>
+<body>
+<!-- Throwaway page for ticket 16: can the app's origin reach the home server? Delete after the test. -->
+<h1>Server test</h1>
+<label>Server address<input id="url" placeholder="https://name.tailnet.ts.net"></label>
+<button id="run">Run test</button>
+<pre id="out">Not run yet.</pre>
+<script>
+  const out = document.getElementById("out");
+  const log = (line) => { out.textContent += line + "\n"; };
+
+  async function attempt(name, url, options) {
+    const started = performance.now();
+    try {
+      const response = await fetch(url, options);
+      const text = await response.text();
+      log(`${name}: OK, status ${response.status}, ${Math.round(performance.now() - started)} ms, reply ${text}`);
+    } catch (error) {
+      log(`${name}: FAILED after ${Math.round(performance.now() - started)} ms: ${error.name}: ${error.message}`);
+    }
+  }
+
+  document.getElementById("run").addEventListener("click", async () => {
+    const base = document.getElementById("url").value.trim().replace(/\/+$/, "");
+    out.textContent = `Testing ${base} from ${location.origin}\n`;
+    // A plain GET needs no preflight; a PUT with a token header does, like the real backup will.
+    await attempt("1. Simple GET", `${base}/ping`, {});
+    await attempt("2. PUT with token", `${base}/backup`, {
+      method: "PUT",
+      headers: { "Authorization": "Bearer test", "Content-Type": "application/json" },
+      body: JSON.stringify({ test: true, at: new Date().toISOString() }),
+    });
+    log("Done.");
+  });
+</script>
+</body>
+</html>
