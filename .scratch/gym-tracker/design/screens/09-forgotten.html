@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Forgotten session</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+:root{--ink:#151412;--ink2:#5F5B53;--paper:#FBFAF7;--surf:#F1EEE7;--surf2:#F7F5F0;--card:#FFFFFF;--line:#E4E0D7;--line2:#D6D1C6;--amber:#FFB300;--amberC:#FFE4A0;--amberS:#FFF4D6;--amberInk:#6E4700;--err:#B3261E;--errC:#FCE8E6;--errInk:#8C1D18}
+.scr{position:relative;overflow:hidden;width:390px;background:var(--paper);color:var(--ink);font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.pad{padding:0 20px}
+.btn{height:56px;padding:0 22px;border-radius:28px;border:none;font-family:inherit;font-size:16px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;color:var(--ink);background:var(--surf)}
+.btn.lg{height:64px;border-radius:32px;font-size:19px;font-weight:700;width:100%}
+.btn.pri{background:var(--amber)}
+.btn.out{background:transparent;border:1px solid var(--line2)}
+</style>
+
+<div class="scr" style="height: 844px; display: flex; flex-direction: column">
+  <div class="pad" style="padding-top: 28px">
+    <svg role="img" aria-label="CDT Gym Tracker logo" width="40" height="40" viewBox="18 18 72 72"><circle cx="54" cy="54" r="36" fill="#FFB300"></circle><g transform="translate(54 54) scale(0.64) translate(-50 -50)"><path d="M28 66 C28 54 36 50 50 50 C64 50 72 54 72 66 Z" fill="#151412"></path><path d="M37 40 L35 19 L46 32 Z M63 40 L65 19 L54 32 Z" fill="#151412" stroke="#151412" stroke-width="2" stroke-linejoin="round"></path><path d="M33 45 C33 36 40 30 50 30 C60 30 67 36 67 45 C67 53 60 60 50 62 C40 60 33 53 33 45 Z" fill="#151412"></path><rect x="14" y="62" width="72" height="8" rx="4" fill="#FFFFFF"></rect><rect x="12" y="50" width="12" height="32" rx="5" fill="#FFFFFF"></rect><rect x="76" y="50" width="12" height="32" rx="5" fill="#FFFFFF"></rect><rect x="36" y="58" width="11" height="17" rx="5.5" fill="#151412"></rect><rect x="53" y="58" width="11" height="17" rx="5.5" fill="#151412"></rect></g></svg>
+  </div>
+  <div style="flex: 1"></div>
+  <div class="pad" style="display: flex; flex-direction: column; gap: 20px">
+    <div aria-hidden="true" style="width: 112px; height: 124px; border-radius: 32px; background: #F1EEE7; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+      <span style="font-size: 14px; font-weight: 700; color: #6E4700; letter-spacing: 0.6px">SAT</span>
+      <span style="font-size: 52px; font-weight: 750; line-height: 1; letter-spacing: -1.5px">24</span>
+      <span style="font-size: 14px; font-weight: 600; color: #5F5B53">Oct</span>
+    </div>
+    <h1 style="margin: 0; font-size: 32px; font-weight: 720; letter-spacing: -0.7px; line-height: 1.15">Finish your session from Saturday 24 October?</h1>
+    <div style="font-size: 17px; line-height: 1.45; color: #5F5B53">Full body is still running. End it to save it under that day.</div>
+  </div>
+  <div class="pad" style="padding-top: 32px; padding-bottom: 24px; display: flex; flex-direction: column; gap: 10px">
+    <button class="btn lg pri">End it</button>
+    <button class="btn lg out">Continue</button>
+  </div>
+</div>
+
+
+</body>
+</html>

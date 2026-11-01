@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Settings</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+.scr{position:relative;overflow:hidden;width:390px;background:#FBFAF7;color:#151412;font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.h2{font-size:20px;font-weight:700;margin:28px 4px 10px;letter-spacing:-0.2px}
+.rc{width:100%;text-align:left;border:none;background:#F1EEE7;border-radius:24px;padding:16px;font-family:inherit;color:#151412;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.rc b{font-size:18px;font-weight:700;display:block}
+.rc span.x{font-size:14px;color:#5F5B53;line-height:1.4;display:block;margin-top:2px}
+.list{background:#FFFFFF;border:1px solid #E4E0D7;border-radius:24px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 12px 8px 16px;border:none;border-top:1px solid #EEEBE4;width:100%;background:transparent;text-align:left;font-family:inherit;color:#151412}
+.li:first-child{border-top:none}
+.li-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.li-t{font-size:16px;font-weight:600}
+.li-s{font-size:13px;color:#5F5B53}
+.chev{color:#5F5B53}
+.row{display:flex;gap:8px}
+.in{height:56px;flex:1;min-width:0;border-radius:18px;border:1px solid #D6D1C6;padding:0 16px;font-family:inherit;font-size:16px;color:#151412;background:#FFFFFF}
+.btn{height:56px;padding:0 20px;border-radius:28px;border:none;font-family:inherit;font-size:16px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;color:#151412;background:#F1EEE7}
+.btn.dark{background:#151412;color:#FFFFFF}
+.btn.out{background:transparent;border:1px solid #D6D1C6}
+.note{font-size:13px;color:#5F5B53;line-height:1.45;padding:8px 4px 0}
+.nav{position:absolute;left:0;right:0;bottom:0;height:84px;background:#F1EEE7;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:10px 8px 14px}
+.nav button{border:none;background:transparent;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;color:#5F5B53;font-size:12px;font-weight:500}
+.nav .pill{width:64px;height:32px;border-radius:16px;display:flex;align-items:center;justify-content:center}
+.nav .on{color:#151412;font-weight:700}
+.nav .on .pill{background:#FFE4A0}
+</style>
+
+<div class="scr" style="height: 1840px">
+  <div style="padding: 28px 20px 0">
+    <h1 style="margin: 0; font-size: 34px; font-weight: 720; letter-spacing: -0.8px">Settings</h1>
+
+    <div class="h2">Routines</div>
+    <button class="rc"><span style="flex: 1"><b>Full body</b><span class="x">Leg press · Chest press · Lat pulldown · Seated row · Leg curl · Shoulder press · Bicep curl · Pull-ups</span></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+    <button class="rc"><span style="flex: 1"><b>Quick day</b><span class="x">Leg press · Chest press · Pull-ups</span></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+    <div class="row" style="margin-top: 4px">
+      <label style="flex: 1; display: flex"><span style="position: absolute; left: -9999px">New routine name</span><input class="in" placeholder="New routine name"></label>
+      <button class="btn dark"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>New routine</button>
+    </div>
+    <div class="note">Routine changes apply from the next session.</div>
+
+    <div class="h2">Exercises</div>
+    <div class="list">
+      <button class="li"><span class="li-m"><span class="li-t">Leg press</span><span class="li-s">Machine · 62.5 kg (+2.5) · 2 × 9–12</span></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Chest press</span><span class="li-s">Machine · 40 kg (+2.5) · 2 × 9–12</span></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Lat pulldown</span><span class="li-s">Machine · 45 kg (+2.5) · 2 × 9–12</span></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Seated row</span><span class="li-s">Machine · 42.5 kg (+2.5) · 2 × 9–12</span></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Leg curl</span><span class="li-s">Machine · 35 kg (+5) · 2 × 9–12</span></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Shoulder press</span><span class="li-s">Free weight · 14 kg (+2) · 2 × 9–12</span></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Bicep curl</span><span class="li-s">Free weight · 12 kg (+2) · 3 × 9–12</span></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Pull-ups</span><span class="li-s">Bodyweight · 2 × 9–12</span></span><svg class="i chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+    </div>
+    <button class="btn" style="width: 100%; margin-top: 10px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Add an exercise</button>
+
+    <div class="h2">Archived exercises</div>
+    <div class="list">
+      <div class="li"><span class="li-m"><span class="li-t">Chest fly</span><span class="li-s">Machine · 30 kg (+2.5)</span></span><button class="btn out" style="height: 48px; font-size: 15px">Unarchive</button></div>
+    </div>
+    <div class="note">Unarchived exercises come back without a routine; add them to one above.</div>
+
+    <div class="h2">Backup</div>
+    <div class="list">
+      <div class="li" style="padding: 14px 16px"><span class="li-m"><span class="li-s">Last backup</span><span class="li-t">20 Oct 2026, 19:05</span></span><button class="btn out" style="height: 48px; font-size: 15px">Back up</button></div>
+      <button class="li"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"></path></svg><span class="li-m"><span class="li-t">Restore from backup</span><span class="li-s">Pick a backup file</span></span></button>
+    </div>
+
+    <div class="h2">Export</div>
+    <div class="list">
+      <button class="li"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"></rect><path d="M4 9h16M4 15h16M10 3v18"></path></svg><span class="li-m"><span class="li-t">Export to spreadsheet</span><span class="li-s">All finished sessions as a CSV file, one row per set, for Excel or Google Sheets.</span></span></button>
+    </div>
+  </div>
+  <nav class="nav">
+    <button><span class="pill"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"></path></svg></span>Home</button>
+    <button><span class="pill"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"></path></svg></span>Progress</button>
+    <button><span class="pill"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 7v5l3 2"></path></svg></span>History</button>
+    <button class="on"><span class="pill"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg></span>Settings</button>
+  </nav>
+</div>
+
+
+</body>
+</html>

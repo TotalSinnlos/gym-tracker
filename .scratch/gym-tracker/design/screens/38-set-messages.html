@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Settings messages</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+.scr{position:relative;overflow:hidden;width:390px;background:#FBFAF7;color:#151412;font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.h2{font-size:20px;font-weight:700;margin:24px 4px 10px}
+.list{background:#FFFFFF;border:1px solid #E4E0D7;border-radius:24px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 12px 10px 16px;border:none;border-top:1px solid #EEEBE4;width:100%;background:transparent;text-align:left;font-family:inherit;color:#151412}
+.li:first-child{border-top:none}
+.li-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.li-t{font-size:16px;font-weight:600}
+.li-s{font-size:13px;color:#5F5B53}
+.err{display:flex;gap:10px;align-items:flex-start;background:#FCE8E6;color:#8C1D18;border-radius:16px;padding:12px 14px;font-size:14px;font-weight:600;line-height:1.4;margin-top:10px}
+.snack{position:absolute;left:12px;right:12px;bottom:16px;background:#151412;color:#FFFFFF;border-radius:20px;padding:0 8px 0 18px;min-height:56px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:500;box-shadow:0 8px 24px rgba(21,20,18,0.24)}
+.snack button{height:48px;padding:0 14px;border:none;background:transparent;color:#FFB300;font-family:inherit;font-size:15px;font-weight:700;border-radius:24px}
+</style>
+
+<div class="scr" style="height: 844px">
+  <div style="padding: 28px 20px 0">
+    <h1 style="margin: 0; font-size: 34px; font-weight: 720; letter-spacing: -0.8px">Settings</h1>
+    <div class="h2">Backup</div>
+    <div class="list">
+      <div class="li"><span class="li-m"><span class="li-s">Last backup</span><span class="li-t">20 Oct 2026, 19:05</span></span></div>
+      <button class="li"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"></path></svg><span class="li-m"><span class="li-t">Restore from backup</span><span class="li-s">Pick a backup file</span></span></button>
+    </div>
+    <div class="err" role="alert">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 20px; height: 20px"><circle cx="12" cy="12" r="9"></circle><path d="M12 7.5v5.5M12 16.5h.01"></path></svg>
+      <span>That file isn't a CDT Gym backup, or it's damaged. Nothing was changed.</span>
+    </div>
+    <div class="h2">Export</div>
+    <div class="list">
+      <button class="li"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="3"></rect><path d="M4 9h16M4 15h16M10 3v18"></path></svg><span class="li-m"><span class="li-t">Export to spreadsheet</span><span class="li-s">All finished sessions as a CSV file, one row per set, for Excel or Google Sheets.</span></span></button>
+    </div>
+  </div>
+  <div class="snack" role="status">
+    <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: #FFB300"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>
+    <span style="flex: 1">Shared a spreadsheet with 412 sets.</span>
+    <button>OK</button>
+  </div>
+</div>
+
+
+</body>
+</html>

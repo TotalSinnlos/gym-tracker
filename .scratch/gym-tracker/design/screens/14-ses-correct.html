@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Session, correcting a set</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+:root{--ink:#151412;--ink2:#5F5B53;--paper:#FBFAF7;--surf:#F1EEE7;--surf2:#F7F5F0;--card:#FFFFFF;--line:#E4E0D7;--line2:#D6D1C6;--amber:#FFB300;--amberC:#FFE4A0;--amberS:#FFF4D6;--amberInk:#6E4700;--err:#B3261E;--errC:#FCE8E6;--errInk:#8C1D18}
+.scr{position:relative;overflow:hidden;width:390px;background:var(--paper);color:var(--ink);font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.pad{padding:0 20px}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.i.l{width:28px;height:28px;stroke-width:2.4}
+.ib{width:48px;height:48px;border-radius:24px;border:none;background:var(--surf);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;font-family:inherit}
+.ib.plain{background:transparent;color:var(--ink2)}
+.ib.big{width:64px;height:64px;border-radius:32px;background:var(--card)}
+.btn{height:56px;padding:0 22px;border-radius:28px;border:none;font-family:inherit;font-size:16px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;color:var(--ink);background:var(--surf)}
+.btn.lg{height:64px;border-radius:32px;font-size:19px;font-weight:700;width:100%}
+.btn.sm{height:48px;border-radius:24px;font-size:14px;padding:0 16px}
+.btn.pri{background:var(--amber)}
+.btn.out{background:transparent;border:1px solid var(--line2)}
+.hdr{display:flex;align-items:center;gap:8px;height:56px;margin-top:16px}
+.hdr-t{flex:1;text-align:center;font-size:15px;font-weight:500}
+.seg8{display:flex;gap:4px;margin-top:10px}
+.seg8 div{flex:1;height:6px;border-radius:3px;background:#E4E0D7}
+.seg8 .d{background:var(--ink)}
+.seg8 .c{flex:2;background:var(--amber)}
+.nrow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px}
+.ename{margin:0;font-size:30px;font-weight:650;letter-spacing:-0.5px;line-height:1.1}
+.etype{font-size:14px;color:var(--ink2)}
+.slab{margin-top:16px;background:var(--surf);border-radius:36px;padding:16px;height:128px;display:flex;align-items:center;justify-content:space-between;opacity:0.45}
+.wt{display:flex;align-items:baseline;gap:6px}
+.wt b{font-size:84px;font-weight:720;letter-spacing:-3px;line-height:1;font-variant-numeric:tabular-nums}
+.wt span{font-size:24px;font-weight:600;color:var(--ink2)}
+.setrow{display:flex;align-items:center;gap:12px;margin-top:16px;opacity:0.45}
+.setpill{background:var(--ink);color:#FFFFFF;border-radius:16px;padding:8px 14px;font-size:20px;font-weight:700}
+.setpill span{font-weight:500;color:#CFCAC0}
+.tgt{font-size:15px;color:var(--ink2)}
+.sec{font-size:13px;font-weight:500;color:var(--ink2);margin:18px 4px 6px}
+.logged{height:56px;background:var(--amberS);border:2px solid var(--amber);border-radius:20px;padding:0 16px;display:flex;align-items:center;gap:12px;width:100%;font-family:inherit;color:var(--ink);text-align:left}
+.logged .k{font-size:14px;color:var(--ink2);width:44px}
+.logged .v{flex:1;font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.logged .e{font-size:13px;font-weight:700;color:var(--amberInk)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:32px 32px 0 0;box-shadow:0 -8px 28px rgba(21,20,18,0.12);padding:20px 20px 24px;display:flex;flex-direction:column;gap:12px}
+.sh-t{font-size:18px;font-weight:700}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--ink2);min-width:0}
+.in{height:60px;width:100%;border-radius:18px;border:1px solid var(--line2);padding:0 16px;font-family:inherit;font-size:28px;font-weight:700;color:var(--ink);background:var(--card)}
+.in.foc{border:2px solid var(--ink)}
+</style>
+
+<div class="scr" style="height: 844px">
+  <div class="pad">
+    <div class="hdr">
+      <button class="ib" aria-label="Back to home"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"></path></svg></button>
+      <div class="hdr-t">Full body · 3 of 8 done</div>
+      <button class="btn sm out" style="font-size: 15px">End</button>
+    </div>
+    <div class="seg8" aria-hidden="true"><div class="d"></div><div class="d"></div><div class="d"></div><div class="c"></div><div></div><div></div><div></div><div></div></div>
+    <div class="nrow">
+      <div><h1 class="ename">Lat pulldown</h1><div class="etype">Machine · steps of 2.5 kg</div></div>
+      <button class="btn sm">Skip for now</button>
+    </div>
+    <div class="slab">
+      <button class="ib big" aria-label="Lower weight by 2.5 kg"><svg class="i l" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+      <div class="wt"><b>45</b><span>kg</span></div>
+      <button class="ib big" aria-label="Raise weight by 2.5 kg"><svg class="i l" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+    </div>
+    <div class="setrow"><div class="setpill">Set 2 <span>of 2</span></div><div class="tgt">Target: 2 × 9–12 reps</div></div>
+    <div class="sec">Logged</div>
+    <div class="logged"><span class="k">Set 1</span><span class="v">11 × 45 kg</span><span class="e">Editing</span></div>
+  </div>
+  <div class="sheet">
+    <div class="sh-t">Correct set 1</div>
+    <div class="g2">
+      <label class="fld">Reps<input class="in foc" inputmode="numeric" value="12"></label>
+      <label class="fld">Weight (kg)<input class="in" inputmode="decimal" value="45"></label>
+    </div>
+    <div class="g2">
+      <button class="btn lg out">Cancel</button>
+      <button class="btn lg pri">Save</button>
+    </div>
+  </div>
+</div>
+
+
+</body>
+</html>

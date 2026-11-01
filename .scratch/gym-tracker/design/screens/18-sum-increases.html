@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Summary with increases</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+:root{--ink:#151412;--ink2:#5F5B53;--paper:#FBFAF7;--surf:#F1EEE7;--surf2:#F7F5F0;--card:#FFFFFF;--line:#E4E0D7;--line2:#D6D1C6;--amber:#FFB300;--amberC:#FFE4A0;--amberS:#FFF4D6;--amberInk:#6E4700}
+.scr{position:relative;overflow:hidden;width:390px;background:var(--paper);color:var(--ink);font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.i.s{width:16px;height:16px;stroke-width:3}
+.btn{height:56px;padding:0 22px;border-radius:28px;border:none;font-family:inherit;font-size:16px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;color:var(--ink);background:var(--surf)}
+.btn.lg{height:64px;border-radius:32px;font-size:19px;font-weight:700;width:100%}
+.btn.sm{height:48px;border-radius:24px;font-size:15px;padding:0 20px}
+.btn.pri{background:var(--amber)}
+.btn.out{background:transparent;border:1px solid var(--line2)}
+.btn.white{background:var(--card);border:1px solid var(--line2)}
+.up{background:var(--amberS);border-radius:22px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.up-n{font-size:17px;font-weight:650}
+.up-s{font-size:13px;color:var(--ink2)}
+.up-v{display:flex;align-items:baseline;gap:6px;font-variant-numeric:tabular-nums}
+.up-v .o{font-size:16px;color:var(--ink2)}
+.up-v .a{font-size:16px;font-weight:700}
+.up-v b{font-size:30px;font-weight:800;letter-spacing:-0.5px}
+.up-v .u{font-size:15px;font-weight:600}
+.badge{width:44px;height:44px;flex-shrink:0;border-radius:22px;display:flex;align-items:center;justify-content:center}
+.sec{font-size:13px;font-weight:600;color:var(--ink2);margin:8px 4px -8px}
+.list{background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;padding:12px 16px;border-top:1px solid #EEEBE4}
+.li:first-child{border-top:none}
+.li-t{font-size:16px;font-weight:600}
+.li-s{font-size:13px;color:var(--ink2)}
+.st{width:28px;height:28px;border-radius:14px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:var(--ink);color:#FFFFFF}
+.st.skip{background:transparent;border:2px dashed #9A958B;color:var(--ink2)}
+</style>
+
+<div class="scr" style="height: 1500px; padding: 28px 20px 24px; display: flex; flex-direction: column; gap: 16px">
+  <div>
+    <h1 style="margin: 0; font-size: 34px; font-weight: 720; letter-spacing: -0.8px">Session saved</h1>
+    <div style="margin-top: 4px; font-size: 15px; color: #5F5B53">Sat 24 Oct · Full body · 6 of 8 done</div>
+  </div>
+  <div style="background: #FFB300; border-radius: 36px; padding: 20px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 4px">
+      <svg aria-hidden="true" width="56" height="56" viewBox="0 0 96 96"><g fill="#151412"><circle cx="48" cy="48" r="32"></circle><circle cx="78" cy="48" r="14"></circle><circle cx="69.2" cy="69.2" r="14"></circle><circle cx="48" cy="78" r="14"></circle><circle cx="26.8" cy="69.2" r="14"></circle><circle cx="18" cy="48" r="14"></circle><circle cx="26.8" cy="26.8" r="14"></circle><circle cx="48" cy="18" r="14"></circle><circle cx="69.2" cy="26.8" r="14"></circle></g><path d="M48 66V30M34 43l14-14 14 14" fill="none" stroke="#FFB300" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <div>
+        <div style="font-size: 22px; font-weight: 750">Weight goes up</div>
+        <div style="font-size: 14px; font-weight: 600; color: #4A3300">You earned it on 2 exercises</div>
+      </div>
+    </div>
+    <div class="up">
+      <div><div class="up-n">Leg press</div><div class="up-s">next time</div></div>
+      <div class="up-v"><span class="o">62.5</span><span class="a">→</span><b>65</b><span class="u">kg</span></div>
+    </div>
+    <div class="up">
+      <div><div class="up-n">Chest press</div><div class="up-s">next time</div></div>
+      <div class="up-v"><span class="o">40</span><span class="a">→</span><b>42.5</b><span class="u">kg</span></div>
+    </div>
+  </div>
+  <div style="border: 1px solid #E4E0D7; border-radius: 24px; padding: 16px; display: flex; gap: 14px; align-items: center">
+    <span class="badge" style="background: #151412; color: #FFB300"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="fill: currentColor; stroke: none"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"></path></svg></span>
+    <div><div style="font-size: 16px; font-weight: 650">Pull-ups: rep range beaten</div><div style="font-size: 14px; color: #5F5B53">Time for a harder variation?</div></div>
+  </div>
+  <div style="background: #F1EEE7; border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <span class="badge" style="background: #FFFFFF"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"></path></svg></span>
+      <div style="font-size: 16px; font-weight: 600; line-height: 1.35">Bicep curl: a set was below the rep range.</div>
+    </div>
+    <button class="btn sm white">Lower to 10 kg next time?</button>
+    <div style="display: flex; gap: 10px; align-items: center; font-size: 14px; color: #5F5B53; padding: 0 4px">
+      <span style="font-size: 12px; font-weight: 700; background: #E4E0D7; border-radius: 8px; padding: 2px 8px">After tapping</span>
+      <span><svg class="i s" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align: -3px; stroke-width: 2.6"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg> Lowered to 10 kg for next time.</span>
+    </div>
+  </div>
+  <div class="sec">Exercises</div>
+  <div class="list">
+    <div class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><div><div class="li-t">Leg press</div><div class="li-s">Done · 62.5 kg · 13 / 13 reps</div></div></div>
+    <div class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><div><div class="li-t">Chest press</div><div class="li-s">Done · 40 kg · 13 / 14 reps</div></div></div>
+    <div class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><div><div class="li-t">Lat pulldown</div><div class="li-s">Done · 45 kg · 11 / 10 reps</div></div></div>
+    <div class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><div><div class="li-t">Seated row</div><div class="li-s">Done · 42.5 kg · 12 / 11 reps</div></div></div>
+    <div class="li"><span class="st skip"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12"></path></svg></span><div><div class="li-t" style="color: #5F5B53">Leg curl</div><div class="li-s">Skipped</div></div></div>
+    <div class="li"><svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28" style="flex-shrink: 0"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#151412" stroke-width="2"></circle><path d="M14 1.5 A12.5 12.5 0 0 1 14 26.5 Z" fill="#151412"></path></svg><div><div class="li-t">Shoulder press</div><div class="li-s">Incomplete · 14 kg · 10 reps</div></div></div>
+    <div class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><div><div class="li-t">Bicep curl</div><div class="li-s">Done · 12 kg · 10 / 9 / 8 reps</div></div></div>
+    <div class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><div><div class="li-t">Pull-ups</div><div class="li-s">Done · 13 / 13 reps</div></div></div>
+  </div>
+  <div style="border: 1px solid #E4E0D7; border-radius: 24px; padding: 14px 14px 14px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+    <div><div style="font-size: 13px; color: #5F5B53">Last backup</div><div style="font-size: 16px; font-weight: 600">20 Oct 2026, 19:05</div></div>
+    <button class="btn sm out">Back up</button>
+  </div>
+  <div style="flex: 1"></div>
+  <button class="btn lg pri" style="flex-shrink: 0">Done</button>
+</div>
+
+
+</body>
+</html>

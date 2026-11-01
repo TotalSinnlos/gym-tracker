@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>End session confirmation</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+:root{--ink:#151412;--ink2:#5F5B53;--paper:#FBFAF7;--surf:#F1EEE7;--surf2:#F7F5F0;--card:#FFFFFF;--line:#E4E0D7;--line2:#D6D1C6;--amber:#FFB300;--amberC:#FFE4A0;--amberS:#FFF4D6;--amberInk:#6E4700;--err:#B3261E;--errC:#FCE8E6;--errInk:#8C1D18}
+.scr{position:relative;overflow:hidden;width:390px;background:var(--paper);color:var(--ink);font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.pad{padding:0 20px}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.i.l{width:28px;height:28px;stroke-width:2.4}
+.ib{width:48px;height:48px;border-radius:24px;border:none;background:var(--surf);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;font-family:inherit}
+.ib.big{width:64px;height:64px;border-radius:32px;background:var(--card)}
+.btn{height:56px;padding:0 22px;border-radius:28px;border:none;font-family:inherit;font-size:16px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;color:var(--ink);background:var(--surf)}
+.btn.lg{height:64px;border-radius:32px;font-size:19px;font-weight:700;width:100%}
+.btn.sm{height:48px;border-radius:24px;font-size:14px;padding:0 16px}
+.btn.out{background:transparent;border:1px solid var(--line2)}
+.btn.dark{background:var(--ink);color:#FFFFFF}
+.hdr{display:flex;align-items:center;gap:8px;height:56px;margin-top:16px}
+.hdr-t{flex:1;text-align:center;font-size:15px;font-weight:500}
+.seg8{display:flex;gap:4px;margin-top:10px}
+.seg8 div{flex:1;height:6px;border-radius:3px;background:#E4E0D7}
+.seg8 .d{background:var(--ink)}
+.seg8 .c{flex:2;background:var(--amber)}
+.ename{margin:20px 0 0;font-size:30px;font-weight:650;letter-spacing:-0.5px;line-height:1.1}
+.slab{margin-top:16px;background:var(--surf);border-radius:36px;padding:16px;height:128px;display:flex;align-items:center;justify-content:space-between}
+.wt{display:flex;align-items:baseline;gap:6px}
+.wt b{font-size:84px;font-weight:720;letter-spacing:-3px;line-height:1;font-variant-numeric:tabular-nums}
+.wt span{font-size:24px;font-weight:600;color:var(--ink2)}
+.scrim{position:absolute;left:0;top:0;right:0;bottom:0;background:rgba(21,20,18,0.45)}
+.dlg{position:absolute;left:12px;right:12px;bottom:16px;background:var(--card);border-radius:32px;padding:24px 20px 20px;display:flex;flex-direction:column;gap:12px}
+.dlg-t{font-size:24px;font-weight:720;line-height:1.2;letter-spacing:-0.3px}
+.dlg-b{font-size:15px;line-height:1.45;color:var(--ink2);margin-bottom:8px}
+</style>
+
+<div class="scr" style="height: 844px">
+  <div class="pad" aria-hidden="true">
+    <div class="hdr">
+      <span class="ib"><svg class="i" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"></path></svg></span>
+      <div class="hdr-t">Full body · 6 of 8 done</div>
+      <span class="btn sm out" style="font-size: 15px">End</span>
+    </div>
+    <div class="seg8"><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="c"></div><div></div><div class="d"></div></div>
+    <h1 class="ename">Shoulder press</h1>
+    <div class="slab">
+      <span class="ib big"><svg class="i l" viewBox="0 0 24 24"><path d="M5 12h14"></path></svg></span>
+      <div class="wt"><b>14</b><span>kg</span></div>
+      <span class="ib big"><svg class="i l" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg></span>
+    </div>
+  </div>
+  <div class="scrim"></div>
+  <div class="dlg" role="alertdialog" aria-labelledby="dt">
+    <div class="dlg-t" id="dt">2 exercises not done. End anyway?</div>
+    <div class="dlg-b">Shoulder press and Bicep curl are saved as incomplete or skipped.</div>
+    <button class="btn lg out">Keep going</button>
+    <button class="btn lg dark">End session</button>
+  </div>
+</div>
+
+
+</body>
+</html>

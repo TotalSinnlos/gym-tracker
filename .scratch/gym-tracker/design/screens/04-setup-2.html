@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Setup step 2</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+:root{--ink:#151412;--ink2:#5F5B53;--paper:#FBFAF7;--surf:#F1EEE7;--surf2:#F7F5F0;--card:#FFFFFF;--line:#E4E0D7;--line2:#D6D1C6;--amber:#FFB300;--amberC:#FFE4A0;--amberS:#FFF4D6;--amberInk:#6E4700;--err:#B3261E;--errC:#FCE8E6;--errInk:#8C1D18}
+.scr{position:relative;overflow:hidden;width:390px;background:var(--paper);color:var(--ink);font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.pad{padding:0 20px}
+.ib{width:48px;height:48px;border-radius:24px;border:none;background:var(--surf);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;font-family:inherit}
+.ib.plain{background:transparent;color:var(--ink2)}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.h1{margin:0;font-size:34px;font-weight:720;letter-spacing:-0.8px;line-height:1.1}
+.mut{color:var(--ink2)}
+.sec{font-size:13px;font-weight:600;color:var(--ink2);margin:24px 4px 8px}
+.btn{height:56px;padding:0 22px;border-radius:28px;border:none;font-family:inherit;font-size:16px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;color:var(--ink);background:var(--surf)}
+.btn.lg{height:64px;border-radius:32px;font-size:19px;font-weight:700;width:100%}
+.btn.pri{background:var(--amber)}
+.btn.out{background:transparent;border:1px solid var(--line2)}
+.list{background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 8px 10px 16px;border-top:1px solid #EEEBE4;width:100%;background:transparent;border-left:none;border-right:none;border-bottom:none;text-align:left;font-family:inherit;color:var(--ink)}
+.li:first-child{border-top:none}
+.li-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.li-t{font-size:16px;font-weight:600}
+.li-s{font-size:13px;color:var(--ink2)}
+.n{width:32px;height:32px;border-radius:16px;background:var(--surf);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-variant-numeric:tabular-nums}
+.acts{display:flex;gap:0;margin-right:-4px}
+.ib.dim{opacity:0.3}
+.add{color:var(--ink);width:48px;height:48px;border-radius:24px;background:var(--amberC);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.again{font-size:13px;font-weight:600;color:var(--amberInk)}
+.steps{display:flex;gap:4px}
+.steps div{flex:1;height:6px;border-radius:3px;background:#E4E0D7}
+.steps .d{background:var(--amber)}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+</style>
+
+<div class="scr" style="height: 1000px; display: flex; flex-direction: column">
+  <div class="pad" style="padding-top: 40px; display: flex; flex-direction: column; gap: 14px">
+    <div>
+      <h1 class="h1">Your routine</h1>
+      <div class="mut" style="margin-top: 6px; font-size: 16px; line-height: 1.4">Step 2 of 2: add your exercises in the order you usually do them.</div>
+    </div>
+    <div class="steps" aria-hidden="true"><div class="d"></div><div class="d"></div></div>
+  </div>
+  <div class="pad">
+    <div class="sec">Routine</div>
+    <div class="list">
+      <div class="li">
+        <span class="n">1</span>
+        <span class="li-m"><span class="li-t">Leg press</span><span class="li-s">Machine · 62.5 kg (+2.5) · 2 × 9–12</span></span>
+        <span class="acts">
+          <button class="ib plain dim" aria-label="Move Leg press up" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+          <button class="ib plain" aria-label="Move Leg press down"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+          <button class="ib plain" aria-label="Remove Leg press"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+        </span>
+      </div>
+      <div class="li">
+        <span class="n">2</span>
+        <span class="li-m"><span class="li-t">Chest press</span><span class="li-s">Machine · 40 kg (+2.5) · 2 × 9–12</span></span>
+        <span class="acts">
+          <button class="ib plain" aria-label="Move Chest press up"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+          <button class="ib plain" aria-label="Move Chest press down"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+          <button class="ib plain" aria-label="Remove Chest press"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+        </span>
+      </div>
+      <div class="li">
+        <span class="n">3</span>
+        <span class="li-m"><span class="li-t">Lat pulldown</span><span class="li-s">Machine · 45 kg (+2.5) · 2 × 9–12</span></span>
+        <span class="acts">
+          <button class="ib plain" aria-label="Move Lat pulldown up"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+          <button class="ib plain dim" aria-label="Move Lat pulldown down" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+          <button class="ib plain" aria-label="Remove Lat pulldown"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+        </span>
+      </div>
+    </div>
+    <div class="sec">Tap to add</div>
+    <div class="list">
+      <button class="li">
+        <span class="add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>
+        <span class="li-m"><span class="li-t">Pull-ups</span><span class="li-s">Bodyweight · 2 × 9–12</span></span>
+      </button>
+      <button class="li">
+        <span class="add" style="background: var(--surf)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>
+        <span class="li-m"><span class="li-t">Leg press</span><span class="again">Already in routine, adds it again</span></span>
+      </button>
+      <button class="li">
+        <span class="add" style="background: var(--surf)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>
+        <span class="li-m"><span class="li-t">Chest press</span><span class="again">Already in routine, adds it again</span></span>
+      </button>
+      <button class="li">
+        <span class="add" style="background: var(--surf)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span>
+        <span class="li-m"><span class="li-t">Lat pulldown</span><span class="again">Already in routine, adds it again</span></span>
+      </button>
+    </div>
+  </div>
+  <div style="flex: 1"></div>
+  <div class="pad g2" style="padding-top: 16px; padding-bottom: 24px">
+    <button class="btn lg out">Back</button>
+    <button class="btn lg pri">Done</button>
+  </div>
+</div>
+
+
+</body>
+</html>

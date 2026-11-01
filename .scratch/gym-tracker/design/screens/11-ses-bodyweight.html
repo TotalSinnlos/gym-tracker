@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Session, bodyweight</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+:root{--ink:#151412;--ink2:#5F5B53;--paper:#FBFAF7;--surf:#F1EEE7;--surf2:#F7F5F0;--card:#FFFFFF;--line:#E4E0D7;--line2:#D6D1C6;--amber:#FFB300;--amberC:#FFE4A0;--amberS:#FFF4D6;--amberInk:#6E4700;--err:#B3261E;--errC:#FCE8E6;--errInk:#8C1D18}
+.scr{position:relative;overflow:hidden;width:390px;background:var(--paper);color:var(--ink);font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.pad{padding:0 20px}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.ib{width:48px;height:48px;border-radius:24px;border:none;background:var(--surf);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;font-family:inherit}
+.btn{height:56px;padding:0 22px;border-radius:28px;border:none;font-family:inherit;font-size:16px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;color:var(--ink);background:var(--surf)}
+.btn.lg{height:64px;border-radius:32px;font-size:19px;font-weight:700;width:100%}
+.btn.sm{height:48px;border-radius:24px;font-size:14px;padding:0 16px}
+.btn.pri{background:var(--amber)}
+.btn.out{background:transparent;border:1px solid var(--line2)}
+.hdr{display:flex;align-items:center;gap:8px;height:56px;margin-top:16px}
+.hdr-t{flex:1;text-align:center;font-size:15px;font-weight:500}
+.seg8{display:flex;gap:4px;margin-top:10px}
+.seg8 div{flex:1;height:6px;border-radius:3px;background:#E4E0D7}
+.seg8 .d{background:var(--ink)}
+.seg8 .c{flex:2;background:var(--amber)}
+.nrow{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px}
+.ename{margin:0;font-size:30px;font-weight:650;letter-spacing:-0.5px;line-height:1.1}
+.etype{font-size:14px;color:var(--ink2)}
+.slab{margin-top:16px;background:var(--surf);border-radius:36px;padding:16px 24px;height:128px;display:flex;align-items:center;justify-content:space-between}
+.wt{display:flex;align-items:baseline;gap:8px}
+.wt b{font-size:84px;font-weight:720;letter-spacing:-3px;line-height:1;font-variant-numeric:tabular-nums}
+.wt span{font-size:24px;font-weight:600;color:var(--ink2)}
+.tgt{font-size:15px;color:var(--ink2);text-align:right;line-height:1.4}
+.last{margin-top:12px;border:1px solid var(--line);border-radius:24px;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.last-m{flex:1;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.lab{font-size:13px;font-weight:500;color:var(--ink2)}
+.last-v{font-size:17px;font-weight:600}
+.sec{font-size:13px;font-weight:500;color:var(--ink2);margin:18px 4px 6px}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:32px 32px 0 0;box-shadow:0 -8px 28px rgba(21,20,18,0.08);padding:16px 20px 24px;display:flex;flex-direction:column;gap:12px}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--ink2);min-width:0}
+.in{height:60px;width:100%;border-radius:18px;border:1px solid var(--line2);padding:0 16px;font-family:inherit;font-size:28px;font-weight:700;color:var(--ink);background:var(--surf2)}
+.in.foc{border:2px solid var(--ink);background:var(--card)}
+.list{background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 16px;border-top:1px solid #EEEBE4;width:100%;background:transparent;border-left:none;border-right:none;border-bottom:none;text-align:left;font-family:inherit;color:var(--ink)}
+.li:first-child{border-top:none}
+.li-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.li-t{font-size:16px;font-weight:600}
+.li-s{font-size:13px;color:var(--ink2)}
+.nx{width:28px;height:28px;border-radius:14px;background:var(--surf);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--ink2)}
+</style>
+
+<div class="scr" style="height: 844px">
+  <div class="pad">
+    <div class="hdr">
+      <button class="ib" aria-label="Back to home"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"></path></svg></button>
+      <div class="hdr-t">Full body · 5 of 8 done</div>
+      <button class="btn sm out" style="font-size: 15px">End</button>
+    </div>
+    <div class="seg8" aria-hidden="true"><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div class="d"></div><div></div><div></div><div class="c"></div></div>
+    <div class="nrow">
+      <div><h1 class="ename">Pull-ups</h1><div class="etype">Bodyweight</div></div>
+      <button class="btn sm">Skip for now</button>
+    </div>
+    <div class="slab">
+      <div class="wt"><b>Set 1</b><span>of 2</span></div>
+      <div class="tgt">Target<br>2 × 9–12 reps</div>
+    </div>
+    <div class="last">
+      <div class="last-m">
+        <div class="lab">Last time</div>
+        <div class="last-v">8 reps, 7 reps</div>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px">
+        <svg role="img" aria-label="Total reps over the last 10 sessions, rising from 9 to 15" width="104" height="56" viewBox="0 0 104 56" fill="none"><polyline points="4,48 14.6,41.3 25.2,34.7 35.8,34.7 46.4,28 57,21.3 67.6,21.3 78.2,14.7 88.8,14.7 99.4,8" stroke="#151412" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline><circle cx="99.4" cy="8" r="4.5" fill="#FFB300" stroke="#151412" stroke-width="2"></circle></svg>
+        <span class="lab" style="font-size: 12px">Total reps</span>
+      </div>
+    </div>
+    <div class="sec">Up next</div>
+    <div class="list">
+      <button class="li"><span class="nx">6</span><span class="li-m"><span class="li-t">Shoulder press</span><span class="li-s">Tap to do this now</span></span></button>
+    </div>
+  </div>
+  <div class="sheet">
+    <label class="fld">Reps<input class="in foc" inputmode="numeric" placeholder="0"></label>
+    <button class="btn lg pri">Log set</button>
+  </div>
+</div>
+
+
+</body>
+</html>

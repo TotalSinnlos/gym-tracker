@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Progress</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+.scr{position:relative;overflow:hidden;width:390px;background:#FBFAF7;color:#151412;font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.list{background:#FFFFFF;border:1px solid #E4E0D7;border-radius:24px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;min-height:76px;padding:10px 12px 10px 16px;border:none;border-top:1px solid #EEEBE4;width:100%;background:transparent;text-align:left;font-family:inherit;color:#151412}
+.li:first-child{border-top:none}
+.li-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.li-t{font-size:16px;font-weight:600}
+.li-w{font-size:20px;font-weight:700;letter-spacing:-0.3px;font-variant-numeric:tabular-nums}
+.li-w.bw{font-size:16px;font-weight:600;color:#5F5B53}
+.li-s{font-size:13px;color:#5F5B53}
+.sp{flex-shrink:0}
+.nav{position:absolute;left:0;right:0;bottom:0;height:84px;background:#F1EEE7;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:10px 8px 14px}
+.nav button{border:none;background:transparent;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;color:#5F5B53;font-size:12px;font-weight:500}
+.nav .pill{width:64px;height:32px;border-radius:16px;display:flex;align-items:center;justify-content:center}
+.nav .on{color:#151412;font-weight:700}
+.nav .on .pill{background:#FFE4A0}
+</style>
+
+<div class="scr" style="height: 1040px">
+  <div style="padding: 28px 20px 0">
+    <h1 style="margin: 0; font-size: 34px; font-weight: 720; letter-spacing: -0.8px">Progress</h1>
+    <div style="margin-top: 6px; font-size: 14px; line-height: 1.45; color: #5F5B53">Lines show each exercise's weight over its last 10 sessions (total reps for bodyweight). The amber dot is today's level.</div>
+  </div>
+  <div style="padding: 16px 20px 0">
+    <div class="list">
+      <button class="li"><span class="li-m"><span class="li-t">Leg press</span><span class="li-w">62.5 kg</span><span class="li-s">Last increase: 3 Oct</span></span><svg class="sp" role="img" aria-label="Rising" width="80" height="32" viewBox="0 0 80 32" fill="none"><polyline points="4,28 12,28 20,16 28,16 36,16 44,16 52,16 60,4 68,4 76,4" stroke="#151412" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"></polyline><circle cx="76" cy="4" r="3.5" fill="#FFB300" stroke="#151412" stroke-width="1.6"></circle></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Chest press</span><span class="li-w">40 kg</span><span class="li-s">Last increase: 10 Oct</span></span><svg class="sp" role="img" aria-label="Rising" width="80" height="32" viewBox="0 0 80 32" fill="none"><polyline points="4,28 12,28 20,16 28,16 36,16 44,16 52,4 60,4 68,4 76,4" stroke="#151412" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"></polyline><circle cx="76" cy="4" r="3.5" fill="#FFB300" stroke="#151412" stroke-width="1.6"></circle></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Lat pulldown</span><span class="li-w">45 kg</span><span class="li-s">Last increase: 20 Oct</span></span><svg class="sp" role="img" aria-label="Rising" width="80" height="32" viewBox="0 0 80 32" fill="none"><polyline points="4,28 12,28 20,16 28,16 36,16 44,16 52,16 60,16 68,4 76,4" stroke="#151412" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"></polyline><circle cx="76" cy="4" r="3.5" fill="#FFB300" stroke="#151412" stroke-width="1.6"></circle></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Seated row</span><span class="li-w">42.5 kg</span><span class="li-s">Last increase: 26 Sep</span></span><svg class="sp" role="img" aria-label="Rising" width="80" height="32" viewBox="0 0 80 32" fill="none"><polyline points="4,28 12,28 20,28 28,28 36,4 44,4 52,4 60,4 68,4 76,4" stroke="#151412" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"></polyline><circle cx="76" cy="4" r="3.5" fill="#FFB300" stroke="#151412" stroke-width="1.6"></circle></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Leg curl</span><span class="li-w">35 kg</span><span class="li-s">Last increase: 26 Sep</span></span><svg class="sp" role="img" aria-label="Rising" width="80" height="32" viewBox="0 0 80 32" fill="none"><polyline points="4,28 12,28 20,28 28,28 36,4 44,4 52,4 60,4 68,4 76,4" stroke="#151412" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"></polyline><circle cx="76" cy="4" r="3.5" fill="#FFB300" stroke="#151412" stroke-width="1.6"></circle></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Shoulder press</span><span class="li-w">14 kg</span><span class="li-s">Last increase: 1 Oct</span></span><svg class="sp" role="img" aria-label="Rising" width="80" height="32" viewBox="0 0 80 32" fill="none"><polyline points="4,28 12,28 20,28 28,28 36,28 44,4 52,4 60,4 68,4 76,4" stroke="#151412" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"></polyline><circle cx="76" cy="4" r="3.5" fill="#FFB300" stroke="#151412" stroke-width="1.6"></circle></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Bicep curl</span><span class="li-w">12 kg</span><span class="li-s">No increase yet</span></span><svg class="sp" role="img" aria-label="Flat" width="80" height="32" viewBox="0 0 80 32" fill="none"><polyline points="4,16 12,16 20,16 28,16 36,16 44,16 52,16 60,16 68,16 76,16" stroke="#151412" stroke-width="2.2" stroke-linecap="round"></polyline><circle cx="76" cy="16" r="3.5" fill="#FFB300" stroke="#151412" stroke-width="1.6"></circle></svg></button>
+      <button class="li"><span class="li-m"><span class="li-t">Pull-ups</span><span class="li-w bw">Bodyweight</span></span><svg class="sp" role="img" aria-label="Total reps rising" width="80" height="32" viewBox="0 0 80 32" fill="none"><polyline points="4,28 12,24 20,20 28,20 36,16 44,12 52,12 60,8 68,8 76,4" stroke="#151412" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="1 0"></polyline><circle cx="76" cy="4" r="3.5" fill="#FFB300" stroke="#151412" stroke-width="1.6"></circle></svg></button>
+    </div>
+  </div>
+  <nav class="nav">
+    <button><span class="pill"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"></path></svg></span>Home</button>
+    <button class="on"><span class="pill"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6"></path></svg></span>Progress</button>
+    <button><span class="pill"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 7v5l3 2"></path></svg></span>History</button>
+    <button><span class="pill"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"></path><circle cx="16" cy="7" r="2"></circle><circle cx="10" cy="17" r="2"></circle></svg></span>Settings</button>
+  </nav>
+</div>
+
+
+</body>
+</html>

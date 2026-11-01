@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Edit exercise</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+.scr{position:relative;overflow:hidden;width:390px;background:#FBFAF7;color:#151412;font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.ib{width:48px;height:48px;border-radius:24px;border:none;background:#F1EEE7;color:#151412;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#5F5B53;min-width:0}
+.in{height:56px;width:100%;border-radius:18px;border:1px solid #D6D1C6;padding:0 16px;font-family:inherit;font-size:18px;font-weight:600;color:#151412;background:#FFFFFF}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:#F1EEE7;border-radius:28px;padding:4px}
+.seg button{height:48px;border:none;border-radius:24px;background:transparent;font-family:inherit;font-size:15px;font-weight:600;color:#5F5B53}
+.seg button.on{background:#FFFFFF;color:#151412;font-weight:700;box-shadow:0 1px 3px rgba(21,20,18,0.14)}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.btn{height:56px;padding:0 22px;border-radius:28px;border:none;font-family:inherit;font-size:16px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;color:#151412;background:#F1EEE7;width:100%}
+.btn.lg{height:64px;border-radius:32px;font-size:19px;font-weight:700}
+.btn.pri{background:#FFB300}
+.btn.out{background:transparent;border:1px solid #D6D1C6}
+</style>
+
+<div class="scr" style="height: 1000px; padding: 16px 20px 24px; display: flex; flex-direction: column; gap: 14px">
+  <div style="display: flex; align-items: center; height: 56px"><button class="ib" aria-label="Back to settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button></div>
+  <h1 style="margin: 0 0 6px; font-size: 30px; font-weight: 720; letter-spacing: -0.6px">Edit Leg press</h1>
+  <label class="fld">Name<input class="in" value="Leg press"></label>
+  <div class="fld">Type<div class="seg" role="group" aria-label="Type"><button class="on">Machine</button><button>Free weight</button><button>Bodyweight</button></div></div>
+  <div class="g2">
+    <label class="fld">Weight (kg)<input class="in" inputmode="decimal" value="62.5"></label>
+    <label class="fld">Weight step (kg)<input class="in" inputmode="decimal" value="2.5"></label>
+  </div>
+  <div class="g3">
+    <label class="fld">Sets<input class="in" inputmode="numeric" value="2"></label>
+    <label class="fld">Min reps<input class="in" inputmode="numeric" value="9"></label>
+    <label class="fld">Max reps<input class="in" inputmode="numeric" value="12"></label>
+  </div>
+  <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px">
+    <button class="btn out"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="5" rx="1.5"></rect><path d="M5 9v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9M10 13h4"></path></svg>Archive</button>
+    <div style="font-size: 13px; color: #5F5B53; padding: 0 4px; line-height: 1.45">This exercise has history, so it can be archived but not deleted.</div>
+  </div>
+  <div style="flex: 1"></div>
+  <div class="g2">
+    <button class="btn lg out">Cancel</button>
+    <button class="btn lg pri">Save</button>
+  </div>
+</div>
+
+
+</body>
+</html>

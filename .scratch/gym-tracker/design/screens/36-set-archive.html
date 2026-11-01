@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Archive exercise confirmation</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+.scr{position:relative;overflow:hidden;width:390px;background:#FBFAF7;color:#151412;font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.ghost{background:#FFFFFF;border:1px solid #D6D1C6;border-radius:18px;height:56px}
+.scrim{position:absolute;left:0;top:0;right:0;bottom:0;background:rgba(21,20,18,0.45)}
+.dlg{position:absolute;left:12px;right:12px;bottom:16px;background:#FFFFFF;border-radius:32px;padding:24px 20px 20px;display:flex;flex-direction:column;gap:12px}
+.btn{height:64px;border-radius:32px;font-size:19px;font-weight:700;font-family:inherit;width:100%}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips span{background:#F1EEE7;border-radius:12px;padding:6px 12px;font-size:14px;font-weight:600}
+</style>
+
+<div class="scr" style="height: 844px">
+  <div aria-hidden="true" style="padding: 88px 20px 0; display: flex; flex-direction: column; gap: 14px">
+    <div style="font-size: 30px; font-weight: 720; letter-spacing: -0.6px">Edit Leg press</div>
+    <div class="ghost"></div><div class="ghost"></div><div class="ghost"></div>
+  </div>
+  <div class="scrim"></div>
+  <div class="dlg" role="alertdialog" aria-labelledby="t">
+    <div id="t" style="font-size: 24px; font-weight: 720; letter-spacing: -0.3px">Archive Leg press?</div>
+    <div style="font-size: 15px; line-height: 1.45; color: #5F5B53">It's hidden and its history is kept. It will be taken out of these routines:</div>
+    <div class="chips"><span>Full body</span><span>Quick day</span></div>
+    <div style="height: 8px"></div>
+    <button class="btn" style="background: transparent; border: 1px solid #D6D1C6; color: #151412">Keep it</button>
+    <button class="btn" style="background: #151412; border: none; color: #FFFFFF">Archive</button>
+  </div>
+</div>
+
+
+</body>
+</html>

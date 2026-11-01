@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Setup step 1</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+:root{--ink:#151412;--ink2:#5F5B53;--paper:#FBFAF7;--surf:#F1EEE7;--surf2:#F7F5F0;--card:#FFFFFF;--line:#E4E0D7;--line2:#D6D1C6;--amber:#FFB300;--amberC:#FFE4A0;--amberS:#FFF4D6;--amberInk:#6E4700;--err:#B3261E;--errC:#FCE8E6;--errInk:#8C1D18}
+.scr{position:relative;overflow:hidden;width:390px;background:var(--paper);color:var(--ink);font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.pad{padding:0 20px}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.h1{margin:0;font-size:34px;font-weight:720;letter-spacing:-0.8px;line-height:1.1}
+.mut{color:var(--ink2)}
+.sec{font-size:13px;font-weight:600;color:var(--ink2);margin:24px 4px 8px}
+.btn{height:56px;padding:0 22px;border-radius:28px;border:none;font-family:inherit;font-size:16px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;color:var(--ink);background:var(--surf)}
+.btn.lg{height:64px;border-radius:32px;font-size:19px;font-weight:700;width:100%}
+.btn.w{width:100%}
+.btn.pri{background:var(--amber)}
+.btn.dark{background:var(--ink);color:#FFFFFF}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px}
+.list{background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 8px 10px 16px;border-top:1px solid #EEEBE4;width:100%;background:transparent;border-left:none;border-right:none;border-bottom:none;text-align:left;font-family:inherit;color:var(--ink)}
+.li:first-child{border-top:none}
+.li-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.li-t{font-size:16px;font-weight:600}
+.li-s{font-size:13px;color:var(--ink2)}
+.chev{color:var(--ink2);width:40px;display:flex;justify-content:center}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--ink2);min-width:0}
+.in{height:56px;width:100%;border-radius:18px;border:1px solid var(--line2);padding:0 16px;font-family:inherit;font-size:18px;font-weight:600;color:var(--ink);background:var(--card)}
+.in.foc{border:2px solid var(--ink)}
+.help{font-size:13px;font-weight:500;color:var(--ink2)}
+.seg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:var(--surf);border-radius:28px;padding:4px}
+.seg button{height:48px;border:none;border-radius:24px;background:transparent;font-family:inherit;font-size:15px;font-weight:600;color:var(--ink2)}
+.seg button.on{background:var(--card);color:var(--ink);font-weight:700;box-shadow:0 1px 3px rgba(21,20,18,0.14)}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.steps{display:flex;gap:4px}
+.steps div{flex:1;height:6px;border-radius:3px;background:#E4E0D7}
+.steps .d{background:var(--amber)}
+</style>
+
+<div class="scr" style="height: 1040px; display: flex; flex-direction: column">
+  <div class="pad" style="padding-top: 32px; display: flex; flex-direction: column; gap: 14px">
+    <svg role="img" aria-label="CDT Gym Tracker logo" width="64" height="64" viewBox="18 18 72 72"><circle cx="54" cy="54" r="36" fill="#FFB300"></circle><g transform="translate(54 54) scale(0.64) translate(-50 -50)"><path d="M28 66 C28 54 36 50 50 50 C64 50 72 54 72 66 Z" fill="#151412"></path><path d="M37 40 L35 19 L46 32 Z M63 40 L65 19 L54 32 Z" fill="#151412" stroke="#151412" stroke-width="2" stroke-linejoin="round"></path><path d="M33 45 C33 36 40 30 50 30 C60 30 67 36 67 45 C67 53 60 60 50 62 C40 60 33 53 33 45 Z" fill="#151412"></path><rect x="14" y="62" width="72" height="8" rx="4" fill="#FFFFFF"></rect><rect x="12" y="50" width="12" height="32" rx="5" fill="#FFFFFF"></rect><rect x="76" y="50" width="12" height="32" rx="5" fill="#FFFFFF"></rect><rect x="36" y="58" width="11" height="17" rx="5.5" fill="#151412"></rect><rect x="53" y="58" width="11" height="17" rx="5.5" fill="#151412"></rect></g></svg>
+    <div>
+      <h1 class="h1">Welcome!</h1>
+      <div class="mut" style="margin-top: 6px; font-size: 16px">Step 1 of 2: add your exercises.</div>
+    </div>
+    <div class="steps" aria-hidden="true"><div class="d"></div><div></div></div>
+  </div>
+  <div class="pad" style="margin-top: 20px">
+    <div class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 14px">
+      <label class="fld">Name
+        <input class="in foc" value="Lat pulldown">
+      </label>
+      <div class="fld">Type
+        <div class="seg" role="group" aria-label="Type">
+          <button class="on">Machine</button>
+          <button>Free weight</button>
+          <button>Bodyweight</button>
+        </div>
+      </div>
+      <div class="g2">
+        <label class="fld">Weight (kg)
+          <input class="in" inputmode="decimal" value="45">
+        </label>
+        <label class="fld">Weight step (kg)
+          <input class="in" inputmode="decimal" value="2.5">
+        </label>
+      </div>
+      <div class="g3">
+        <label class="fld">Sets
+          <input class="in" inputmode="numeric" value="2">
+        </label>
+        <label class="fld">Min reps
+          <input class="in" inputmode="numeric" value="9">
+        </label>
+        <label class="fld">Max reps
+          <input class="in" inputmode="numeric" value="12">
+        </label>
+      </div>
+      <button class="btn dark w">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+        Add exercise
+      </button>
+    </div>
+  </div>
+  <div class="pad">
+    <div class="sec">Your exercises · tap one to edit it</div>
+    <div class="list">
+      <button class="li">
+        <span class="li-m"><span class="li-t">Leg press</span><span class="li-s">Machine · 62.5 kg (+2.5) · 2 × 9–12</span></span>
+        <span class="chev"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg></span>
+      </button>
+      <button class="li">
+        <span class="li-m"><span class="li-t">Chest press</span><span class="li-s">Machine · 40 kg (+2.5) · 2 × 9–12</span></span>
+        <span class="chev"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg></span>
+      </button>
+      <button class="li">
+        <span class="li-m"><span class="li-t">Pull-ups</span><span class="li-s">Bodyweight · 2 × 9–12</span></span>
+        <span class="chev"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg></span>
+      </button>
+    </div>
+  </div>
+  <div style="flex: 1"></div>
+  <div class="pad" style="padding-top: 16px; padding-bottom: 24px">
+    <button class="btn lg pri">Next</button>
+  </div>
+</div>
+
+
+</body>
+</html>

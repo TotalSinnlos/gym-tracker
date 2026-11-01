@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Routine editor</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+.scr{position:relative;overflow:hidden;width:390px;background:#FBFAF7;color:#151412;font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.ib{width:48px;height:48px;border-radius:24px;border:none;background:#F1EEE7;color:#151412;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
+.ib.plain{background:transparent;color:#5F5B53}
+.ib.dim{opacity:0.3}
+.sec{font-size:13px;font-weight:600;color:#5F5B53;margin:22px 4px 8px}
+.list{background:#FFFFFF;border:1px solid #E4E0D7;border-radius:24px;overflow:hidden}
+.li{display:flex;align-items:center;gap:8px;min-height:60px;padding:6px 4px 6px 12px;border:none;border-top:1px solid #EEEBE4;width:100%;background:transparent;text-align:left;font-family:inherit;color:#151412}
+.li:first-child{border-top:none}
+.n{width:28px;height:28px;border-radius:14px;background:#F1EEE7;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.t{flex:1;font-size:16px;font-weight:600;min-width:0}
+.add{width:40px;height:40px;border-radius:20px;background:#FFE4A0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#5F5B53}
+.in{height:56px;width:100%;border-radius:18px;border:1px solid #D6D1C6;padding:0 16px;font-family:inherit;font-size:18px;font-weight:600;color:#151412;background:#FFFFFF}
+.btn{height:56px;padding:0 22px;border-radius:28px;font-family:inherit;font-size:16px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;background:transparent;color:#B3261E;border:1px solid #E6B8B3}
+.btn.off{color:#8F8A80;border-color:#E4E0D7;background:#F1EEE7}
+</style>
+
+<div class="scr" style="height: 1560px; padding: 16px 20px 32px">
+  <div style="display: flex; align-items: center; height: 56px"><button class="ib" aria-label="Back to settings"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button></div>
+  <h1 style="margin: 12px 0 16px; font-size: 30px; font-weight: 720; letter-spacing: -0.6px">Edit routine</h1>
+  <label class="fld">Name<input class="in" value="Quick day"></label>
+  <div class="sec">Exercises, in order</div>
+  <div class="list">
+    <div class="li"><span class="n">1</span><span class="t">Leg press</span><button class="ib plain dim" aria-label="Move up" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button><button class="ib plain" aria-label="Move down"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button><button class="ib plain" aria-label="Remove"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <div class="li"><span class="n">2</span><span class="t">Chest press</span><button class="ib plain" aria-label="Move up"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button><button class="ib plain" aria-label="Move down"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button><button class="ib plain" aria-label="Remove"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+    <div class="li"><span class="n">3</span><span class="t">Pull-ups</span><button class="ib plain" aria-label="Move up"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button><button class="ib plain dim" aria-label="Move down" disabled><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button><button class="ib plain" aria-label="Remove"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button></div>
+  </div>
+  <div class="sec">Tap to add</div>
+  <div class="list">
+    <button class="li"><span class="add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span><span class="t">Lat pulldown</span></button>
+    <button class="li"><span class="add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span><span class="t">Seated row</span></button>
+    <button class="li"><span class="add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span><span class="t">Leg curl</span></button>
+    <button class="li"><span class="add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span><span class="t">Shoulder press</span></button>
+    <button class="li"><span class="add"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span><span class="t">Bicep curl</span></button>
+    <button class="li"><span class="add" style="background: #F1EEE7"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></span><span class="t">Leg press<span style="display: block; font-size: 13px; font-weight: 600; color: #6E4700">Already in routine, adds it again</span></span></button>
+  </div>
+  <div style="font-size: 13px; color: #5F5B53; padding: 10px 4px 0">Changes apply from the next session.</div>
+  <div style="margin-top: 28px; display: flex; flex-direction: column; gap: 8px">
+    <button class="btn"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"></path></svg>Delete routine</button>
+  </div>
+  <div style="margin-top: 20px; font-size: 13px; font-weight: 600; color: #5F5B53; padding: 0 4px">Disabled variants</div>
+  <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px">
+    <button class="btn off" disabled>Delete routine</button>
+    <div style="font-size: 13px; color: #5F5B53; padding: 0 4px 8px">You need at least one routine, so it can't be deleted.</div>
+    <button class="btn off" disabled>Delete routine</button>
+    <div style="font-size: 13px; color: #5F5B53; padding: 0 4px">A session of this routine is running. End it first.</div>
+  </div>
+</div>
+
+
+</body>
+</html>

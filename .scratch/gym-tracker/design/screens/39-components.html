@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Components</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+.pg{width:900px;background:#FBFAF7;color:#151412;font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box;padding:48px}
+.pg *{box-sizing:border-box}
+.h{font-size:22px;font-weight:720;margin:40px 0 6px}
+.d{font-size:14px;color:#5F5B53;margin-bottom:16px;line-height:1.45;max-width:640px}
+.row{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+.cap{font-size:12px;color:#5F5B53;margin-top:6px;font-family:ui-monospace,monospace}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.btn{height:56px;padding:0 22px;border-radius:28px;border:none;font-family:inherit;font-size:16px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;color:#151412;background:#F1EEE7}
+.btn.lg{height:64px;border-radius:32px;font-size:19px;font-weight:700;min-width:240px}
+.btn.pri{background:#FFB300}
+.btn.out{background:transparent;border:1px solid #D6D1C6}
+.btn.dark{background:#151412;color:#FFFFFF}
+.btn.dng{background:#B3261E;color:#FFFFFF}
+.btn.dngo{background:transparent;color:#B3261E;border:1px solid #E6B8B3}
+.btn.off{background:#ECE9E2;color:#8F8A80}
+.btn.press{background:#F2A600;transform:scale(0.97)}
+.ib{width:48px;height:48px;border-radius:24px;border:none;background:#F1EEE7;color:#151412;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.ib.big{width:64px;height:64px;border-radius:32px;background:#FFFFFF;border:1px solid #E4E0D7}
+.ib.plain{background:transparent;color:#5F5B53}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#5F5B53;width:180px}
+.in{height:60px;width:100%;border-radius:18px;border:1px solid #D6D1C6;padding:0 16px;font-family:inherit;font-size:28px;font-weight:700;color:#151412;background:#F7F5F0}
+.in.foc{border:2px solid #151412;background:#FFFFFF}
+.in.bad{border:2px solid #B3261E;background:#FFFFFF}
+.card{background:#FFFFFF;border:1px solid #E4E0D7;border-radius:24px}
+.li{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 16px;border-top:1px solid #EEEBE4}
+.li:first-child{border-top:none}
+.st{width:28px;height:28px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;background:#151412;color:#FFFFFF;flex-shrink:0}
+.chip{display:inline-flex;align-items:center;border-radius:12px;padding:4px 10px;font-size:13px;font-weight:700;background:#FFE4A0;color:#6E4700}
+</style>
+
+<div class="pg" style="height: 1900px">
+  <div style="font-size: 40px; font-weight: 720; letter-spacing: -1px">Components</div>
+  <div class="d" style="margin-top: 8px">One amber thing per screen: the main action. Everything else is ink, paper and warm greys. Touch targets are 48 dp minimum, main actions 64 dp.</div>
+
+  <div class="h">Buttons</div>
+  <div class="d">Main sits at the bottom in thumb reach, full width, one per screen. Pressed state darkens to amber-700 and scales to 0.97.</div>
+  <div class="row">
+    <div><button class="btn lg pri">Log set</button><div class="cap">main · 64</div></div>
+    <div><button class="btn lg press">Log set</button><div class="cap">main · pressed</div></div>
+    <div><button class="btn lg off" disabled>Next</button><div class="cap">main · disabled</div></div>
+  </div>
+  <div class="row" style="margin-top: 16px">
+    <div><button class="btn">Skip for now</button><div class="cap">tonal · 56</div></div>
+    <div><button class="btn out">Keep going</button><div class="cap">outlined</div></div>
+    <div><button class="btn dark">Add exercise</button><div class="cap">ink (secondary emphasis)</div></div>
+    <div><button class="btn dng">Delete session</button><div class="cap">destructive confirm</div></div>
+    <div><button class="btn dngo">Delete routine</button><div class="cap">destructive entry</div></div>
+  </div>
+
+  <div class="h">Icon buttons</div>
+  <div class="row">
+    <div><button class="ib big" aria-label="Minus"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 28px; height: 28px; stroke-width: 2.4"><path d="M5 12h14"></path></svg></button><div class="cap">− 64</div></div>
+    <div><button class="ib big" aria-label="Plus"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 28px; height: 28px; stroke-width: 2.4"><path d="M12 5v14M5 12h14"></path></svg></button><div class="cap">+ 64</div></div>
+    <div><button class="ib" aria-label="Home"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"></path></svg></button><div class="cap">tonal 48</div></div>
+    <div><button class="ib plain" aria-label="Remove"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button><div class="cap">✕ 48</div></div>
+    <div><button class="ib plain" aria-label="Up"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button><div class="cap">↑ 48</div></div>
+    <div><button class="ib plain" aria-label="Down"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button><div class="cap">↓ 48</div></div>
+    <div><button class="ib plain" aria-label="Up disabled" disabled style="opacity: 0.3"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button><div class="cap">disabled</div></div>
+  </div>
+
+  <div class="h">Number fields</div>
+  <div class="d">Reps opens the numeric keypad; weight the decimal keypad. "42,5" and "42.5" are both accepted and shown as typed. Focus is a 2 dp ink border; error is 2 dp error-red plus a message box below.</div>
+  <div class="row">
+    <label class="fld">Reps<input class="in foc" placeholder="0"></label>
+    <label class="fld">Weight (kg)<input class="in" value="42,5"></label>
+    <label class="fld" style="color: #B3261E">Reps<input class="in bad" value="10.5"></label>
+  </div>
+
+  <div class="h">Cards and list items</div>
+  <div class="row">
+    <div style="width: 380px">
+      <div class="card">
+        <div class="li"><span class="st"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px; stroke-width: 3"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><div><div style="font-size: 16px; font-weight: 600">Done</div><div style="font-size: 13px; color: #5F5B53">Filled ink circle with check</div></div></div>
+        <div class="li"><svg aria-hidden="true" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="12.5" fill="none" stroke="#151412" stroke-width="2"></circle><path d="M14 1.5 A12.5 12.5 0 0 1 14 26.5 Z" fill="#151412"></path></svg><div><div style="font-size: 16px; font-weight: 600">Incomplete</div><div style="font-size: 13px; color: #5F5B53">Half-filled circle</div></div></div>
+        <div class="li"><span class="st" style="background: transparent; border: 2px dashed #9A958B; color: #5F5B53"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 14px; height: 14px; stroke-width: 3"><path d="M6 12h12"></path></svg></span><div><div style="font-size: 16px; font-weight: 600; color: #5F5B53">Skipped</div><div style="font-size: 13px; color: #5F5B53">Dashed outline, muted text</div></div></div>
+      </div>
+      <div class="cap">list card · radius 24 · rows ≥ 64</div>
+    </div>
+    <div style="width: 380px; display: flex; flex-direction: column; gap: 12px">
+      <div style="background: #151412; color: #FFFFFF; border-radius: 32px; padding: 20px"><div style="font-size: 22px; font-weight: 700">Hero card</div><div style="font-size: 14px; color: #CFCAC0">Ink fill for the one card that leads</div></div>
+      <div style="background: #F1EEE7; border-radius: 32px 32px 32px 12px; padding: 20px"><div style="font-size: 22px; font-weight: 700">Tonal card</div><div style="font-size: 14px; color: #5F5B53">One corner tucked in: the "shape" accent</div></div>
+      <div style="display: flex; gap: 8px; align-items: center"><span class="chip">↑ +2.5 kg since last time</span><span class="cap" style="margin: 0">chip</span></div>
+    </div>
+  </div>
+
+  <div class="h">Messages</div>
+  <div class="row">
+    <div style="width: 380px; display: flex; gap: 10px; background: #FCE8E6; color: #8C1D18; border-radius: 16px; padding: 12px 14px; font-size: 14px; font-weight: 600">Error: inline, under the field it's about.</div>
+    <div style="width: 380px; display: flex; gap: 10px; background: #151412; color: #FFFFFF; border-radius: 20px; padding: 16px 18px; font-size: 15px">Success: snackbar, 4 s, bottom.<span style="margin-left: auto; color: #FFB300; font-weight: 700">OK</span></div>
+    <div style="width: 380px; display: flex; gap: 10px; background: #FFE4A0; color: #4A3300; border-radius: 20px; padding: 14px 16px; font-size: 14px; font-weight: 500">Notice: amber banner for locked or blocked states.</div>
+    <div style="width: 380px; display: flex; gap: 10px; background: #F1EEE7; border-radius: 16px; padding: 12px 14px; font-size: 14px">Info: tonal note, e.g. "saving works out its current weight again".</div>
+  </div>
+  <div class="d" style="margin-top: 16px">Confirmations are bottom-anchored dialogs (radius 32, 12 dp side inset) over a 45% ink scrim, safe option on top, committing option below, in thumb reach.</div>
+</div>
+
+
+</body>
+</html>

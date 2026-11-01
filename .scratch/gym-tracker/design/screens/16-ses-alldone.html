@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Session, all done</title>
+
+</head>
+<body>
+
+
+<style>@font-face{font-family:"Roboto Flex";src:url("../fonts/RobotoFlex-wght-latin.woff2") format("woff2");font-weight:100 1000;font-display:block}</style>
+<style>
+body{margin:0}
+a{color:#6E4700}a:hover{color:#151412}
+:root{--ink:#151412;--ink2:#5F5B53;--paper:#FBFAF7;--surf:#F1EEE7;--surf2:#F7F5F0;--card:#FFFFFF;--line:#E4E0D7;--line2:#D6D1C6;--amber:#FFB300;--amberC:#FFE4A0;--amberS:#FFF4D6;--amberInk:#6E4700;--err:#B3261E;--errC:#FCE8E6;--errInk:#8C1D18}
+.scr{position:relative;overflow:hidden;width:390px;background:var(--paper);color:var(--ink);font-family:'Roboto Flex',Roboto,system-ui,sans-serif;box-sizing:border-box}
+.scr *{box-sizing:border-box}
+.pad{padding:0 20px}
+.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.i.s{width:16px;height:16px;stroke-width:3}
+.ib{width:48px;height:48px;border-radius:24px;border:none;background:var(--surf);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0;font-family:inherit}
+.btn{height:56px;padding:0 22px;border-radius:28px;border:none;font-family:inherit;font-size:16px;font-weight:650;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;color:var(--ink);background:var(--surf)}
+.btn.lg{height:64px;border-radius:32px;font-size:19px;font-weight:700;width:100%}
+.btn.pri{background:var(--amber)}
+.hdr{display:flex;align-items:center;gap:8px;height:56px;margin-top:16px}
+.hdr-t{flex:1;text-align:center;font-size:15px;font-weight:500;padding-right:56px}
+.seg8{display:flex;gap:4px;margin-top:10px}
+.seg8 div{flex:1;height:6px;border-radius:3px;background:var(--ink)}
+.hero{margin-top:20px;background:var(--amber);border-radius:36px;padding:20px;display:flex;gap:16px;align-items:center}
+.hero-t{font-size:22px;font-weight:750;line-height:1.2}
+.hero-s{font-size:15px;font-weight:500;color:#4A3300;margin-top:4px;line-height:1.4}
+.sec{font-size:13px;font-weight:500;color:var(--ink2);margin:20px 4px 6px}
+.list{background:var(--card);border:1px solid var(--line);border-radius:24px;overflow:hidden}
+.li{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 16px;border-top:1px solid #EEEBE4;width:100%;background:transparent;border-left:none;border-right:none;border-bottom:none;text-align:left;font-family:inherit;color:var(--ink)}
+.li:first-child{border-top:none}
+.li-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.li-t{font-size:16px;font-weight:600}
+.li-s{font-size:13px;color:var(--ink2)}
+.st{width:28px;height:28px;border-radius:14px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;background:var(--ink);color:#FFFFFF}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:32px 32px 0 0;box-shadow:0 -8px 28px rgba(21,20,18,0.08);padding:16px 20px 24px}
+</style>
+
+<div class="scr" style="height: 1000px">
+  <div class="pad">
+    <div class="hdr">
+      <button class="ib" aria-label="Back to home"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"></path></svg></button>
+      <div class="hdr-t">Full body · 8 of 8 done</div>
+    </div>
+    <div class="seg8" aria-hidden="true"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+    <div class="hero">
+      <svg aria-hidden="true" width="64" height="64" viewBox="0 0 96 96" style="flex-shrink: 0"><g fill="#151412"><circle cx="48" cy="48" r="32"></circle><circle cx="78" cy="48" r="14"></circle><circle cx="69.2" cy="69.2" r="14"></circle><circle cx="48" cy="78" r="14"></circle><circle cx="26.8" cy="69.2" r="14"></circle><circle cx="18" cy="48" r="14"></circle><circle cx="26.8" cy="26.8" r="14"></circle><circle cx="48" cy="18" r="14"></circle><circle cx="69.2" cy="26.8" r="14"></circle></g><path d="M31 49l11 11 23-24" fill="none" stroke="#FFB300" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <div>
+        <div class="hero-t">All exercises done!</div>
+        <div class="hero-s">Correct anything below, or end the session.</div>
+      </div>
+    </div>
+    <div class="sec">Finished · tap one to correct it</div>
+    <div class="list">
+      <button class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span class="li-m"><span class="li-t">Leg press</span><span class="li-s">13 / 13 reps · 62.5 kg</span></span></button>
+      <button class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span class="li-m"><span class="li-t">Chest press</span><span class="li-s">13 / 14 reps · 40 kg</span></span></button>
+      <button class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span class="li-m"><span class="li-t">Lat pulldown</span><span class="li-s">11 / 10 reps · 45 kg</span></span></button>
+      <button class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span class="li-m"><span class="li-t">Seated row</span><span class="li-s">12 / 11 reps · 42.5 kg</span></span></button>
+      <button class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span class="li-m"><span class="li-t">Leg curl</span><span class="li-s">12 / 12 reps · 35 kg</span></span></button>
+      <button class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span class="li-m"><span class="li-t">Shoulder press</span><span class="li-s">11 / 10 reps · 14 kg</span></span></button>
+      <button class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span class="li-m"><span class="li-t">Bicep curl</span><span class="li-s">10 / 9 / 8 reps · 12 kg</span></span></button>
+      <button class="li"><span class="st"><svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span><span class="li-m"><span class="li-t">Pull-ups</span><span class="li-s">13 / 13 reps</span></span></button>
+    </div>
+  </div>
+  <div class="sheet">
+    <button class="btn lg pri">End session</button>
+  </div>
+</div>
+
+
+</body>
+</html>
