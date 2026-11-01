@@ -127,7 +127,7 @@ function SessionDetail({ session, onBack }: { session: Session; onBack: () => vo
         {locked && (
           <div className="banner" role="status">
             <Icon name="lock" />
-            <span>A session is running. You can correct or delete past sessions once it has ended.</span>
+            <span>End the running session to correct or delete past sessions.</span>
           </div>
         )}
 
@@ -186,7 +186,7 @@ function SessionDetail({ session, onBack }: { session: Session; onBack: () => vo
               Delete this session?
             </div>
             <div className="dlg-b">
-              Its sets are removed. Weights it changed go back to what they were before.
+              Weights it changed go back to what they were.
             </div>
             <button className="btn lg out" onClick={() => setConfirmingDelete(false)}>
               Keep it

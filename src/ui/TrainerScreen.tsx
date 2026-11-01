@@ -8,7 +8,7 @@ import { TrainerText } from "./TrainerCard";
 import { useTrainerChat } from "./trainerChat";
 
 /**
- * The trainer chat: one ongoing conversation, newest at the bottom, with the text box under it. It's the
+ * The trainer chat: one ongoing chat, newest message at the bottom, with the text box under it. It's the
  * Trainer area, or with `onBack` a page opened from the session screen, with a back arrow to it.
  */
 export function TrainerScreen({ onBack }: { onBack?: () => void }) {
@@ -33,11 +33,8 @@ export function TrainerScreen({ onBack }: { onBack?: () => void }) {
     <>
       <div className="page area chat-page">
         <div className="chat-head">
-          <div>
-            <h1 className="h1">Trainer</h1>
-            <div className="page-sub">Knows your sessions, its summaries and your goals and notes.</div>
-          </div>
-          {messages.length > 0 && (
+          <h1 className="h1">Trainer</h1>
+          {enabled && messages.length > 0 && (
             <button className="btn sm txt" onClick={() => setClearing(true)} disabled={chat.sending}>
               Clear chat
             </button>
@@ -50,8 +47,7 @@ export function TrainerScreen({ onBack }: { onBack?: () => void }) {
           <div className="nothing area-empty">
             <h2 className="nothing-t">Ask your trainer.</h2>
             <p className="body mut">
-              For example why an exercise has stalled, whether to change a routine, or what to do when a machine is taken.
-              Answers can take up to a minute.
+              For example why an exercise has stalled, or what to do when a machine is taken.
             </p>
           </div>
         ) : (
@@ -61,7 +57,7 @@ export function TrainerScreen({ onBack }: { onBack?: () => void }) {
             ))}
             {chat.sending ? (
               <div className="msg ai wait">
-                Thinking…<span className="mut"> This can take up to a minute.</span>
+                Thinking…<span className="mut"> This can take up to a minute and a half.</span>
               </div>
             ) : (
               unanswered && (
@@ -89,7 +85,7 @@ export function TrainerScreen({ onBack }: { onBack?: () => void }) {
             <div className="dlg-t" id="clear-chat-title">
               Clear the chat?
             </div>
-            <div className="dlg-b">The trainer forgets this conversation. Your sessions, summaries and goals and notes stay.</div>
+            <div className="dlg-b">Your sessions, summaries and goals and notes stay.</div>
             <button className="btn lg out" onClick={() => setClearing(false)}>
               Keep it
             </button>

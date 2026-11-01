@@ -293,7 +293,7 @@ function CurrentExercise({ entry, enterFrom }: { entry: SessionEntry; enterFrom:
             <div className="first">
               <Icon name="star" />
               <span>
-                <b>First time for this one.</b> <span className="mut">Nothing to compare with yet.</span>
+                <b>First time for this one.</b>
               </span>
             </div>
           )}

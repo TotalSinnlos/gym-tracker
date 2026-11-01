@@ -13,7 +13,7 @@ The trainer's short written review of one finished session, kept with that sessi
 _Avoid_: summary (on its own), review, AI summary
 
 **Trainer chat**:
-The one ongoing conversation between the user and the trainer.
+The one ongoing exchange of messages between the user and the trainer.
 _Avoid_: conversation, thread, chats (there is only one)
 
 **Trainer brief**:

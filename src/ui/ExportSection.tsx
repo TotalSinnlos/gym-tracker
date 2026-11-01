@@ -41,11 +41,11 @@ export function ExportSection() {
           <Icon name="table" />
           <span className="li-m">
             <span className="li-t">Export to spreadsheet</span>
-            <span className="li-s">A CSV file for Google Sheets or Excel, one row per set.</span>
+            <span className="li-s">For Google Sheets or Excel</span>
           </span>
         </button>
       </div>
-      {nothing && <p className="hint">Nothing to export yet. Finish a session first.</p>}
+      {nothing && <p className="hint">Nothing to export yet.</p>}
       {error && (
         <p className="errmsg section-msg" role="alert">
           <Icon name="error" />

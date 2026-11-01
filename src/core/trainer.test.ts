@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   type BackupServer,
   type ServerProblem,
@@ -504,17 +504,48 @@ describe("the trainer chat", () => {
     expect(core.trainerChat().unanswered).toBe(true);
   });
 
-  it("clears the chat, dropping a reply that arrives afterwards", async () => {
+  it("clears the chat, but not while a reply is on its way", async () => {
     const { core, fake } = await setup();
     await core.sendTrainerMessage("Hello");
     fake.hold();
     const sending = core.sendTrainerMessage("Still there?");
 
+    await expect(core.clearTrainerChat()).rejects.toThrow("Wait for the trainer's reply");
+    fake.release();
+    await sending;
+    expect(core.trainerChat().messages).toHaveLength(4);
+
     await core.clearTrainerChat();
     expect(core.trainerChat()).toEqual({ messages: [], unanswered: false });
+  });
+
+  it("drops a reply that arrives after a restore replaced the chat", async () => {
+    const { core, fake } = await setup();
+    const before = core.createBackup();
+    fake.hold();
+    const sending = core.sendTrainerMessage("Hello");
+
+    await core.restoreBackup(before.text);
     fake.release();
     await sending;
     expect(core.trainerChat()).toEqual({ messages: [], unanswered: false });
+  });
+
+  it("sends nothing more, and keeps no reply, once the trainer is turned off while a reply is on its way", async () => {
+    const { core, fake, press, routine } = await setup();
+    await runSession(core, routine.id, { [press.id]: [10, 10] });
+    // The first try is too large, so the core would normally send again with less history.
+    fake.maxChars = 10;
+    fake.hold();
+    const sending = core.sendTrainerMessage("Hello");
+    await vi.waitFor(() => expect(fake.chats).toHaveLength(1));
+
+    await core.setTrainerEnabled(false);
+    fake.release();
+    await sending.catch(() => {});
+
+    expect(fake.chats).toHaveLength(1);
+    expect(core.trainerChat()).toMatchObject({ unanswered: true, messages: [{ text: "Hello" }] });
   });
 
   it("keeps the chat through backup and restore", async () => {
@@ -574,6 +605,12 @@ describe("the chat brief", () => {
         "2026-10-02 Full body: Leg press 62.5 kg: 10, 9; Seated row skipped; Dips 9, 8",
     );
     expect(brief).toContain("Your summaries after sessions, oldest first:\n2026-10-01:\nSummary 1");
+  });
+
+  it("lists every active exercise with its next weight, even one in no routine and never done", async () => {
+    const { core } = await setup();
+    await core.createExercise({ name: "Biceps curl", type: "machine", weight: 12 });
+    expect(core.trainerChatBrief()).toContain("- Biceps curl: machine, 2 sets of 9-12 reps, increment 2.5 kg, next session at 12 kg");
   });
 
   it("says when there are no sessions or goals yet", async () => {

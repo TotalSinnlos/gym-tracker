@@ -17,7 +17,7 @@ export function OverviewScreen({ onOpenExercise }: { onOpenExercise: (id: string
           <h1 className="h1">Progress</h1>
           {rows.length > 0 && (
             <p className="page-intro">
-              The last 10 sessions: weight, or total reps for bodyweight.
+              Last 10 sessions
             </p>
           )}
         </div>

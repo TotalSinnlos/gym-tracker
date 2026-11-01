@@ -92,7 +92,7 @@ function EditForm({ exercise, onClose }: { exercise: Exercise; onClose: () => vo
               Delete
             </button>
           ) : (
-            <p className="hint">This exercise has history, so it can be archived but not deleted.</p>
+            <p className="hint">Exercises with history can only be archived.</p>
           )}
         </div>
       </ExerciseForm>

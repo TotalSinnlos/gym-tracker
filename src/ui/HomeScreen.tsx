@@ -92,7 +92,7 @@ export function HomeScreen({ onOpenSession }: { onOpenSession: () => void }) {
         ) : (
           <div className="nothing">
             <h1 className="nothing-t">Nothing to start yet</h1>
-            <p className="body mut">Add exercises to a routine in settings to start a session.</p>
+            <p className="body mut">Add exercises to a routine in settings first.</p>
           </div>
         )}
         {error && <p className="errmsg">{error}</p>}

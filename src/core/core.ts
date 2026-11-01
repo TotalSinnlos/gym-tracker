@@ -888,8 +888,9 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       await whileReplyOnItsWay(() => askForReply(last));
     },
 
-    /** Empties the trainer chat. A reply still on its way is dropped when it arrives. */
+    /** Empties the trainer chat. Not while a reply is on its way. */
     async clearTrainerChat() {
+      if (replyOnItsWay) throw new CoreError("Wait for the trainer's reply first");
       await commit({ ...data, trainerChat: [] });
     },
 
@@ -955,7 +956,8 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
   /**
    * Sends the recent trainer chat with the chat brief, leaving out more of the oldest sessions each time
    * the server says it's too large, and stores the trainer's reply to `asked` (the chat's last message),
-   * unless the chat was cleared or replaced (a restore) meanwhile.
+   * unless the chat was replaced (a restore) meanwhile. Once the trainer is turned off, nothing more is
+   * sent and no reply is kept.
    */
   async function askForReply(asked: ChatMessage) {
     const isStillLast = () => data.trainerChat.at(-1)?.id === asked.id;
@@ -966,6 +968,7 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
     let sessionsLeftOut = 0;
     let reply: string;
     for (;;) {
+      requireTrainerStillOn();
       const brief = buildChatBrief(data, now().toISOString(), { sessionsLeftOut, messagesLeftOut });
       try {
         reply = await trainerServer!.chat(connection, brief, messages);
@@ -976,9 +979,14 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
         sessionsLeftOut = leaveOutMore(sessions, sessionsLeftOut);
       }
     }
+    requireTrainerStillOn();
     if (!isStillLast()) return;
     const answer: ChatMessage = { id: newId(), role: "trainer", text: reply, at: now().toISOString() };
     await commit({ ...data, trainerChat: [...data.trainerChat, answer] });
+  }
+
+  function requireTrainerStillOn() {
+    if (!trainerEnabled()) throw new CoreError("The trainer was turned off");
   }
 
   function requireServer(): BackupServer {

@@ -22,7 +22,7 @@ export function RestoreDialog({ info, onCancel, onRestore }: { info: BackupInfo;
           </div>
         </div>
         <div className="dlg-b">
-          Everything on this phone is replaced. This can't be undone.
+          This can't be undone.
         </div>
         <button className="btn lg out" onClick={onCancel}>
           Cancel

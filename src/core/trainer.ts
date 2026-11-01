@@ -228,7 +228,7 @@ export function buildChatBrief(data: AppData, now: string, { sessionsLeftOut = 0
       "Facts per exercise (finished sessions only):",
       ...data.exercises.filter((e) => !e.archived).map((e) => `- ${facts(sessions, undefined, e, now)}`),
     ].join("\n"),
-    ["Exercises:", ...exercisesIn(data, sessions).map((e) => `- ${exerciseLine(e, sessions, true)}`)].join("\n"),
+    ["Exercises:", ...chatExercises(data).map((e) => `- ${exerciseLine(e, sessions, true)}`)].join("\n"),
     routinesPart(data),
     [
       "Sessions, oldest first:",
@@ -239,6 +239,12 @@ export function buildChatBrief(data: AppData, now: string, { sessionsLeftOut = 0
     ...(messagesLeftOut > 0 ? [`Chat: the ${messagesLeftOut} oldest messages of this chat are left out.`] : []),
   ];
   return parts.join("\n\n");
+}
+
+/** Every active exercise (each has a weight for the next session), and archived ones still in the history. */
+function chatExercises(data: AppData): Exercise[] {
+  const inHistory = exercisesIn(data, data.sessions);
+  return data.exercises.filter((e) => !e.archived || inHistory.includes(e));
 }
 
 const PROGRESSION_RULE =

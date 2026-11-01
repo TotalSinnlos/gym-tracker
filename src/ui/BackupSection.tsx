@@ -80,7 +80,6 @@ export function BackupSection({ allowRestore = false }: { allowRestore?: boolean
               <Icon name="upload" />
               <span className="li-m">
                 <span className="li-t">Restore from backup</span>
-                <span className="li-s">Pick a backup file</span>
               </span>
             </button>
           </div>

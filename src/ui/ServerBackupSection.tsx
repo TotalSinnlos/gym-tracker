@@ -77,7 +77,7 @@ export function ServerBackupSection() {
           <Icon name="plus" />
           <span className="li-m">
             <span className="li-t">Set up server backup</span>
-            <span className="li-s">Back up to your own server, such as a home server reached through Tailscale.</span>
+            <span className="li-s">For example a home server reached through Tailscale</span>
           </span>
         </button>
       </div>
@@ -101,7 +101,6 @@ export function ServerBackupSection() {
             <Icon name="upload" />
             <span className="li-m">
               <span className="li-t">{busy === "fetching" ? "Getting the newest backup…" : "Restore from server"}</span>
-              <span className="li-s">Replace the data on this phone with the server's newest backup</span>
             </span>
           </button>
           <button className="li" onClick={() => setEditing(true)} disabled={busy !== null}>
@@ -121,14 +120,13 @@ export function ServerBackupSection() {
             <Icon name="error" />
             <span>
               {server.lastError
-                ? `The last backup to your server failed: ${server.lastError}. The app tries again whenever it's open.`
-                : "Your latest changes have waited over a day to reach your server. Open the app with Tailscale on to send them."}
+                ? `The last backup failed: ${server.lastError}. The app tries again whenever it's open.`
+                : "Changes from over a day ago haven't reached your server. Turn on Tailscale to send them."}
             </span>
           </div>
         )}
         <p className="hint">
-          The app backs up to your server by itself after each session. Removing only forgets the server on this phone; the
-          backups on it stay there.
+          The app backs up by itself after each session. Removing the server keeps the backups on it.
         </p>
       </>
     );
@@ -196,7 +194,7 @@ function ConnectForm({ currentUrl, busy, onSubmit, onCancel }: ConnectFormProps)
       </label>
       <div className="note">
         <Icon name="info" />
-        <span>Chrome may ask whether this app can access devices on your local network. Tap Allow, or backups can't reach your server.</span>
+        <span>If Chrome asks to access devices on your local network, tap Allow.</span>
       </div>
       <div className="g2">
         <button type="button" className="btn lg out" onClick={onCancel} disabled={busy}>

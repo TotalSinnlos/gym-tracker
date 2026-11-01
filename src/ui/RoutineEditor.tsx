@@ -32,7 +32,7 @@ export function RoutineEditor({ routineId, detailed = false, withName = true }: 
 
       <div className="sec">{detailed ? "Routine" : "Exercises, in order"}</div>
       {exercises.length === 0 ? (
-        <div className="empty">No exercises yet. Add some from the list below.</div>
+        <div className="empty">No exercises yet.</div>
       ) : (
         <ol className="list">
           {exercises.map((exercise, index) => (

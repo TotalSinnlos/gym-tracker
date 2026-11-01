@@ -39,8 +39,8 @@ export function TrainerSection() {
           </div>
           <GoalsForm key={trainer.goals} saved={trainer.goals} onSave={(goals) => run(() => core.setTrainerGoals(goals))} />
           <p className="hint">
-            With the trainer on, your sessions, history, earlier summaries, these notes and your chat messages are sent
-            to an AI (Google Gemini) through your server. Its advice is only text: it never changes your routines or weights.
+            With the trainer on, your training, these notes and your chat messages go to Google Gemini through your
+            server. It never changes your routines or weights.
           </p>
         </>
       )}
@@ -72,7 +72,7 @@ function GoalsForm({ saved, onSave }: { saved: string; onSave: (goals: string) =
           className="in area"
           value={goals}
           onChange={(e) => setGoals(e.target.value)}
-          placeholder="For example: build muscle, sore left shoulder with overhead pressing. Can be left empty."
+          placeholder="For example: build muscle, sore left shoulder with overhead pressing"
           rows={3}
         />
       </label>

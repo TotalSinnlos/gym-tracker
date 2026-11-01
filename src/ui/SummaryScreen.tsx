@@ -31,7 +31,7 @@ export function SummaryScreen({ result, onDone }: { result: EndSessionResult; on
             </svg>
           </div>
           <h1 className="h1">Session discarded</h1>
-          <p className="prompt-b">Nothing was logged, so there was nothing to save.</p>
+          <p className="prompt-b">Nothing was logged.</p>
         </div>
         <div className="push-down" />
         {doneButton}

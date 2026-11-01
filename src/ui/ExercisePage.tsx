@@ -205,7 +205,7 @@ function ExerciseDetails({ exercise, onBack, onEdit }: { exercise: Exercise; onB
               </button>
             )}
           </div>
-          {!actions.canDelete && <p className="hint">This exercise has history, so it can be archived but not deleted.</p>}
+          {!actions.canDelete && <p className="hint">Exercises with history can only be archived.</p>}
         </div>
       </div>
       {actions.dialog}

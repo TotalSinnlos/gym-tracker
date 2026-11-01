@@ -23,7 +23,7 @@ export const NavigateContext = createContext<(area: Area) => void>(() => {});
 export function MainArea({ area, children }: { area: Area; children: ReactNode }) {
   const navigate = useContext(NavigateContext);
   const trainerOn = useCore().trainer().enabled;
-  const areas = AREAS.filter((item) => item.area !== "trainer" || trainerOn || area === "trainer");
+  const areas = AREAS.filter((item) => item.area !== "trainer" || trainerOn);
   return (
     <div className="app-with-nav">
       <main className="screen with-nav">{children}</main>

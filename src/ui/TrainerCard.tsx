@@ -61,7 +61,7 @@ export function TrainerCard({ sessionId, inHistory = false }: { sessionId: strin
   } else {
     // No summary and none on the way: only History offers to write one.
     if (!inHistory || !enabled) return null;
-    body = <p className="trainer-wait mut">This session has no trainer summary.</p>;
+    body = <p className="trainer-wait mut">No summary yet.</p>;
     action = { label: "Write summary", run: writeNow };
   }
 

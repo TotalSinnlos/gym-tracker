@@ -28,7 +28,6 @@ export function SettingsScreen() {
         <section>
           <div className="h2">Routines</div>
           <RoutineList onOpen={(id) => setView({ name: "routine", id })} />
-          <p className="hint">Routine changes apply from the next session.</p>
         </section>
 
         <section>

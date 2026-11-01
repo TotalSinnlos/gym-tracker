@@ -147,23 +147,23 @@ describe("trainer chat", () => {
     const ask = await start(options);
     return (body: unknown, token = TOKEN) => ask(body, token, "/trainer/chat");
   };
-  const conversation = [
+  const chatMessages = [
     { role: "user", text: "Should I swap the leg press?" },
     { role: "trainer", text: "Not yet: it went up 2 weeks ago." },
     { role: "user", text: "And the row?" },
   ];
 
-  it("returns the trainer's reply, with the chat instructions, the chat brief and the whole conversation reaching the AI", async () => {
+  it("returns the trainer's reply, with the chat instructions, the chat brief and all the messages reaching the AI", async () => {
     const ai = standInAi({ ok: true, text: "The row hasn't gone up in 6 weeks." });
     const ask = await startChat({ writer: ai.writer });
 
-    const answer = await ask({ brief: "Today: 2026-11-01", messages: conversation });
+    const answer = await ask({ brief: "Today: 2026-11-01", messages: chatMessages });
 
     expect(answer).toEqual({ status: 200, body: { reply: "The row hasn't gone up in 6 weeks." } });
     expect(ai.asked).toHaveLength(1);
     expect(ai.asked[0].instructions).toContain(CHAT_INSTRUCTIONS);
     expect(ai.asked[0].instructions).toContain("Today: 2026-11-01");
-    expect(ai.asked[0].messages).toEqual(conversation);
+    expect(ai.asked[0].messages).toEqual(chatMessages);
   });
 
   it("refuses requests that aren't a chat message, without asking the AI", async () => {
@@ -173,15 +173,15 @@ describe("trainer chat", () => {
     for (const body of [
       "not json",
       [],
-      { messages: conversation },
-      { brief: "  ", messages: conversation },
+      { messages: chatMessages },
+      { brief: "  ", messages: chatMessages },
       { brief: "Today: 2026-11-01" },
       { brief: "Today: 2026-11-01", messages: [] },
       { brief: "Today: 2026-11-01", messages: [{ role: "user", text: "  " }] },
       { brief: "Today: 2026-11-01", messages: [{ role: "coach", text: "Hi" }] },
       { brief: "Today: 2026-11-01", messages: [{ role: "user", text: 5 }] },
       { brief: "Today: 2026-11-01", messages: ["Hi"] },
-      { brief: "Today: 2026-11-01", messages: conversation.slice(0, 2) },
+      { brief: "Today: 2026-11-01", messages: chatMessages.slice(0, 2) },
     ]) {
       expect(await ask(body)).toMatchObject({ status: 400, body: { reason: "invalid" } });
     }
@@ -201,20 +201,20 @@ describe("trainer chat", () => {
   it("refuses the wrong token without asking the AI", async () => {
     const ai = standInAi();
     const ask = await startChat({ writer: ai.writer });
-    expect((await ask({ brief: "Today: 2026-11-01", messages: conversation }, "wrong")).status).toBe(401);
+    expect((await ask({ brief: "Today: 2026-11-01", messages: chatMessages }, "wrong")).status).toBe(401);
     expect(ai.asked).toEqual([]);
   });
 
   it("says so when the trainer isn't set up on the server", async () => {
     const ask = await startChat({});
-    expect(await ask({ brief: "Today: 2026-11-01", messages: conversation })).toMatchObject({
+    expect(await ask({ brief: "Today: 2026-11-01", messages: chatMessages })).toMatchObject({
       status: 501,
       body: { reason: "not-set-up" },
     });
   });
 
   it("passes on what went wrong with the AI, like trainer summaries", async () => {
-    const body = { brief: "Today: 2026-11-01", messages: conversation };
+    const body = { brief: "Today: 2026-11-01", messages: chatMessages };
     const cases: [AiResult, number, string][] = [
       [{ ok: false, reason: "too-large", detail: "too many tokens" }, 413, "too-large"],
       [{ ok: false, reason: "busy", detail: "503 high demand" }, 503, "busy"],
@@ -234,6 +234,6 @@ describe("trainer chat", () => {
         new Promise((resolve) => signal.addEventListener("abort", () => resolve({ ok: false, reason: "busy", detail: "timed out" }))),
     };
     const ask = await startChat({ writer: slow, timeoutMs: 50 });
-    expect(await ask({ brief: "Today: 2026-11-01", messages: conversation })).toMatchObject({ status: 503, body: { reason: "busy" } });
+    expect(await ask({ brief: "Today: 2026-11-01", messages: chatMessages })).toMatchObject({ status: 503, body: { reason: "busy" } });
   });
 });
