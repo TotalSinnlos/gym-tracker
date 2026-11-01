@@ -1,10 +1,10 @@
 // The service's web requests: PUT /backup stores a backup, GET /backup/latest returns the newest,
-// POST /trainer asks the AI for a session summary (see trainer.ts).
+// POST /trainer asks the AI for a trainer summary, POST /trainer/chat for a reply in the trainer chat (see trainer.ts).
 
 import { createHash, timingSafeEqual } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { BackupStore } from "./backupStore.ts";
-import { handleTrainer, type TrainerConfig } from "./trainer.ts";
+import { handleTrainer, handleTrainerChat, type TrainerConfig } from "./trainer.ts";
 
 export interface AppConfig {
   /** The secret the app sends as "Authorization: Bearer <token>". */
@@ -27,7 +27,7 @@ export function createHandler(config: AppConfig, store: BackupStore) {
         // The browser asks first whether the app may send a token; the CORS headers above answer it.
         return send(response, 204);
       }
-      if (path !== "/backup" && path !== "/backup/latest" && path !== "/trainer") {
+      if (!["/backup", "/backup/latest", "/trainer", "/trainer/chat"].includes(path)) {
         return send(response, 404, { error: "Not found." });
       }
       if (!hasToken(request, config.token)) return send(response, 401, { error: "Wrong or missing token." });
@@ -47,6 +47,9 @@ export function createHandler(config: AppConfig, store: BackupStore) {
       }
       if (path === "/trainer" && request.method === "POST") {
         return await handleTrainer(() => readBody(request, config.maxBytes), config.trainer, response);
+      }
+      if (path === "/trainer/chat" && request.method === "POST") {
+        return await handleTrainerChat(() => readBody(request, config.maxBytes), config.trainer, response);
       }
       return send(response, 405, { error: "Method not allowed." });
     } catch (error) {

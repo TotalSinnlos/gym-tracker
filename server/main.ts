@@ -5,7 +5,7 @@ import { createHandler } from "./app.ts";
 import { createBackupStore } from "./backupStore.ts";
 import { createGeminiWriter } from "./gemini.ts";
 import type { TrainerConfig } from "./trainer.ts";
-import { trainerInstructions } from "./trainerInstructions.ts";
+import { chatInstructions, trainerInstructions } from "./trainerInstructions.ts";
 
 const env = process.env;
 const token = env.BACKUP_TOKEN ?? "";
@@ -54,6 +54,7 @@ function setUpTrainer(): TrainerConfig | undefined {
   return {
     writer: createGeminiWriter({ apiKey, model }),
     instructions: trainerInstructions,
+    chatInstructions,
     maxChars: Number(env.TRAINER_MAX_CHARS ?? 600_000),
     timeoutMs: Number(env.TRAINER_TIMEOUT_MS ?? 90_000),
   };

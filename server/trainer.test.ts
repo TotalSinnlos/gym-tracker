@@ -3,11 +3,12 @@ import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
 import { createHandler } from "./app.ts";
 import type { BackupStore } from "./backupStore.ts";
-import type { AiResult, AiWriter } from "./trainer.ts";
+import type { AiMessage, AiResult, AiWriter } from "./trainer.ts";
 
 const TOKEN = "a-test-token-that-is-long-enough";
 const APP = "https://totalsinnlos.github.io";
 const INSTRUCTIONS = "Review the session.";
+const CHAT_INSTRUCTIONS = "Answer the lifter.";
 
 let server: Server | undefined;
 
@@ -18,10 +19,10 @@ afterEach(async () => {
 
 /** A stand-in AI that answers with `result` and remembers what it was asked. */
 function standInAi(result: AiResult = { ok: true, text: "A good session." }) {
-  const asked: { instructions: string; brief: string }[] = [];
+  const asked: { instructions: string; messages: AiMessage[] }[] = [];
   const writer: AiWriter = {
-    async write({ instructions, brief }) {
-      asked.push({ instructions, brief });
+    async write({ instructions, messages }) {
+      asked.push({ instructions, messages });
       return result;
     },
   };
@@ -39,14 +40,15 @@ async function start(options: { writer?: AiWriter; maxChars?: number; timeoutMs?
   const trainer = options.writer && {
     writer: options.writer,
     instructions: INSTRUCTIONS,
+    chatInstructions: CHAT_INSTRUCTIONS,
     maxChars: options.maxChars ?? 1000,
     timeoutMs: options.timeoutMs ?? 5000,
   };
   server = createServer(createHandler({ token: TOKEN, allowedOrigin: APP, maxBytes: 10_000, trainer }, noStore));
   await new Promise<void>((resolve) => server!.listen(0, "127.0.0.1", resolve));
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-  return async (body: unknown, token = TOKEN) => {
-    const response = await fetch(`${base}/trainer`, {
+  return async (body: unknown, token = TOKEN, path = "/trainer") => {
+    const response = await fetch(`${base}${path}`, {
       method: "POST",
       headers: { Origin: APP, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       body: typeof body === "string" ? body : JSON.stringify(body),
@@ -63,7 +65,10 @@ describe("trainer", () => {
     const answer = await ask({ brief: "This session: chest press 45 kg: 13, 13" });
 
     expect(answer).toEqual({ status: 200, body: { summary: "Chest press went up." } });
-    expect(ai.asked).toEqual([{ instructions: INSTRUCTIONS, brief: "This session: chest press 45 kg: 13, 13" }]);
+    // A trainer summary is a conversation of one message: the trainer brief.
+    expect(ai.asked).toEqual([
+      { instructions: INSTRUCTIONS, messages: [{ role: "user", text: "This session: chest press 45 kg: 13, 13" }] },
+    ]);
   });
 
   it("refuses requests without the right token and doesn't ask the AI", async () => {
@@ -133,5 +138,102 @@ describe("trainer", () => {
     const preflight = await fetch(`${base}/trainer`, { method: "OPTIONS", headers: { Origin: APP } });
     expect(preflight.status).toBe(204);
     expect(preflight.headers.get("Access-Control-Allow-Methods")).toContain("POST");
+  });
+});
+
+describe("trainer chat", () => {
+  /** Sends to POST /trainer/chat instead. */
+  const startChat = async (options: Parameters<typeof start>[0]) => {
+    const ask = await start(options);
+    return (body: unknown, token = TOKEN) => ask(body, token, "/trainer/chat");
+  };
+  const conversation = [
+    { role: "user", text: "Should I swap the leg press?" },
+    { role: "trainer", text: "Not yet: it went up 2 weeks ago." },
+    { role: "user", text: "And the row?" },
+  ];
+
+  it("returns the trainer's reply, with the chat instructions, the chat brief and the whole conversation reaching the AI", async () => {
+    const ai = standInAi({ ok: true, text: "The row hasn't gone up in 6 weeks." });
+    const ask = await startChat({ writer: ai.writer });
+
+    const answer = await ask({ brief: "Today: 2026-11-01", messages: conversation });
+
+    expect(answer).toEqual({ status: 200, body: { reply: "The row hasn't gone up in 6 weeks." } });
+    expect(ai.asked).toHaveLength(1);
+    expect(ai.asked[0].instructions).toContain(CHAT_INSTRUCTIONS);
+    expect(ai.asked[0].instructions).toContain("Today: 2026-11-01");
+    expect(ai.asked[0].messages).toEqual(conversation);
+  });
+
+  it("refuses requests that aren't a chat message, without asking the AI", async () => {
+    const ai = standInAi();
+    const ask = await startChat({ writer: ai.writer });
+
+    for (const body of [
+      "not json",
+      [],
+      { messages: conversation },
+      { brief: "  ", messages: conversation },
+      { brief: "Today: 2026-11-01" },
+      { brief: "Today: 2026-11-01", messages: [] },
+      { brief: "Today: 2026-11-01", messages: [{ role: "user", text: "  " }] },
+      { brief: "Today: 2026-11-01", messages: [{ role: "coach", text: "Hi" }] },
+      { brief: "Today: 2026-11-01", messages: [{ role: "user", text: 5 }] },
+      { brief: "Today: 2026-11-01", messages: ["Hi"] },
+      { brief: "Today: 2026-11-01", messages: conversation.slice(0, 2) },
+    ]) {
+      expect(await ask(body)).toMatchObject({ status: 400, body: { reason: "invalid" } });
+    }
+    expect(ai.asked).toEqual([]);
+  });
+
+  it("counts the chat brief and the messages together towards the size limit, without asking the AI when over it", async () => {
+    const ai = standInAi();
+    const ask = await startChat({ writer: ai.writer, maxChars: 100 });
+    const message = (length: number) => [{ role: "user", text: "x".repeat(length) }];
+
+    expect(await ask({ brief: "y".repeat(50), messages: message(50) })).toMatchObject({ status: 200 });
+    expect(await ask({ brief: "y".repeat(50), messages: message(51) })).toMatchObject({ status: 413, body: { reason: "too-large" } });
+    expect(ai.asked).toHaveLength(1);
+  });
+
+  it("refuses the wrong token without asking the AI", async () => {
+    const ai = standInAi();
+    const ask = await startChat({ writer: ai.writer });
+    expect((await ask({ brief: "Today: 2026-11-01", messages: conversation }, "wrong")).status).toBe(401);
+    expect(ai.asked).toEqual([]);
+  });
+
+  it("says so when the trainer isn't set up on the server", async () => {
+    const ask = await startChat({});
+    expect(await ask({ brief: "Today: 2026-11-01", messages: conversation })).toMatchObject({
+      status: 501,
+      body: { reason: "not-set-up" },
+    });
+  });
+
+  it("passes on what went wrong with the AI, like trainer summaries", async () => {
+    const body = { brief: "Today: 2026-11-01", messages: conversation };
+    const cases: [AiResult, number, string][] = [
+      [{ ok: false, reason: "too-large", detail: "too many tokens" }, 413, "too-large"],
+      [{ ok: false, reason: "busy", detail: "503 high demand" }, 503, "busy"],
+      [{ ok: false, reason: "failed", detail: "403 bad key" }, 502, "failed"],
+    ];
+    for (const [result, status, reason] of cases) {
+      const answer = await (await startChat({ writer: standInAi(result).writer }))(body);
+      expect(answer).toMatchObject({ status, body: { reason } });
+      expect(JSON.stringify(answer.body)).not.toContain(result.ok ? "" : result.detail);
+      await new Promise((resolve) => server?.close(resolve));
+    }
+  });
+
+  it("gives the AI a deadline", async () => {
+    const slow: AiWriter = {
+      write: ({ signal }) =>
+        new Promise((resolve) => signal.addEventListener("abort", () => resolve({ ok: false, reason: "busy", detail: "timed out" }))),
+    };
+    const ask = await startChat({ writer: slow, timeoutMs: 50 });
+    expect(await ask({ brief: "Today: 2026-11-01", messages: conversation })).toMatchObject({ status: 503, body: { reason: "busy" } });
   });
 });

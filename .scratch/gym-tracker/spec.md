@@ -139,6 +139,16 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 89. As a lifter, I want to have a session's summary written again after correcting it, or written for a session that has none, so that a typo or a missing summary doesn't leave me without useful advice.
 90. As a lifter, I want the trainer to take its earlier advice into account, so that it follows up instead of repeating itself.
 
+### Trainer chat
+
+91. As a lifter, I want to chat with the trainer about my training, with it knowing my whole history, its trainer summaries and my goals and notes, so that I can ask what a trainer summary doesn't answer (for example "should I swap the leg press?").
+92. As a lifter, I want to ask the trainer during a workout, with it seeing the session I'm doing, so that I can get help when a machine is taken or something hurts.
+93. As a lifter, I want the chat to be one ongoing conversation that remembers what we discussed, so that I don't have to explain things again.
+94. As a lifter, I want to ask about a trainer summary straight from it, so that I can follow up on its advice without retyping it.
+95. As a lifter, I want a message that couldn't be answered (offline, the AI busy) to stay in the chat with a way to try again, so that I don't lose what I wrote.
+96. As a lifter, I want to see when each message was written, so that I can tell old advice from new.
+97. As a lifter, I want to clear the chat, so that I can start over when it's gone stale.
+
 ## Implementation Decisions
 
 ### Platform
@@ -253,6 +263,16 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 - A summary is stored on its session, so it shows in History and is part of backups; deleting a session deletes its summary. Like the server backup, the core marks a summary as due when a session ends with the trainer on, and the app retries when it next opens, comes to the foreground or comes back online. A failure never blocks ending a session. A summary that arrives late simply appears on its session in History, with no notice elsewhere.
 - Editing a session doesn't rewrite its summary by itself. Each past session in History has a "Write again" button ("Write summary" if it has none), which works one session at a time and replaces the old summary. Turning the trainer on never writes summaries for older sessions by itself.
 - Turning the trainer off, or disconnecting the server, keeps existing summaries and cancels any that are still due, so nothing is sent afterwards.
+
+### Trainer chat
+
+- The **trainer chat** is one ongoing conversation with the trainer, stored on the phone. It uses the same trainer switch as trainer summaries: with the trainer off, the chat is kept but hidden, and nothing is sent. It's part of backups and restore. Sending a message doesn't start a server backup by itself; the chat goes along with the next one.
+- Each message goes to the home server (`POST /trainer/chat`) with a **chat brief** and the recent conversation, and the server returns the trainer's reply. The core builds the chat brief, as plain data so tests can check it without an AI: like a trainer brief, but as of now instead of as of one session. It has all sessions and the session in progress (if any), the worked-out facts for every active exercise, the exercises (with the weight for the next session), routines and progression rule, all trainer summaries with their dates, the goals and notes, and today's date.
+- Only the most recent 40 messages are sent; older ones stay on screen, and the chat brief says some were left out. There's no length limit on a message of the app's own: only the server's overall size limit applies. A chat brief the server calls too large is trimmed like a trainer brief, leaving out the oldest sessions' lines and keeping the per-exercise facts.
+- One message at a time: while a reply is on its way ("Thinking…", up to about a minute and a half), the user can type but not send. The user's message is stored straight away; the reply is added when it arrives, even if the user has moved to another screen. If it fails (offline, the AI busy, a server problem), the message stays, shown as not answered with the reason and "Try again". Nothing is retried automatically. A new message after an unanswered one is allowed, and the two are sent to the trainer together.
+- The trainer chat and trainer summaries are separate: the chat doesn't go into trainer briefs, and trainer summaries don't appear in the chat (the chat brief has them). For something that should last, such as an injury, the trainer suggests adding it to the goals and notes.
+- "Clear chat" empties the conversation after a confirmation; sessions, trainer summaries and the goals and notes stay. A reply that arrives after the chat was cleared is dropped.
+- The chat's instructions on the server follow the trainer summaries': a neutral, matter-of-fact tone with no persona, short answers (a few sentences, under about 120 words) unless the user asks for detail, plain text with "- " points, one short question back when a question is unclear, only the numbers in the chat brief, advice only (it can't change anything in the app), and nothing medical beyond avoiding what hurts. Replies are in English unless the user writes in another language. There are no topic limits: the user decides what's worth asking.
 - The CSV export has one row per set, with columns: date, routine, exercise, exercise type, set number, weight in kg (empty for bodyweight), reps. Skipped entries produce no rows.
 
 ### Screens
@@ -263,7 +283,10 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
 - **Overview**: all active exercises with their current weight (or "bodyweight"), the date of the last increase and a small trend line.
 - **Exercise page**: a weight-over-time graph (weighted exercises only), a reps-per-session graph (incomplete sessions shown as hollow points) and the exercise's settings.
 - **History**: a list of past sessions. Each opens a detail view where sets can be edited and the session deleted.
-- **Settings**: manage exercises (including archived ones), manage routines, back up, restore and export CSV. Once server backup is set up: the trainer switch, with a note on what gets sent, and the "Goals and notes" box.
+- **Settings**: manage exercises (including archived ones), manage routines, back up, restore and export CSV. Once server backup is set up: the trainer switch, with a note on what gets sent (including chat messages), and the "Goals and notes" box.
+- **Trainer** (a fifth area in the bottom navigation, only while the trainer is on): the trainer chat, newest message at the bottom, each with its time (e.g. "18:42") and a date line wherever the day changes; a text box and "Send"; "Thinking…" while waiting; "Try again" on an unanswered message; "Clear chat".
+- **Session screen**, while the trainer is on: a chat button opens the trainer chat, with a back arrow to the session.
+- **Trainer summaries** (end-of-session summary and History): an "Ask about this" button opens the trainer chat with the start of a message filled in, e.g. "About my Upper body session on Sat 31 Oct: ".
 - **History**: a list of past sessions. Each opens a detail view where sets can be edited and the session deleted. Exercises that earned a weight increase in that session are highlighted. The detail view shows the session's summary if it has one; with the trainer on, also a "Write again" (or "Write summary") button.
 - The visual design will be done separately in Claude Design. A design brief describing these screens will be written when the build reaches that point, and the result will be built into the app.
 
@@ -281,7 +304,8 @@ A web app I install from Chrome to my phone's home screen. It opens full screen 
   - resuming: a session interrupted after any command continues exactly where it left off when the core is reloaded from the same store, and a session older than 6 hours is reported as stale;
   - backup and restore: the data after a backup followed by a restore is identical to the data before, and a malformed or wrong-version file is rejected without touching existing data;
   - CSV export: the correct columns, one row per set, an empty weight for bodyweight, and no rows for skipped entries;
-  - AI trainer: what the trainer brief contains (including the worked-out facts per exercise, archived exercises, earlier summaries and the goals text), a brief for an older session leaving out everything after it, trimming the oldest lines when too large, a summary becoming due when a session ends with the trainer on (and not when it's off), a stored summary clearing it, a failure keeping it due, turning the trainer off cancelling due summaries, writing again replacing a summary, and summaries surviving backup and restore and being deleted with their session.
+  - AI trainer: what the trainer brief contains (including the worked-out facts per exercise, archived exercises, earlier summaries and the goals text), a brief for an older session leaving out everything after it, trimming the oldest lines when too large, a summary becoming due when a session ends with the trainer on (and not when it's off), a stored summary clearing it, a failure keeping it due, turning the trainer off cancelling due summaries, writing again replacing a summary, and summaries surviving backup and restore and being deleted with their session;
+  - trainer chat: what the chat brief contains (all sessions and the session in progress, facts for every active exercise, trainer summaries, goals and notes, today's date), only the recent 40 messages being sent and the brief saying so, trimming when too large, the user's message stored before the reply arrives, a failure leaving it unanswered and "Try again" answering it, an unanswered message and a new one sent together, no sending while the trainer is off or a reply is on its way, clearing (and a late reply being dropped), and the chat surviving backup and restore.
 - The quality of the trainer's advice is judged by the user on real sessions, not by tests.
 - Screens, charts, installing to the home screen, sharing to Drive, offline behaviour and update timing are checked by hand on the phone.
 - There's no prior art: the repo is empty, so this spec sets up the test conventions.

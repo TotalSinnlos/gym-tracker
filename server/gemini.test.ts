@@ -14,7 +14,7 @@ function standInFetch(status: number, body: unknown) {
 const ask = (fakeFetch: typeof fetch) =>
   createGeminiWriter({ apiKey: "test-key", model: "gemini-test", fetch: fakeFetch }).write({
     instructions: "Review the session.",
-    brief: "Chest press 45 kg: 13, 13",
+    messages: [{ role: "user", text: "Chest press 45 kg: 13, 13" }],
     signal: new AbortController().signal,
   });
 
@@ -31,6 +31,28 @@ describe("Gemini", () => {
     expect(JSON.parse(init.body as string)).toEqual({
       systemInstruction: { parts: [{ text: "Review the session." }] },
       contents: [{ role: "user", parts: [{ text: "Chest press 45 kg: 13, 13" }] }],
+    });
+  });
+
+  it("sends a conversation with the trainer's messages as the model's own turns", async () => {
+    const { fakeFetch, requests } = standInFetch(200, { candidates: [{ content: { parts: [{ text: "Fine." }] } }] });
+    await createGeminiWriter({ apiKey: "test-key", model: "gemini-test", fetch: fakeFetch }).write({
+      instructions: "Answer the lifter.",
+      messages: [
+        { role: "user", text: "Swap the leg press?" },
+        { role: "trainer", text: "Not yet." },
+        { role: "user", text: "Why?" },
+      ],
+      signal: new AbortController().signal,
+    });
+
+    expect(JSON.parse(requests[0].init.body as string)).toEqual({
+      systemInstruction: { parts: [{ text: "Answer the lifter." }] },
+      contents: [
+        { role: "user", parts: [{ text: "Swap the leg press?" }] },
+        { role: "model", parts: [{ text: "Not yet." }] },
+        { role: "user", parts: [{ text: "Why?" }] },
+      ],
     });
   });
 

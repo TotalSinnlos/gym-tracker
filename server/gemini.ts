@@ -8,7 +8,7 @@ export function createGeminiWriter(options: { apiKey: string; model: string; fet
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(options.model)}:generateContent`;
 
   return {
-    async write({ instructions, brief, signal }): Promise<AiResult> {
+    async write({ instructions, messages, signal }): Promise<AiResult> {
       let response: Response;
       try {
         response = await doFetch(url, {
@@ -16,7 +16,8 @@ export function createGeminiWriter(options: { apiKey: string; model: string; fet
           headers: { "x-goog-api-key": options.apiKey, "Content-Type": "application/json" },
           body: JSON.stringify({
             systemInstruction: { parts: [{ text: instructions }] },
-            contents: [{ role: "user", parts: [{ text: brief }] }],
+            // Gemini calls the AI's own turns "model".
+            contents: messages.map((m) => ({ role: m.role === "trainer" ? "model" : "user", parts: [{ text: m.text }] })),
           }),
           signal,
         });
@@ -35,7 +36,7 @@ export function createGeminiWriter(options: { apiKey: string; model: string; fet
         const text = parts.filter((part) => !part.thought).map((part) => part.text ?? "").join("").trim();
         if (text) return { ok: true, text };
         const why = data.candidates?.[0]?.finishReason ?? data.promptFeedback?.blockReason ?? "no text";
-        return { ok: false, reason: "failed", detail: `Gemini sent no summary (${why}).` };
+        return { ok: false, reason: "failed", detail: `Gemini sent no text (${why}).` };
       } catch {
         return { ok: false, reason: "failed", detail: "Gemini's answer wasn't readable." };
       }
