@@ -17,7 +17,7 @@ export function TrainerSection() {
           <div className="li">
             <span className="li-m">
               <span className="li-t">AI trainer</span>
-              <span className="li-s">Set up server backup first: the trainer goes through your server.</span>
+              <span className="li-s">Needs server backup</span>
             </span>
           </div>
         </div>
@@ -27,7 +27,6 @@ export function TrainerSection() {
             <label className="li">
               <span className="li-m">
                 <span className="li-t">Summary after each session</span>
-                <span className="li-s">An AI looks at how the session went, given your history</span>
               </span>
               <input
                 type="checkbox"
@@ -39,8 +38,7 @@ export function TrainerSection() {
           </div>
           <GoalsForm key={trainer.goals} saved={trainer.goals} onSave={(goals) => run(() => core.setTrainerGoals(goals))} />
           <p className="hint">
-            With the trainer on, your training, these notes and your chat messages go to Google Gemini through your
-            server. It never changes your routines or weights.
+            Your training, these notes and your chat messages are sent to Google Gemini.
           </p>
         </>
       )}
@@ -72,7 +70,7 @@ function GoalsForm({ saved, onSave }: { saved: string; onSave: (goals: string) =
           className="in area"
           value={goals}
           onChange={(e) => setGoals(e.target.value)}
-          placeholder="For example: build muscle, sore left shoulder with overhead pressing"
+          placeholder="e.g. build muscle, sore left shoulder"
           rows={3}
         />
       </label>

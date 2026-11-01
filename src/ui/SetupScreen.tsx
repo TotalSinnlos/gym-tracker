@@ -67,7 +67,7 @@ export function SetupScreen() {
       <div className="setup-head setup-head-2">
         <div>
           <h1 className="h1">Your routine</h1>
-          <div className="setup-step">Step 2 of 2: add your exercises in the order you usually do them.</div>
+          <div className="setup-step">Step 2 of 2: add exercises in your usual order.</div>
         </div>
         <div className="steps" aria-hidden="true">
           <div className="d" />

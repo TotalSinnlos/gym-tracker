@@ -790,7 +790,7 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
      * Off keeps the summaries already written and cancels those still due, so nothing is sent afterwards.
      */
     async setTrainerEnabled(enabled: boolean) {
-      if (enabled && !data.serverBackup) throw new CoreError("Set up server backup first: the trainer goes through your server");
+      if (enabled && !data.serverBackup) throw new CoreError("Set up server backup first");
       const trainer = { goals: "", ...data.settings.trainer, enabled };
       await commit({ ...data, settings: { ...data.settings, trainer }, trainerDue: enabled ? data.trainerDue : [] });
     },

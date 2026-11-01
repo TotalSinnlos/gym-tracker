@@ -58,7 +58,7 @@ export function SummaryScreen({ result, onDone }: { result: EndSessionResult; on
         ) : (
           <div className="steady">
             <b>Steady session.</b>{" "}
-            <span className="mut">Same weights next time. Beat every set by a rep and they go up.</span>
+            <span className="mut">Same weights next time.</span>
           </div>
         )}
         {special && <div className="sec tight">Exercises</div>}

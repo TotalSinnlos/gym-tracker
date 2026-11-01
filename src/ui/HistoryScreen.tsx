@@ -52,7 +52,6 @@ export function HistoryScreen() {
               <span />
             </div>
             <h2 className="nothing-t">No sessions yet.</h2>
-            <p className="body mut">They'll appear here once you end one.</p>
           </div>
         ) : (
           months.map((month) => (
@@ -120,14 +119,13 @@ function SessionDetail({ session, onBack }: { session: Session; onBack: () => vo
           <h1 className="detail-t">{formatDate(session.startedAt)}</h1>
           <div className="detail-sub">
             {session.routineName} · {doneCount(session)} of {session.entries.length} done
-            {!locked && " · tap a set to correct it"}
           </div>
         </div>
 
         {locked && (
           <div className="banner" role="status">
             <Icon name="lock" />
-            <span>End the running session to correct or delete past sessions.</span>
+            <span>Locked while a session is running.</span>
           </div>
         )}
 
@@ -237,8 +235,7 @@ function CorrectSet({ sessionId, entry, index, onClose }: { sessionId: string; e
         recalculates &&
         currentWeight !== undefined && (
           <>
-            This is {entry.exerciseName}'s latest result, so saving also updates its current weight (now{" "}
-            {formatKg(currentWeight)}).
+            Also updates its current weight (now {formatKg(currentWeight)}).
           </>
         )
       }

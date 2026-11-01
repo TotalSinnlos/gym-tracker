@@ -31,8 +31,8 @@ export function useExerciseActions(exercise: Exercise, onDone: () => void) {
         </div>
         {(confirming === "archive" || routineNames.length > 0) && (
           <div className="body mut">
-            {confirming === "archive" && "It's hidden and its history is kept. "}
-            {routineNames.length > 0 && "It will be taken out of these routines:"}
+            {confirming === "archive" && "Its history is kept. "}
+            {routineNames.length > 0 && "It's removed from:"}
           </div>
         )}
         {routineNames.length > 0 && (
@@ -79,7 +79,6 @@ export function ArchivedExercises() {
           </div>
         ))}
       </div>
-      <p className="hint">Unarchived exercises come back without a routine; add them to one above.</p>
       {error && (
         <p className="errmsg section-msg">
           <Icon name="error" />

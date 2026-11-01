@@ -90,7 +90,7 @@ export function RoutineEditor({ routineId, detailed = false, withName = true }: 
                   </span>
                   <span className="li-m">
                     <span className="li-t">{exercise.name}</span>
-                    {again && <span className="li-s again-t">Already in routine, adds it again</span>}
+                    {again && <span className="li-s again-t">Already in routine</span>}
                   </span>
                 </button>
               );

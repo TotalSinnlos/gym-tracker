@@ -22,7 +22,6 @@ export function ServerBackupCard() {
     detail = server.lastBackupAt && formatDateTime(server.lastBackupAt);
   } else if (server.lastError) {
     status = "Not backed up yet";
-    detail = "The app will try again later.";
   } else {
     status = "Waiting to back up";
   }

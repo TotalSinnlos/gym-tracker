@@ -181,7 +181,7 @@ function ExerciseDetails({ exercise, onBack, onEdit }: { exercise: Exercise; onB
         )}
 
         {anyIncomplete && history.reps.length >= 2 && (
-          <p className="note">Hollow points are sessions where the exercise was left incomplete.</p>
+          <p className="note">Hollow points: left incomplete.</p>
         )}
 
         <div>

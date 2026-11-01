@@ -30,7 +30,6 @@ export function SessionScreen({ onLeave, onOpenChat, onEnded }: Props) {
 
   if (!session) return null;
   const pending = core.pendingCount();
-  const notDone = session.entries.filter((e) => e.state === "pending");
 
   async function end() {
     let result: EndSessionResult | undefined;
@@ -81,12 +80,9 @@ export function SessionScreen({ onLeave, onOpenChat, onEnded }: Props) {
       {confirmingEnd && (
         <>
           <div className="scrim" onClick={() => setConfirmingEnd(false)} />
-          <div className="dlg" role="alertdialog" aria-labelledby="end-title" aria-describedby="end-body">
+          <div className="dlg" role="alertdialog" aria-labelledby="end-title">
             <div className="dlg-t" id="end-title">
               {pending} {pending === 1 ? "exercise" : "exercises"} not done. End anyway?
-            </div>
-            <div className="dlg-b" id="end-body">
-              {joinNames(notDone.map((e) => e.exerciseName))} {pending === 1 ? "is" : "are"} saved as incomplete or skipped.
             </div>
             <button className="btn lg out" onClick={() => setConfirmingEnd(false)}>
               Keep going
@@ -99,11 +95,6 @@ export function SessionScreen({ onLeave, onOpenChat, onEnded }: Props) {
       )}
     </main>
   );
-}
-
-/** "A", "A and B", "A, B and C". */
-function joinNames(names: string[]): string {
-  return names.length <= 1 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
 function CurrentExercise({ entry, enterFrom }: { entry: SessionEntry; enterFrom: string }) {
@@ -309,11 +300,11 @@ function CurrentExercise({ entry, enterFrom }: { entry: SessionEntry; enterFrom:
                       <span className={partly ? "nx part" : "nx"}>{partly ? "½" : position(next.id)}</span>
                       <span className="li-m">
                         <span className="li-t">{next.exerciseName}</span>
-                        <span className={partly ? "li-s part" : "li-s"}>
-                          {partly
-                            ? `${next.loggedSets.length} of ${next.sets} sets logged · tap to continue`
-                            : "Tap to do this now"}
-                        </span>
+                        {partly && (
+                          <span className="li-s part">
+                            {next.loggedSets.length} of {next.sets} sets logged
+                          </span>
+                        )}
                       </span>
                     </button>
                   );
@@ -333,7 +324,7 @@ function CurrentExercise({ entry, enterFrom }: { entry: SessionEntry; enterFrom:
   );
 }
 
-/** Finished exercises, each tappable to reopen and correct it. `withWeight` adds the weight instead of the hint. */
+/** Finished exercises, each tappable to reopen and correct it. `withWeight` adds the weight. */
 function FinishedList({ entries, withWeight = false }: { entries: SessionEntry[]; withWeight?: boolean }) {
   const core = useCore();
   const { run } = useAction();
@@ -347,12 +338,8 @@ function FinishedList({ entries, withWeight = false }: { entries: SessionEntry[]
           <span className="li-m">
             <span className="li-t">{entry.exerciseName}</span>
             <span className="li-s num">
-              {formatReps(entry)} reps ·{" "}
-              {withWeight
-                ? entry.sessionWeight === undefined
-                  ? "bodyweight"
-                  : formatKg(entry.sessionWeight)
-                : "tap to correct"}
+              {formatReps(entry)} reps
+              {withWeight && ` · ${entry.sessionWeight === undefined ? "bodyweight" : formatKg(entry.sessionWeight)}`}
             </span>
           </span>
         </button>
@@ -369,7 +356,7 @@ function AllDone() {
         <Badge />
         <div className="hero-t">All exercises done!</div>
       </div>
-      <div className="sec">Finished · tap one to correct it</div>
+      <div className="sec">Finished</div>
       <FinishedList entries={core.finishedEntries()} withWeight />
     </section>
   );

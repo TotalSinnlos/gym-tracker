@@ -36,7 +36,7 @@ export function StaleSessionPrompt({ onEnded, onContinue }: Props) {
           <span className="day-m">{started.toLocaleDateString("en-GB", { month: "short" })}</span>
         </div>
         <h1 className="prompt-t">Finish your session from {formatDay(session.startedAt)}?</h1>
-        <p className="prompt-b">{session.routineName} is still running. End it to save it under that day.</p>
+        <p className="prompt-b">{session.routineName} is still running.</p>
         {error && <p className="errmsg">{error}</p>}
       </div>
       <div className="dock prompt-actions">

@@ -42,13 +42,10 @@ export function TrainerScreen({ onBack }: { onBack?: () => void }) {
         </div>
 
         {!enabled ? (
-          <p className="body mut">Turn on the trainer in settings to chat with it.</p>
+          <p className="body mut">Turn on the trainer in settings.</p>
         ) : messages.length === 0 && !chat.sending ? (
           <div className="nothing area-empty">
             <h2 className="nothing-t">Ask your trainer.</h2>
-            <p className="body mut">
-              For example why an exercise has stalled, or what to do when a machine is taken.
-            </p>
           </div>
         ) : (
           <div className="chat" aria-live="polite">
@@ -57,7 +54,7 @@ export function TrainerScreen({ onBack }: { onBack?: () => void }) {
             ))}
             {chat.sending ? (
               <div className="msg ai wait">
-                Thinking…<span className="mut"> This can take up to a minute and a half.</span>
+                Thinking…
               </div>
             ) : (
               unanswered && (
@@ -85,7 +82,6 @@ export function TrainerScreen({ onBack }: { onBack?: () => void }) {
             <div className="dlg-t" id="clear-chat-title">
               Clear the chat?
             </div>
-            <div className="dlg-b">Your sessions, summaries and goals and notes stay.</div>
             <button className="btn lg out" onClick={() => setClearing(false)}>
               Keep it
             </button>

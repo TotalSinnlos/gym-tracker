@@ -81,7 +81,6 @@ export function RoutineScreen({ routineId, onClose }: { routineId: string; onClo
         <h1 className="page-t flush">Edit routine</h1>
         <div>
           <RoutineEditor routineId={routineId} />
-          <p className="hint">Changes apply from the next session.</p>
         </div>
         <div>
           <button className="btn dngo w" disabled={problem !== null} onClick={() => setConfirming(true)}>

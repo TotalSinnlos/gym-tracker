@@ -77,7 +77,6 @@ export function ServerBackupSection() {
           <Icon name="plus" />
           <span className="li-m">
             <span className="li-t">Set up server backup</span>
-            <span className="li-s">For example a home server reached through Tailscale</span>
           </span>
         </button>
       </div>
@@ -120,14 +119,11 @@ export function ServerBackupSection() {
             <Icon name="error" />
             <span>
               {server.lastError
-                ? `The last backup failed: ${server.lastError}. The app tries again whenever it's open.`
-                : "Changes from over a day ago haven't reached your server. Turn on Tailscale to send them."}
+                ? `Last backup failed: ${server.lastError}.`
+                : "Not backed up for over a day. Is Tailscale on?"}
             </span>
           </div>
         )}
-        <p className="hint">
-          The app backs up by itself after each session. Removing the server keeps the backups on it.
-        </p>
       </>
     );
   }
@@ -188,7 +184,7 @@ function ConnectForm({ currentUrl, busy, onSubmit, onCancel }: ConnectFormProps)
           type="password"
           value={token}
           onChange={(e) => setToken(e.target.value)}
-          placeholder={currentUrl ? "Leave empty to keep the current one" : undefined}
+          placeholder={currentUrl ? "Leave empty to keep it" : undefined}
           autoComplete="off"
         />
       </label>

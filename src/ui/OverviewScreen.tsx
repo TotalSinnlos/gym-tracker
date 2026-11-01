@@ -25,7 +25,7 @@ export function OverviewScreen({ onOpenExercise }: { onOpenExercise: (id: string
           <div className="nothing area-empty">
             <Icon name="progress" />
             <h2 className="nothing-t">No exercises yet.</h2>
-            <p className="body mut">Add some in settings and your trends will show up here.</p>
+            <p className="body mut">Add some in settings.</p>
           </div>
         ) : (
           <div className="list">

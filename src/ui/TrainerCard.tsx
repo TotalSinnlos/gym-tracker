@@ -36,7 +36,7 @@ export function TrainerCard({ sessionId, inHistory = false }: { sessionId: strin
   if (writing) {
     body = (
       <p className="trainer-wait">
-        Writing your summary…<span className="mut"> This can take up to a minute.</span>
+        Writing your summary…
       </p>
     );
   } else if (status.state === "written") {
@@ -53,7 +53,7 @@ export function TrainerCard({ sessionId, inHistory = false }: { sessionId: strin
         {status.lastError === null
           ? "Waiting to write your summary…"
           : status.temporary
-            ? "Your summary will arrive once you're online and the AI has time."
+            ? "Your summary will come later."
             : `No summary yet: ${status.lastError}.`}
       </p>
     );

@@ -63,7 +63,6 @@ export function HomeScreen({ onOpenSession }: { onOpenSession: () => void }) {
           <>
             <div className="home-pick">
               <h1 className="h1 big-title">Start a session</h1>
-              <div className="mut">Pick a routine</div>
             </div>
             {routines.map((routine, index) => {
               const exercises = core.routineExercises(routine.id);

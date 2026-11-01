@@ -41,7 +41,6 @@ export function ExportSection() {
           <Icon name="table" />
           <span className="li-m">
             <span className="li-t">Export to spreadsheet</span>
-            <span className="li-s">For Google Sheets or Excel</span>
           </span>
         </button>
       </div>
