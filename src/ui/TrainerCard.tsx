@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useAutoTrainer } from "./autoTrainer";
+import { NavigateContext } from "./BottomNav";
 import { useCore } from "./CoreContext";
-import { formatDateTime } from "./format";
+import { formatDateTime, formatDayShort } from "./format";
 import { Icon } from "./icons";
+import { useTrainerChat } from "./trainerChat";
 
 /**
  * A session's trainer summary: being written, written, or waiting after a failure. In History it also
@@ -11,6 +13,8 @@ import { Icon } from "./icons";
 export function TrainerCard({ sessionId, inHistory = false }: { sessionId: string; inHistory?: boolean }) {
   const core = useCore();
   const { writingId, write } = useAutoTrainer();
+  const chat = useTrainerChat();
+  const navigate = useContext(NavigateContext);
   const [error, setError] = useState<string | null>(null);
   const status = core.trainerSummaryStatus(sessionId);
   const { enabled } = core.trainer();
@@ -18,6 +22,13 @@ export function TrainerCard({ sessionId, inHistory = false }: { sessionId: strin
 
   async function writeNow() {
     setError(await write(sessionId));
+  }
+
+  /** Opens the trainer chat with the start of a message about this session. */
+  function askAboutIt() {
+    const session = core.getSession(sessionId);
+    chat.setDraft(`About my ${session.routineName} session on ${formatDayShort(session.startedAt)}: `);
+    navigate("trainer");
   }
 
   let body;
@@ -31,7 +42,7 @@ export function TrainerCard({ sessionId, inHistory = false }: { sessionId: strin
   } else if (status.state === "written") {
     body = (
       <>
-        <SummaryText text={status.summary.text} />
+        <TrainerText text={status.summary.text} />
         {inHistory && <div className="li-s">Written {formatDateTime(status.summary.writtenAt)}</div>}
       </>
     );
@@ -58,10 +69,19 @@ export function TrainerCard({ sessionId, inHistory = false }: { sessionId: strin
     <section className="card trainer" aria-live="polite">
       <div className="trainer-h">Trainer</div>
       {body}
-      {action && !writing && (
-        <button className="btn sm out" onClick={action.run} disabled={writingId !== null}>
-          {action.label}
-        </button>
+      {!writing && (action || (enabled && status.state === "written")) && (
+        <div className="trainer-actions">
+          {enabled && status.state === "written" && (
+            <button className="btn sm out" onClick={askAboutIt}>
+              Ask about this
+            </button>
+          )}
+          {action && (
+            <button className="btn sm out" onClick={action.run} disabled={writingId !== null}>
+              {action.label}
+            </button>
+          )}
+        </div>
       )}
       {error && !writing && (
         <p className="errmsg" role="alert">
@@ -75,8 +95,8 @@ export function TrainerCard({ sessionId, inHistory = false }: { sessionId: strin
 
 const LABEL = /^(Going well|Keep an eye on|Suggestion):\s*(.*)$/;
 
-/** The summary as written, with its "- " points as a list and its part names in bold. */
-function SummaryText({ text }: { text: string }) {
+/** The trainer's text as written (a trainer summary or a chat reply): "- " points as a list, a summary's part names in bold. */
+export function TrainerText({ text }: { text: string }) {
   const blocks: ({ kind: "p"; text: string } | { kind: "ul"; items: string[] })[] = [];
   for (const raw of text.split("\n")) {
     const line = raw.trim();

@@ -106,6 +106,9 @@ function checkData(data: AppData) {
   }
   if (data.activeSession !== null && !isSession(data.activeSession, true)) invalidBackup("the running session is damaged");
   if (!data.sessions.every((s) => isSession(s, false))) invalidBackup("a saved session is damaged");
+  const isMessage = (m: unknown) =>
+    isObject(m) && isText(m.id) && (m.role === "user" || m.role === "trainer") && typeof m.text === "string" && isTime(m.at);
+  if (!Array.isArray(data.trainerChat) || !data.trainerChat.every(isMessage)) invalidBackup("the trainer chat is damaged");
 }
 
 function checkExercise(exercise: unknown): asserts exercise is Exercise {

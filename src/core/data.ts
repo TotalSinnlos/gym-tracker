@@ -12,6 +12,7 @@ export const emptyData = (): AppData => ({
   sessions: [],
   serverBackup: null,
   trainerDue: [],
+  trainerChat: [],
 });
 
 /** Fills in fields added after the data was first saved. */

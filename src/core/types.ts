@@ -108,6 +108,26 @@ export interface AppData {
   serverBackup: ServerBackup | null;
   /** Sessions whose trainer summary is still to be written, oldest first. Never part of a backup file. */
   trainerDue: TrainerDue[];
+  /** The trainer chat, oldest message first. Part of backups. */
+  trainerChat: ChatMessage[];
+}
+
+/** One message of the trainer chat. */
+export interface ChatMessage {
+  id: string;
+  /** "user": the lifter. "trainer": the trainer's reply. */
+  role: "user" | "trainer";
+  text: string;
+  /** ISO time it was sent or arrived. */
+  at: string;
+}
+
+/** What `trainerChat()` tells the screens. */
+export interface TrainerChat {
+  /** Oldest first. */
+  messages: ChatMessage[];
+  /** The last message is the user's and has no reply. */
+  unanswered: boolean;
 }
 
 export interface TrainerDue {

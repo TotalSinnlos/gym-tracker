@@ -102,3 +102,31 @@ describe("the HTTP trainer", () => {
     expect(await problemOf(createHttpBackupServer().summarize(connection, "brief"))).toMatchObject({ problem: "aiFailed" });
   });
 });
+
+describe("the HTTP trainer chat", () => {
+  const messages = [{ role: "user" as const, text: "Swap the leg press?" }];
+
+  it("sends the chat brief and the messages with POST and the token, and returns the reply", async () => {
+    const requests = answer(() => new Response('{"reply":" Not yet. "}', { status: 200 }));
+    expect(await createHttpBackupServer().chat(connection, "Today: 2026-11-01", messages)).toBe("Not yet.");
+
+    expect(requests[0].url).toBe("https://home.example.ts.net/trainer/chat");
+    expect(requests[0].init.method).toBe("POST");
+    expect(requests[0].init.headers).toMatchObject({ Authorization: "Bearer a-token-that-is-long-enough" });
+    expect(JSON.parse(requests[0].init.body as string)).toEqual({ brief: "Today: 2026-11-01", messages });
+  });
+
+  it("tells the core what went wrong, like trainer summaries", async () => {
+    for (const [status, problem] of [
+      [413, "tooLarge"],
+      [501, "notSetUp"],
+      [502, "aiFailed"],
+      [503, "busy"],
+    ] as const) {
+      answer(() => new Response("{}", { status }));
+      expect(await problemOf(createHttpBackupServer().chat(connection, "brief", messages))).toMatchObject({ problem });
+    }
+    answer(() => new Response("{}", { status: 200 }));
+    expect(await problemOf(createHttpBackupServer().chat(connection, "brief", messages))).toMatchObject({ problem: "aiFailed" });
+  });
+});

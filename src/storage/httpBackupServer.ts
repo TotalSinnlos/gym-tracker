@@ -46,17 +46,26 @@ export function createHttpBackupServer(): BackupServer & TrainerServer {
     },
 
     async summarize(connection, brief) {
-      const request = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ brief }) };
-      const response = await call(connection, "/trainer", request, TRAINER_TIMEOUT_MS);
-      if (!response.ok) {
-        const problem = TRAINER_PROBLEMS[response.status];
-        throw problem ? new ServerError(problem) : new ServerError("failed", response.status);
-      }
-      const { summary } = await response.json();
-      if (typeof summary !== "string" || summary.trim() === "") throw new ServerError("aiFailed");
-      return summary.trim();
+      return askTrainer(connection, "/trainer", { brief }, "summary");
+    },
+
+    async chat(connection, brief, messages) {
+      return askTrainer(connection, "/trainer/chat", { brief, messages }, "reply");
     },
   };
+
+  /** Posts `body` to one of the trainer's addresses and returns the text in the answer's `field`. */
+  async function askTrainer(connection: ServerConnection, path: string, body: object, field: "summary" | "reply") {
+    const request = { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) };
+    const response = await call(connection, path, request, TRAINER_TIMEOUT_MS);
+    if (!response.ok) {
+      const problem = TRAINER_PROBLEMS[response.status];
+      throw problem ? new ServerError(problem) : new ServerError("failed", response.status);
+    }
+    const text = (await response.json())[field];
+    if (typeof text !== "string" || text.trim() === "") throw new ServerError("aiFailed");
+    return text.trim();
+  }
 }
 
 /** Whether Chrome's "local network access" permission was refused. False where Chrome can't tell. */

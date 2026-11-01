@@ -58,6 +58,9 @@ export const formatDay = (iso: string) =>
   new Date(iso).toLocaleDateString(LOCALE, { weekday: "long", day: "numeric", month: "long" });
 
 /** "24 Oct 2026, 18:30" */
+/** "18:42" */
+export const formatTime = (iso: string) => new Date(iso).toLocaleTimeString(LOCALE, { hour: "2-digit", minute: "2-digit" });
+
 export const formatDateTime = (iso: string) => new Date(iso).toLocaleString(LOCALE, { dateStyle: "medium", timeStyle: "short" });
 
 /** "2026-10-24", or "2026-10-24-1830" with the time, for file names. */

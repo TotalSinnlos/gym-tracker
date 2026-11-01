@@ -39,8 +39,8 @@ export function TrainerSection() {
           </div>
           <GoalsForm key={trainer.goals} saved={trainer.goals} onSave={(goals) => run(() => core.setTrainerGoals(goals))} />
           <p className="hint">
-            With the trainer on, your sessions, history, earlier summaries and these notes are sent to an AI (Google
-            Gemini) through your server. Its advice is only text: it never changes your routines or weights.
+            With the trainer on, your sessions, history, earlier summaries, these notes and your chat messages are sent
+            to an AI (Google Gemini) through your server. Its advice is only text: it never changes your routines or weights.
           </p>
         </>
       )}

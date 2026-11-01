@@ -782,7 +782,9 @@ button.li:active {
   max-width: var(--max-width);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Four areas, or five while the trainer is on. */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   height: 100%;
 }
 
@@ -2577,6 +2579,111 @@ button.li:active {
 
 .trainer .errmsg {
   align-self: stretch;
+}
+
+.trainer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- Trainer chat ---------- */
+
+.chat-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.chat-head .btn {
+  margin-right: -14px;
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-day {
+  align-self: center;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.msg {
+  max-width: 88%;
+  padding: 12px 16px 8px;
+  border-radius: 22px;
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* The lifter's own messages: on the right, amber tint, line breaks kept. */
+.msg.me {
+  align-self: flex-end;
+  background: var(--amber-soft);
+  border-bottom-right-radius: 8px;
+  white-space: pre-wrap;
+}
+
+.msg.ai {
+  align-self: flex-start;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 8px;
+}
+
+.msg.wait {
+  padding-bottom: 12px;
+}
+
+.msg-time {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ink-2);
+  text-align: right;
+  white-space: normal;
+}
+
+.chat-unanswered {
+  align-self: flex-end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-width: 88%;
+}
+
+.chat-unanswered .errmsg {
+  margin: 0;
+}
+
+.chat-compose {
+  gap: 6px;
+}
+
+.chat-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Grows with what's typed (where the browser can), up to about six lines, then scrolls. */
+.in.area.chat-in {
+  flex: 1;
+  min-height: 56px;
+  max-height: 168px;
+  resize: none;
+  field-sizing: content;
+}
+
+.chat-send {
+  flex: none;
 }
 
 /* An on/off switch: a checkbox drawn as a track with a knob. */

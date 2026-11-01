@@ -37,7 +37,7 @@ export function buildTrainerBrief(data: AppData, session: Session, leaveOut = 0)
   const previous = before.at(-1);
 
   const parts = [
-    "Progression rule: each exercise has a target rep range. When every set reaches at least one rep above the top of the range, the weight goes up by the exercise's increment next time. Skipped and incomplete exercises keep their weight. Below range means a set had fewer reps than the bottom of the range.",
+    PROGRESSION_RULE,
     `Goals and notes: ${goals === "" ? "(none)" : goals}`,
     [
       `This session (${localDate(session.startedAt)}, routine "${session.routineName}"):`,
@@ -46,14 +46,9 @@ export function buildTrainerBrief(data: AppData, session: Session, leaveOut = 0)
     `Training frequency: ${recent} ${recent === 1 ? "session" : "sessions"} in the 4 weeks up to this one${
       previous ? `; the previous session was ${ago(previous.startedAt, session.startedAt)} before.` : "; this is the first session."
     }`,
-    ["Facts per exercise in this session:", ...sessionExercises.map((e) => `- ${facts(upTo, session, e)}`)].join("\n"),
+    ["Facts per exercise in this session:", ...sessionExercises.map((e) => `- ${facts(upTo, session, e, session.startedAt)}`)].join("\n"),
     ["Exercises:", ...exercises.map((e) => `- ${exerciseLine(e, upTo)}`)].join("\n"),
-    [
-      "Routines (as they are now):",
-      ...data.routines.map(
-        (r) => `- ${r.name}: ${r.exerciseIds.map((id) => data.exercises.find((e) => e.id === id)?.name ?? "?").join(", ") || "(empty)"}`,
-      ),
-    ].join("\n"),
+    routinesPart(data),
     [
       "Earlier sessions, oldest first:",
       ...(leaveOut > 0 && before.length > 0 ? [`(${before.length - listed.length} older sessions left out)`] : []),
@@ -82,11 +77,14 @@ function entryLine(data: AppData, session: Session, entry: SessionEntry): string
   return `${name}: ${setsText(entry)} (${notes.join(", ")})`;
 }
 
-/** The facts the AI should rely on instead of counting itself. */
-function facts(upTo: Session[], session: Session, exercise: Exercise): string {
+/**
+ * The facts the AI should rely on instead of counting itself: as of `session` for a trainer brief, or
+ * without one as of `asOf`, for the chat brief.
+ */
+function facts(upTo: Session[], session: Session | undefined, exercise: Exercise, asOf: string): string {
   const results = resultsOf(upTo, exercise.id);
   const parts: string[] = [];
-  const current = decidingEntry(session, exercise.id, ["done", "incomplete"]);
+  const current = session && decidingEntry(session, exercise.id, ["done", "incomplete"]);
   // Skipped this session: the facts are about the weight it was last done at.
   const latest = current ?? results.at(-1)?.entry;
 
@@ -97,15 +95,16 @@ function facts(upTo: Session[], session: Session, exercise: Exercise): string {
     let start = weighted.length - 1;
     while (start > 0 && weighted[start - 1].entry.sessionWeight! >= weight) start--;
     const atWeight = weighted.slice(start).filter((r) => r.entry.sessionWeight === weight);
-    if (start > 0 && weighted[start].session === session) {
+    if (session && start > 0 && weighted[start].session === session) {
       parts.push(`weight went up for this session (to ${kg(weight)})`);
     } else if (start > 0) {
-      parts.push(`weight last went up ${ago(weighted[start].session.startedAt, session.startedAt)} before this session (to ${kg(weight)})`);
+      const when = ago(weighted[start].session.startedAt, asOf);
+      parts.push(`weight last went up ${when} ${session ? "before this session" : "ago"} (to ${kg(weight)})`);
     } else {
       parts.push(`weight hasn't gone up since it was first done (${localDate(weighted[0].session.startedAt)})`);
     }
     const sessions = `${atWeight.length} ${atWeight.length === 1 ? "session" : "sessions"} at ${kg(weight)}`;
-    parts.push(current ? `${sessions} including this one` : `${sessions}, not done this session`);
+    parts.push(!session ? sessions : current ? `${sessions} including this one` : `${sessions}, not done this session`);
     const best = bestSets(atWeight.map((r) => r.entry));
     if (best) parts.push(`best at ${kg(weight)}: ${best}`);
   } else if (exercise.type === "bodyweight") {
@@ -117,7 +116,7 @@ function facts(upTo: Session[], session: Session, exercise: Exercise): string {
 
   const inSessions = upTo.filter((s) => s.entries.some((e) => e.exerciseId === exercise.id)).slice(-RECENT_SESSIONS);
   const skipped = inSessions.filter((s) => !decidingEntry(s, exercise.id, ["done", "incomplete"])).length;
-  parts.push(`skipped in ${skipped} of the last ${inSessions.length} sessions it was in`);
+  if (inSessions.length > 0) parts.push(`skipped in ${skipped} of the last ${inSessions.length} sessions it was in`);
   const lastResults = results.slice(-RECENT_RESULTS);
   if (lastResults.length > 0) {
     const below = lastResults.filter((r) => isBelowRange(r.entry)).length;
@@ -132,10 +131,12 @@ function exercisesIn(data: AppData, upTo: Session[]): Exercise[] {
   return data.exercises.filter((e) => used.has(e.id));
 }
 
-function exerciseLine(exercise: Exercise, upTo: Session[]): string {
+/** `withWeight`: also the weight for the next session (for the chat brief; a trainer brief's session already shows it). */
+function exerciseLine(exercise: Exercise, upTo: Session[], withWeight = false): string {
   const type = EXERCISE_TYPE_LABELS[exercise.type].toLowerCase();
   const increment = exercise.increment === undefined ? "" : `, increment ${kg(exercise.increment)}`;
-  let line = `${exercise.name}: ${type}, ${exercise.sets} sets of ${exercise.repMin}-${exercise.repMax} reps${increment}`;
+  const next = withWeight && !exercise.archived && exercise.weight !== undefined ? `, next session at ${kg(exercise.weight)}` : "";
+  let line = `${exercise.name}: ${type}, ${exercise.sets} sets of ${exercise.repMin}-${exercise.repMax} reps${increment}${next}`;
   if (exercise.archived) {
     const last = resultsOf(upTo, exercise.id).at(-1);
     line += last ? ` (archived; last done ${localDate(last.session.startedAt)})` : " (archived)";
@@ -199,4 +200,69 @@ function ago(from: string, to: string): string {
   if (days <= 0) return "the same day";
   if (days < 14) return days === 1 ? "1 day" : `${days} days`;
   return `${Math.floor(days / 7)} weeks`;
+}
+
+/**
+ * The chat brief: the lifter's training as of `now`, sent with every message in the trainer chat.
+ * `sessionsLeftOut` drops that many of the oldest sessions (and their summaries), for a chat brief that's
+ * too long for the AI; `messagesLeftOut` says how many of the chat's oldest messages aren't sent with it.
+ */
+export function buildChatBrief(data: AppData, now: string, { sessionsLeftOut = 0, messagesLeftOut = 0 } = {}): string {
+  const sessions = data.sessions;
+  const listed = sessions.slice(Math.min(sessionsLeftOut, sessions.length));
+  const goals = data.settings.trainer?.goals.trim() ?? "";
+  const recent = sessions.filter((s) => daysBetween(s.startedAt, now) < 28).length;
+  const last = sessions.at(-1);
+
+  const parts = [
+    `Today: ${localDate(now)}`,
+    PROGRESSION_RULE,
+    `Goals and notes: ${goals === "" ? "(none)" : goals}`,
+    last
+      ? `Training frequency: ${recent} ${recent === 1 ? "session" : "sessions"} in the last 4 weeks; the last one was ${
+          daysBetween(last.startedAt, now) <= 0 ? "today" : `${ago(last.startedAt, now)} ago`
+        } (${localDate(last.startedAt)}).`
+      : "Training frequency: no sessions yet.",
+    ...(data.activeSession ? [runningPart(data.activeSession)] : []),
+    [
+      "Facts per exercise (finished sessions only):",
+      ...data.exercises.filter((e) => !e.archived).map((e) => `- ${facts(sessions, undefined, e, now)}`),
+    ].join("\n"),
+    ["Exercises:", ...exercisesIn(data, sessions).map((e) => `- ${exerciseLine(e, sessions, true)}`)].join("\n"),
+    routinesPart(data),
+    [
+      "Sessions, oldest first:",
+      ...(listed.length < sessions.length ? [`(${sessions.length - listed.length} older sessions left out)`] : []),
+      ...(listed.length === 0 ? ["(none)"] : listed.map(sessionLine)),
+    ].join("\n"),
+    ["Your summaries after sessions, oldest first:", ...summariesOf(listed)].join("\n"),
+    ...(messagesLeftOut > 0 ? [`Chat: the ${messagesLeftOut} oldest messages of this chat are left out.`] : []),
+  ];
+  return parts.join("\n\n");
+}
+
+const PROGRESSION_RULE =
+  "Progression rule: each exercise has a target rep range. When every set reaches at least one rep above the top of the range, the weight goes up by the exercise's increment next time. Skipped and incomplete exercises keep their weight. Below range means a set had fewer reps than the bottom of the range.";
+
+/** The session being done right now, e.g. "- Leg press 60 kg: 11 (1 of 2 sets so far)", "- Dips: not started". */
+function runningPart(session: Session): string {
+  const line = (entry: SessionEntry) => {
+    if (entry.state === "skipped") return `${entry.exerciseName}: skipped`;
+    if (entry.loggedSets.length === 0) return `${entry.exerciseName}: not started`;
+    const state = entry.state === "done" ? "done" : `${entry.loggedSets.length} of ${entry.sets} sets so far`;
+    return `${entry.exerciseName} ${setsText(entry)} (${state})`;
+  };
+  return [
+    `Session in progress (started ${localDate(session.startedAt)}, routine "${session.routineName}"):`,
+    ...session.entries.map((entry) => `- ${line(entry)}`),
+  ].join("\n");
+}
+
+function routinesPart(data: AppData): string {
+  return [
+    "Routines (as they are now):",
+    ...data.routines.map(
+      (r) => `- ${r.name}: ${r.exerciseIds.map((id) => data.exercises.find((e) => e.id === id)?.name ?? "?").join(", ") || "(empty)"}`,
+    ),
+  ].join("\n");
 }

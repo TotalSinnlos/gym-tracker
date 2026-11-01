@@ -22,9 +22,10 @@ import { entryIdsFor, pendingExcept, settleEntry } from "./queue";
 import { type BackupServer, ServerError, type TrainerServer, buildConnection, explainServerError, isTemporary } from "./server";
 import { type SpreadsheetExport, spreadsheetCsv } from "./spreadsheet";
 import type { Store } from "./store";
-import { buildTrainerBrief } from "./trainer";
+import { buildChatBrief, buildTrainerBrief } from "./trainer";
 import {
   type AppData,
+  type ChatMessage,
   type Exercise,
   type ExerciseInput,
   type ExercisePatch,
@@ -33,6 +34,7 @@ import {
   type ServerBackupStatus,
   type ServerConnection,
   type SessionEntry,
+  type TrainerChat,
   type TrainerDue,
   type TrainerStatus,
   type TrainerSummaryStatus,
@@ -46,7 +48,33 @@ export const STALE_SESSION_HOURS = 6;
 /** A server backup waiting longer than this is pointed out in settings. */
 export const SERVER_BACKUP_OVERDUE_HOURS = 24;
 
+/** How many of the trainer chat's most recent messages are sent with each new one. */
+export const CHAT_MESSAGES_SENT = 40;
+
 export type Core = Awaited<ReturnType<typeof createCore>>;
+
+/**
+ * How many of `total` sessions to leave out of a brief next, after `leftOut` were too many to fit: a
+ * quarter more of those still listed (at least one), so a long history fits in a few tries.
+ */
+const leaveOutMore = (total: number, leftOut: number) => Math.min(total, leftOut + Math.max(1, Math.ceil((total - leftOut) / 4)));
+
+/**
+ * The most recent messages to send, starting with one of the user's (a conversation with the AI starts
+ * with the user), and how many older ones are left out. The user's messages in a row (after one went
+ * unanswered) are sent as one.
+ */
+function recentMessages(chat: ChatMessage[]) {
+  let start = Math.max(0, chat.length - CHAT_MESSAGES_SENT);
+  while (start < chat.length && chat[start].role !== "user") start++;
+  const messages: { role: ChatMessage["role"]; text: string }[] = [];
+  for (const { role, text } of chat.slice(start)) {
+    const last = messages.at(-1);
+    if (last?.role === role) last.text += `\n\n${text}`;
+    else messages.push({ role, text });
+  }
+  return { messages, leftOut: start };
+}
 
 export interface CoreOptions {
   newId?: () => string;
@@ -71,6 +99,8 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
   let serverChanges = 0;
   /** `serverChanges` when the last server backup attempt started (see `hasUntriedServerChanges`). */
   let triedServerChanges = 0;
+  /** A trainer chat reply is on its way: the chat sends one message at a time. */
+  let replyOnItsWay = false;
 
   /**
    * Saves `next`. When exercises, routines or past sessions changed (a session saved, history
@@ -826,6 +856,43 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       });
     },
 
+    // --- Trainer chat ---
+
+    /** The trainer chat, oldest message first, and whether the last message still needs a reply. */
+    trainerChat(): TrainerChat {
+      return { messages: data.trainerChat, unanswered: data.trainerChat.at(-1)?.role === "user" };
+    },
+
+    /** The chat brief as it would be sent now (see `buildChatBrief`). */
+    trainerChatBrief: () => buildChatBrief(data, now().toISOString()),
+
+    /**
+     * Stores the user's message, then asks the trainer and stores its reply. A failure leaves the
+     * message unanswered (see `answerTrainerChat`) and is thrown.
+     */
+    async sendTrainerMessage(text: string) {
+      requireChatCanSend();
+      if (text.trim() === "") throw new CoreError("Write a message first");
+      const message: ChatMessage = { id: newId(), role: "user", text: text.trim(), at: now().toISOString() };
+      await whileReplyOnItsWay(async () => {
+        await commit({ ...data, trainerChat: [...data.trainerChat, message] });
+        await askForReply(message);
+      });
+    },
+
+    /** Asks the trainer again for a reply to the last message, after a failure. */
+    async answerTrainerChat() {
+      requireChatCanSend();
+      const last = data.trainerChat.at(-1);
+      if (last?.role !== "user") throw new CoreError("There's no message waiting for a reply");
+      await whileReplyOnItsWay(() => askForReply(last));
+    },
+
+    /** Empties the trainer chat. A reply still on its way is dropped when it arrives. */
+    async clearTrainerChat() {
+      await commit({ ...data, trainerChat: [] });
+    },
+
     // --- Export ---
 
     /**
@@ -863,10 +930,55 @@ export async function createCore(store: Store, options: CoreOptions = {}) {
       } catch (error) {
         const canShorten = leaveOut < brief.earlierSessions;
         if (!(error instanceof ServerError && error.problem === "tooLarge" && canShorten)) throw error;
-        // Leave out a quarter of the sessions still listed (at least one), so a long history fits in a few tries.
-        leaveOut = Math.min(brief.earlierSessions, leaveOut + Math.max(1, Math.ceil((brief.earlierSessions - leaveOut) / 4)));
+        leaveOut = leaveOutMore(brief.earlierSessions, leaveOut);
       }
     }
+  }
+
+  /** Checks the trainer chat can send now: the trainer on, and no reply on its way. */
+  function requireChatCanSend() {
+    if (!trainerEnabled()) throw new CoreError("Turn on the trainer in settings first");
+    if (!trainerServer) throw new CoreError("The trainer isn't available here");
+    if (replyOnItsWay) throw new CoreError("Wait for the trainer's reply first");
+  }
+
+  /** Runs `send` as the one chat request on its way: marked before anything is awaited, so no second one slips in. */
+  async function whileReplyOnItsWay(send: () => Promise<void>) {
+    replyOnItsWay = true;
+    try {
+      await send();
+    } finally {
+      replyOnItsWay = false;
+    }
+  }
+
+  /**
+   * Sends the recent trainer chat with the chat brief, leaving out more of the oldest sessions each time
+   * the server says it's too large, and stores the trainer's reply to `asked` (the chat's last message),
+   * unless the chat was cleared or replaced (a restore) meanwhile.
+   */
+  async function askForReply(asked: ChatMessage) {
+    const isStillLast = () => data.trainerChat.at(-1)?.id === asked.id;
+    if (!isStillLast()) return;
+    const connection = requireConnection();
+    const { messages, leftOut: messagesLeftOut } = recentMessages(data.trainerChat);
+    const sessions = data.sessions.length;
+    let sessionsLeftOut = 0;
+    let reply: string;
+    for (;;) {
+      const brief = buildChatBrief(data, now().toISOString(), { sessionsLeftOut, messagesLeftOut });
+      try {
+        reply = await trainerServer!.chat(connection, brief, messages);
+        break;
+      } catch (error) {
+        const canShorten = sessionsLeftOut < sessions;
+        if (!(error instanceof ServerError && error.problem === "tooLarge" && canShorten)) explainServerError(error);
+        sessionsLeftOut = leaveOutMore(sessions, sessionsLeftOut);
+      }
+    }
+    if (!isStillLast()) return;
+    const answer: ChatMessage = { id: newId(), role: "trainer", text: reply, at: now().toISOString() };
+    await commit({ ...data, trainerChat: [...data.trainerChat, answer] });
   }
 
   function requireServer(): BackupServer {

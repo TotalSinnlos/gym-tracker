@@ -38,10 +38,12 @@ export interface BackupServer {
   latest(connection: ServerConnection): Promise<string | null>;
 }
 
-/** Asks the trainer on the user's server (`POST /trainer`) for a session summary. */
+/** Asks the trainer on the user's server for a trainer summary (`POST /trainer`) or a chat reply (`POST /trainer/chat`). */
 export interface TrainerServer {
-  /** The summary the AI wrote for the brief. */
+  /** The summary the AI wrote for the trainer brief. */
   summarize(connection: ServerConnection, brief: string): Promise<string>;
+  /** The trainer's reply to the conversation (ending with the user's message), given the chat brief. */
+  chat(connection: ServerConnection, brief: string, messages: { role: "user" | "trainer"; text: string }[]): Promise<string>;
 }
 
 /** Problems that usually pass by themselves, so a due summary just waits for the next try. */
@@ -89,6 +91,6 @@ export function explainServerError(error: unknown): never {
     case "notSetUp":
       throw new CoreError("The trainer isn't set up on your server yet: it has no AI key");
     case "aiFailed":
-      throw new CoreError("The AI couldn't write a summary. Check the AI settings on your server");
+      throw new CoreError("The AI couldn't answer. Check the AI settings on your server");
   }
 }

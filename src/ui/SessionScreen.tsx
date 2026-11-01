@@ -12,10 +12,12 @@ import { useSwipe } from "./useSwipe";
 
 interface Props {
   onLeave: () => void;
+  /** Opens the trainer chat, with a way back to the session. */
+  onOpenChat: () => void;
   onEnded: (result: EndSessionResult) => void;
 }
 
-export function SessionScreen({ onLeave, onEnded }: Props) {
+export function SessionScreen({ onLeave, onOpenChat, onEnded }: Props) {
   const core = useCore();
   const session = core.activeSession();
   const current = core.currentEntry();
@@ -44,6 +46,11 @@ export function SessionScreen({ onLeave, onEnded }: Props) {
         <div className="hdr-t num">
           {session.routineName} · {session.entries.length - pending} of {session.entries.length} done
         </div>
+        {core.trainer().enabled && (
+          <button className="ib" aria-label="Ask your trainer" onClick={onOpenChat}>
+            <Icon name="chat" />
+          </button>
+        )}
         {current ? (
           <button className="btn sm out" onClick={() => (pending > 0 ? setConfirmingEnd(true) : end())}>
             End

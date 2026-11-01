@@ -16,6 +16,8 @@ import { SettingsScreen } from "./ui/SettingsScreen";
 import { SetupScreen } from "./ui/SetupScreen";
 import { StaleSessionPrompt, useStaleSessionCheck } from "./ui/StaleSessionPrompt";
 import { SummaryScreen } from "./ui/SummaryScreen";
+import { TrainerChat } from "./ui/trainerChat";
+import { TrainerScreen } from "./ui/TrainerScreen";
 
 export function App() {
   const [core, setCore] = useState<Core | null>(null);
@@ -42,7 +44,9 @@ export function App() {
     <CoreContext.Provider value={core}>
       <AutoBackup core={core}>
         <AutoTrainer core={core}>
-          <Screens />
+          <TrainerChat core={core}>
+            <Screens />
+          </TrainerChat>
         </AutoTrainer>
       </AutoBackup>
     </CoreContext.Provider>
@@ -52,6 +56,8 @@ export function App() {
 type Screen =
   | { name: Area }
   | { name: "session" }
+  /** The trainer chat opened from the session screen. */
+  | { name: "sessionChat" }
   | { name: "summary"; result: EndSessionResult }
   | { name: "overview" }
   | { name: "exercise"; exerciseId: string };
@@ -99,8 +105,18 @@ function CurrentScreen({ screen, setScreen }: { screen: Screen; setScreen: (scre
       return <SettingsScreen />;
     case "history":
       return <HistoryScreen />;
+    case "trainer":
+      return <TrainerScreen />;
+    case "sessionChat":
+      return <TrainerScreen onBack={() => setScreen({ name: "session" })} />;
     case "session":
-      return <SessionScreen onLeave={home} onEnded={(result) => setScreen({ name: "summary", result })} />;
+      return (
+        <SessionScreen
+          onLeave={home}
+          onOpenChat={() => setScreen({ name: "sessionChat" })}
+          onEnded={(result) => setScreen({ name: "summary", result })}
+        />
+      );
     case "summary":
       return <SummaryScreen result={screen.result} onDone={home} />;
     case "overview":

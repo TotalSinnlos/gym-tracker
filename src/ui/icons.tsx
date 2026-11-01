@@ -15,6 +15,7 @@ const PATHS = {
   home: <path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z" />,
   progress: <path d="M4 19V5M4 19h16M8 15l4-4 3 3 5-6" />,
   history: <path d="M3 12a9 9 0 1 0 3-6.7M3 4v5h5M12 7v5l3 2" />,
+  chat: <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4z" />,
   settings: (
     <>
       <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
