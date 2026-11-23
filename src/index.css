@@ -224,15 +224,23 @@ p {
   white-space: nowrap;
   color: var(--ink);
   background: var(--surface);
+  /* Springs back slowly enough for its overshoot to show. */
   transition:
-    transform var(--dur-short) var(--ease-standard),
+    transform var(--dur-medium) var(--ease-spring),
     background-color var(--dur-short) var(--ease-standard);
 }
 
+/* Buttons give under the finger: down in an instant, back on the spring. The same press as CDT Bring. */
 .btn:active:not(:disabled),
 .ib:active:not(:disabled) {
-  transform: scale(0.97);
+  transform: scale(0.92);
   transition-duration: var(--dur-instant);
+}
+
+/* Wide ones give a little less, so their edges don't jump too far. */
+.btn.lg:active:not(:disabled),
+.btn.w:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .btn.lg {
@@ -313,7 +321,7 @@ p {
   justify-content: center;
   padding: 0;
   flex-shrink: 0;
-  transition: transform var(--dur-short) var(--ease-spring);
+  transition: transform var(--dur-medium) var(--ease-spring);
 }
 
 .ib.plain {
@@ -803,13 +811,38 @@ button.li:active {
 }
 
 .nav .pill {
+  position: relative;
   width: 64px;
   height: 32px;
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color var(--dur-medium) var(--ease-standard);
+  transition: transform var(--dur-medium) var(--ease-spring);
+}
+
+/* The pill's colour is a layer of its own, so it can grow out from the middle without stretching the icon.
+   It grows on the spring when its area is chosen, and the old one simply fades and shrinks away. The same as CDT Bring. */
+.nav .pill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--amber-container);
+  opacity: 0;
+  transform: scaleX(0.3);
+  transition:
+    opacity var(--dur-short) var(--ease-standard),
+    transform var(--dur-short) var(--ease-standard);
+}
+
+.nav .pill > * {
+  position: relative;
+}
+
+.nav button:active .pill {
+  transform: scale(0.92);
+  transition-duration: var(--dur-instant);
 }
 
 .nav .on {
@@ -817,8 +850,12 @@ button.li:active {
   font-weight: 700;
 }
 
-.nav .on .pill {
-  background: var(--amber-container);
+.nav .on .pill::before {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--dur-medium) var(--ease-standard),
+    transform var(--dur-long) var(--ease-spring);
 }
 
 /* Screen header for sub-pages: a back button and a title. */
